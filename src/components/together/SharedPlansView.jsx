@@ -39,7 +39,7 @@ export default function SharedPlansView() {
       category: planCategory,
       icon: planCategory === 'Nutrition' ? '🥗' : '🚶',
       participants: [
-        { userId: 'user_1', name: 'Devan (You)', target: myTarget, completedThisWeek: 0 },
+        { userId: 'user_1', name: `${userProfile?.name || 'Rohini'} (You)`, target: myTarget, completedThisWeek: 0 },
         { userId: 'user_2', name: partnerName, target: partnerTarget, completedThisWeek: 0 }
       ],
       schedule: planSchedule,

@@ -67,7 +67,7 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
   const [isBreakItDownOpen, setIsBreakItDownOpen] = useState(false);
 
   // Account State
-  const [name, setName] = useState(userProfile.name || 'Devan');
+  const [name, setName] = useState(userProfile.name || 'Rohini');
   const [goal, setGoal] = useState(userProfile.wellnessGoal || 'energy_vitality');
   const [hydrationGoal, setHydrationGoal] = useState(userProfile.hydrationGoalMl || 2250);
   const [stepGoal, setStepGoal] = useState(userProfile.stepGoal || 8000);

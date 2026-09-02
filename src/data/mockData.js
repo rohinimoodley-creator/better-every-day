@@ -124,7 +124,7 @@ export const DEFAULT_WELLNESS_INTELLIGENCE_SETTINGS = {
 
 export const DEFAULT_USER = {
   id: 'user_1',
-  name: 'Devan',
+  name: 'Rohini',
   avatar: '🌱',
   wellnessGoal: 'energy_vitality',
   affirmationStyle: 'soft_love',
@@ -227,7 +227,7 @@ export const CONTENT_CATEGORIES = [
 export const CONNECTED_PROFILES = [
   {
     id: 'user_1',
-    name: 'Devan (You)',
+    name: 'Rohini (You)',
     relation: 'self',
     avatar: '🌱',
     status: 'Feeling energized & calm',
@@ -655,7 +655,7 @@ export const INITIAL_SHARED_PLANS = [
     category: 'Movement',
     icon: '🚶',
     participants: [
-      { userId: 'user_1', name: 'Devan (You)', target: '30-minute walk', targetDaysPerWeek: 3, completedThisWeek: 2 },
+      { userId: 'user_1', name: 'Rohini (You)', target: '30-minute walk', targetDaysPerWeek: 3, completedThisWeek: 2 },
       { userId: 'user_2', name: 'Maya (Partner)', target: '20-minute gentle stroll', targetDaysPerWeek: 3, completedThisWeek: 2 }
     ],
     schedule: 'Mon, Wed, Fri at 18:00',
@@ -668,7 +668,7 @@ export const INITIAL_SHARED_PLANS = [
     category: 'Movement & Social',
     icon: '👟',
     participants: [
-      { userId: 'user_1', name: 'Devan', target: '5,000 steps', completedThisWeek: 1 },
+      { userId: 'user_1', name: 'Rohini', target: '5,000 steps', completedThisWeek: 1 },
       { userId: 'user_3', name: 'Lucas', target: '8,000 steps', completedThisWeek: 1 },
       { userId: 'user_4', name: 'Elena', target: '20-min mobility', completedThisWeek: 1 }
     ],
@@ -683,7 +683,7 @@ export const INITIAL_SHARED_PLANS = [
     icon: '🥗',
     permissions: { view: true, edit: true, suggest: true, approve: true },
     participants: [
-      { userId: 'user_1', name: 'Devan', role: 'Produce & Slicing' },
+      { userId: 'user_1', name: 'Rohini', role: 'Produce & Slicing' },
       { userId: 'user_2', name: 'Maya', role: 'Grains & Sauces' }
     ],
     dishes: ['Quinoa Salad with Roasted Chickpeas', 'Steamed Greens with Sesame Dressing', 'Fresh Berry Chia Pots'],
@@ -820,7 +820,7 @@ export const INITIAL_SOCIAL_SETTINGS = {
   calendarInvitationPolicy: 'friends_only', // 'friends_only' | 'followers' | 'anyone'
   gymDiscoverability: false,
   gymListedOnProfile: true,
-  communityDisplayName: 'Devan',
+  communityDisplayName: 'Rohini',
   displayNameType: 'real_name', // 'real_name' | 'username' | 'custom' | 'anonymous'
   leaderboardOptIn: false, // OFF by default
   leaderboardMode: 'supportive', // 'supportive' | 'competitive' | 'private'
@@ -903,7 +903,7 @@ export const WELLNESS_CIRCLES_DATABASE = [
     membersCount: 3,
     avatar: '💛',
     labels: ['Besties', 'Daily Movement'],
-    members: ['Devan', 'Maya', 'Lucas'],
+    members: ['Rohini', 'Maya', 'Lucas'],
     currentChallenge: {
       title: '7-Day Gentle Movement Rhythm',
       desc: 'Move for 15+ mins daily. No shaming, just daily cheers!',
@@ -911,9 +911,9 @@ export const WELLNESS_CIRCLES_DATABASE = [
       daysLeft: 2
     },
     activityFeed: [
-      { user: 'Maya', text: 'Just completed 20-min sunset stroll with Devan 🌿', time: '1 hr ago', cheers: 3 },
+      { user: 'Maya', text: 'Just completed 20-min sunset stroll with Rohini 🌿', time: '1 hr ago', cheers: 3 },
       { user: 'Lucas', text: 'Hit 7k steps around the park trail 👟', time: '3 hrs ago', cheers: 4 },
-      { user: 'Devan', text: 'Completed today’s Small Step (hydration & stretch)! 🌱', time: '4 hrs ago', cheers: 2 }
+      { user: 'Rohini', text: 'Completed today’s Small Step (hydration & stretch)! 🌱', time: '4 hrs ago', cheers: 2 }
     ]
   },
   {
@@ -923,7 +923,7 @@ export const WELLNESS_CIRCLES_DATABASE = [
     membersCount: 4,
     avatar: '🏃',
     labels: ['Gym Crew', 'Strength & Mobility'],
-    members: ['Devan', 'Lucas', 'Coach Marcus', 'Sarah M.'],
+    members: ['Rohini', 'Lucas', 'Coach Marcus', 'Sarah M.'],
     currentChallenge: {
       title: 'Mobility & Form Week',
       desc: 'Complete 2 stretch/foam roll recovery sessions.',
@@ -932,7 +932,7 @@ export const WELLNESS_CIRCLES_DATABASE = [
     },
     activityFeed: [
       { user: 'Coach Marcus', text: 'Great mobility session today team! Rest well tonight 🧘', time: '2 hrs ago', cheers: 5 },
-      { user: 'Devan', text: 'Tried the new hamstring mobility flow—felt amazing ✨', time: '5 hrs ago', cheers: 6 }
+      { user: 'Rohini', text: 'Tried the new hamstring mobility flow—felt amazing ✨', time: '5 hrs ago', cheers: 6 }
     ]
   },
   {
@@ -942,7 +942,7 @@ export const WELLNESS_CIRCLES_DATABASE = [
     membersCount: 4,
     avatar: '🏡',
     labels: ['Family', 'Nourishment'],
-    members: ['Devan', 'Maya', 'Mom', 'David'],
+    members: ['Rohini', 'Maya', 'Mom', 'David'],
     currentChallenge: {
       title: 'Whole Plant Diversity',
       desc: 'Incorporate 1 colorful vegetable into dinner.',
@@ -965,7 +965,7 @@ export const SOCIAL_CALENDAR_EVENTS = [
     withUser: 'Maya (Partner)',
     category: 'Walk & Talk',
     status: 'accepted', // 'pending' | 'accepted' | 'declined' | 'reschedule_requested'
-    proposedBy: 'Devan',
+    proposedBy: 'Rohini',
     notes: 'Grab a matcha and walk the 3km loop together.'
   },
   {
@@ -1151,7 +1151,7 @@ export const INITIAL_AUDIT_LOGS = [
     category: 'Exercise',
     original: 'Voice interpreted: "I walked for 20 minutes"',
     modified: 'User corrected to: "15-minute gentle stroll"',
-    author: 'Devan (User)',
+    author: 'Rohini (User)',
     source: 'Voice AI → User Edit'
   },
   {
@@ -1160,7 +1160,7 @@ export const INITIAL_AUDIT_LOGS = [
     category: 'Hydration',
     original: 'Voice interpreted: "Drank 5 cups of water"',
     modified: 'Confirmed as 1250ml water intake',
-    author: 'Devan (User Confirmation)',
+    author: 'Rohini (User Confirmation)',
     source: 'Voice AI Confirmation'
   }
 ];

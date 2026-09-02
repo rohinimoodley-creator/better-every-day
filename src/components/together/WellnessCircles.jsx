@@ -68,7 +68,7 @@ export default function WellnessCircles() {
       type: circleType,
       avatar: circleAvatar,
       labels: selectedLabels,
-      members: ['Devan (You)', 'Maya']
+      members: [`${userProfile?.name || 'Rohini'} (You)`, 'Maya']
     });
 
     setCircleName('');

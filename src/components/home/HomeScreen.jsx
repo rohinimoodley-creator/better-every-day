@@ -52,7 +52,7 @@ export default function HomeScreen({ onNavigateTab }) {
   };
 
   const greeting = getGreeting();
-  const userName = userProfile?.name || 'Friend';
+  const userName = userProfile?.name || 'Rohini';
 
   const todayDateFormatted = new Date().toLocaleDateString('en-US', {
     weekday: 'long',

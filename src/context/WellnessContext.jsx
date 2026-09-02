@@ -44,9 +44,11 @@ export function WellnessProvider({ children }) {
     const saved = localStorage.getItem('bed_user_profile');
     if (saved) {
       const parsed = JSON.parse(saved);
+      const updatedName = (!parsed.name || parsed.name === 'Devan') ? 'Rohini' : parsed.name;
       return {
         ...DEFAULT_USER,
         ...parsed,
+        name: updatedName,
         howIThrive: { ...DEFAULT_HOW_I_THRIVE, ...(parsed.howIThrive || {}) },
         voiceSettings: { ...DEFAULT_VOICE_SETTINGS, ...(parsed.voiceSettings || {}) },
         gratitudeSettings: { ...DEFAULT_GRATITUDE_SETTINGS, ...(parsed.gratitudeSettings || {}) },
@@ -842,7 +844,7 @@ export function WellnessProvider({ children }) {
         category: 'Movement',
         original: 'Smartwatch Walk + Manual Walk (Separate)',
         modified: 'Combined into single verified 30-min walk session (3,500 steps, ~125 kcal)',
-        author: 'Devan (User)',
+        author: 'Rohini (User)',
         source: 'Duplicate Resolution'
       };
       setAuditLogs(prev => [newAudit, ...prev]);
@@ -863,7 +865,7 @@ export function WellnessProvider({ children }) {
       category: 'Data Anomaly',
       original: 'Step Cadence: 34,200 steps in 45 mins',
       modified: action === 'confirmed' ? 'Confirmed as legitimate endurance activity by user' : 'Corrected sensor spike to baseline',
-      author: 'Devan (User)',
+      author: 'Rohini (User)',
       source: 'Anomaly Review'
     };
     setAuditLogs(prev => [newAudit, ...prev]);

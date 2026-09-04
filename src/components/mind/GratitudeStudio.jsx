@@ -41,7 +41,15 @@ export default function GratitudeStudio() {
     }
   ]);
 
+  const [showSavedGratitude, setShowSavedGratitude] = useState(false);
+  const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  const filteredSavedEntries = savedEntries.filter(e => {
+    if (!searchHistoryQuery.trim()) return true;
+    return e.items.some(item => item.toLowerCase().includes(searchHistoryQuery.toLowerCase())) ||
+           e.date.toLowerCase().includes(searchHistoryQuery.toLowerCase());
+  });
 
   const handleFieldChange = (id, value) => {
     setFields(prev => prev.map(f => f.id === id ? { ...f, text: value } : f));
@@ -206,38 +214,77 @@ export default function GratitudeStudio() {
             </div>
           </form>
 
-          {/* Saved Gratitude Entries History */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-              Saved Gratitude Reflections
-            </h4>
-
-            {savedEntries.map(entry => (
-              <div
-                key={entry.id}
-                className="card-glass"
-                style={{
-                  padding: '1.15rem 1.35rem',
-                  borderLeft: '4px solid var(--accent-primary)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.5rem'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                  <span>{entry.date}</span>
-                  <span className="pill-badge primary" style={{ fontSize: '0.66rem' }}>
-                    {entry.items.length} Moments
-                  </span>
-                </div>
-
-                <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.55 }}>
-                  {entry.items.map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
+          {/* Progressive Disclosure: View My Gratitude */}
+          <div className="card-glass" style={{ padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                <h4 style={{ fontSize: '0.98rem', fontWeight: 800, margin: '0 0 0.15rem 0', color: 'var(--text-primary)' }}>
+                  Saved Gratitude Library
+                </h4>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+                  {savedEntries.length} saved reflection {savedEntries.length === 1 ? 'entry' : 'entries'} in your private vault.
+                </p>
               </div>
-            ))}
+
+              <button
+                type="button"
+                onClick={() => setShowSavedGratitude(!showSavedGratitude)}
+                className="btn btn-secondary btn-sm"
+                style={{ gap: '0.35rem', fontSize: '0.78rem' }}
+              >
+                <Bookmark size={13} color="var(--accent-primary)" />
+                <span>{showSavedGratitude ? 'Hide Gratitude History' : `View My Gratitude (${savedEntries.length})`}</span>
+              </button>
+            </div>
+
+            {/* Revealed Gratitude Entries */}
+            {showSavedGratitude && (
+              <div style={{ marginTop: '1.15rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.15rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                {/* Search / Filter Input */}
+                <input
+                  type="text"
+                  placeholder="Search your saved gratitude moments..."
+                  value={searchHistoryQuery}
+                  onChange={e => setSearchHistoryQuery(e.target.value)}
+                  className="input-field"
+                  style={{ fontSize: '0.82rem', padding: '0.45rem 0.75rem' }}
+                />
+
+                {filteredSavedEntries.length > 0 ? (
+                  filteredSavedEntries.map(entry => (
+                    <div
+                      key={entry.id}
+                      style={{
+                        padding: '1rem 1.2rem',
+                        background: 'var(--bg-secondary)',
+                        borderLeft: '4px solid var(--accent-primary)',
+                        borderRadius: 'var(--radius-sm)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.4rem'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        <span>📅 {entry.date}</span>
+                        <span className="pill-badge primary" style={{ fontSize: '0.64rem' }}>
+                          {entry.items.length} Moments
+                        </span>
+                      </div>
+
+                      <ul style={{ margin: 0, paddingLeft: '1.1rem', fontSize: '0.84rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                        {entry.items.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))
+                ) : (
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
+                    No matching gratitude moments found.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
         </div>

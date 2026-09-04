@@ -70,7 +70,9 @@ export default function OverwhelmModal({ isOpen, onClose }) {
             <span className="pill-badge primary" style={{ marginBottom: '0.25rem' }}>
               <Heart size={12} /> Safe Space • Zero Pressure
             </span>
-            <h3 style={{ fontSize: '1.4rem' }}>Let's Slow Everything Down 🌿</h3>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Take a Moment 🫧
+            </h3>
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
             <X size={20} />

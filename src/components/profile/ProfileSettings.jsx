@@ -36,13 +36,9 @@ import {
 import confetti from 'canvas-confetti';
 
 export const YOU_SECTIONS = [
-  { id: 'how_i_thrive', label: 'How I Thrive', icon: Sliders, desc: 'Pace & Communication' },
-  { id: 'appearance', label: 'Appearance', icon: Palette, desc: 'Themes & Visuals' },
-  { id: 'ai_memory', label: 'AI & Memory', icon: Brain, desc: 'Memory Controls & AI' },
-  { id: 'voice', label: 'Voice', icon: Mic, desc: 'Voice Settings' },
-  { id: 'notifications', label: 'Notifications', icon: Bell, desc: 'Reminders & Nudges' },
-  { id: 'accessibility', label: 'Accessibility', icon: Zap, desc: 'ADHD & Calm Modes' },
-  { id: 'privacy_data', label: 'Privacy & Data', icon: ShieldCheck, desc: 'Vault & Sovereignty' },
+  { id: 'how_i_thrive', label: 'How I Thrive', icon: Sliders, desc: 'Adaptive Personalization' },
+  { id: 'appearance', label: 'Appearance', icon: Palette, desc: 'Themes & Text Scaling' },
+  { id: 'privacy_data', label: 'Privacy & Data', icon: ShieldCheck, desc: 'Vault & PDF Export' },
   { id: 'account', label: 'Account', icon: User, desc: 'Profile & Targets' }
 ];
 
@@ -55,11 +51,17 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
     overviewFrequency,
     updateOverviewFrequency,
     howIThrive,
+    updateHowIThrive,
     toggleOneThingMode,
     toggleLowEnergyMode
   } = useWellness();
 
-  const [activeSection, setActiveSection] = useState(initialSection || 'how_i_thrive');
+  // Normalize initialSection in case legacy links pass notifications/accessibility
+  const resolvedSection = (initialSection === 'notifications' || initialSection === 'accessibility' || initialSection === 'ai_memory' || initialSection === 'voice')
+    ? 'how_i_thrive'
+    : (initialSection || 'how_i_thrive');
+
+  const [activeSection, setActiveSection] = useState(resolvedSection);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isAIMemoryOpen, setIsAIMemoryOpen] = useState(false);
   const [isThemeCreatorOpen, setIsThemeCreatorOpen] = useState(false);
@@ -72,11 +74,6 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
   const [hydrationGoal, setHydrationGoal] = useState(userProfile.hydrationGoalMl || 2250);
   const [stepGoal, setStepGoal] = useState(userProfile.stepGoal || 8000);
   const [savedSuccess, setSavedSuccess] = useState(false);
-
-  // Notification State
-  const [reminderTime, setReminderTime] = useState('08:30');
-  const [eveningReviewTime, setEveningReviewTime] = useState('21:00');
-  const [nudgesEnabled, setNudgesEnabled] = useState(true);
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
@@ -115,7 +112,7 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
             </span>
           </div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-            Personalisation & Settings 👤
+            Personalization & Settings 👤
           </h2>
           <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
             Tailor Better Every Day to your personal pace, privacy preferences, and daily rhythm.
@@ -178,60 +175,22 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
         
         {/* 3.1 HOW I THRIVE */}
         {activeSection === 'how_i_thrive' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div className="card-glass" style={{ padding: '1.25rem 1.4rem' }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: '0 0 0.25rem 0', color: 'var(--text-primary)' }}>
-                Home Wellness Overview Frequency 📊
-              </h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0 0 0.85rem 0' }}>
-                Choose how your wellness pillars are summarized on the Home screen.
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                {[
-                  { id: 'daily', label: 'Daily', desc: "Today's meters" },
-                  { id: 'weekly', label: 'Weekly', desc: '7-Day breakdown (Default)' },
-                  { id: 'monthly', label: 'Monthly', desc: '4-Week habit trend' }
-                ].map(opt => {
-                  const isSelected = overviewFrequency === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => updateOverviewFrequency && updateOverviewFrequency(opt.id)}
-                      style={{
-                        padding: '0.75rem 0.5rem',
-                        borderRadius: 'var(--radius-md)',
-                        border: `1.5px solid ${isSelected ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-                        background: isSelected ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
-                        cursor: 'pointer',
-                        textAlign: 'center'
-                      }}
-                    >
-                      <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                        {opt.label}
-                      </div>
-                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                        {opt.desc}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <HowIThriveHub />
-          </div>
+          <HowIThriveHub />
         )}
 
-        {/* 3.2 APPEARANCE */}
+        {/* 3.2 APPEARANCE & THEMES (Includes Relocated Text Enlargement) */}
         {activeSection === 'appearance' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div className="card-glass" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <Palette size={17} color="var(--accent-primary)" /> Color Palette & Themes
-                </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.6rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
+                    <Palette size={18} color="var(--accent-primary)" /> Color Palette & Themes
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
+                    Choose a calming color system or generate a custom AI theme.
+                  </p>
+                </div>
 
                 <button
                   onClick={() => setIsThemeCreatorOpen(true)}
@@ -242,7 +201,8 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
                 </button>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem' }}>
+              {/* Theme Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 {themes.map(th => {
                   const active = theme === th.id;
                   return (
@@ -273,188 +233,55 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
                   );
                 })}
               </div>
+
+              {/* Text Enlargement (Relocated from How I Thrive) */}
+              <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block' }}>
+                    Text Enlargement & Scaling 🔍
+                  </span>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Adjust font size across all dashboards, check-ins, and guides.
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                  {[
+                    { id: 'standard', label: 'Standard Text (100%)', desc: 'Default readability' },
+                    { id: 'large', label: 'Large Text (115%)', desc: 'Enhanced size' },
+                    { id: 'extra_large', label: 'Extra Large (125%)', desc: 'Maximum legibility' }
+                  ].map(ts => {
+                    const active = (howIThrive?.textSize || 'standard') === ts.id;
+                    return (
+                      <button
+                        key={ts.id}
+                        type="button"
+                        onClick={() => updateHowIThrive && updateHowIThrive('textSize', ts.id)}
+                        style={{
+                          background: active ? 'var(--accent-primary-light)' : 'var(--bg-tertiary)',
+                          border: active ? '2px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                          padding: '0.75rem 0.5rem',
+                          borderRadius: 'var(--radius-md)',
+                          fontWeight: 700,
+                          fontSize: '0.8rem',
+                          color: 'var(--text-primary)',
+                          cursor: 'pointer',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <div>{ts.label}</div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 2 }}>{ts.desc}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
             </div>
           </div>
         )}
 
-        {/* 3.3 AI & MEMORY */}
-        {activeSection === 'ai_memory' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div className="card-glass" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Brain size={17} color="var(--accent-primary)" /> AI Personalisation & Memory Controls
-                  </h3>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
-                    View, manage, or clear the contextual memory Better Every Day uses to support you.
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setIsAIMemoryOpen(true)}
-                  className="btn btn-primary btn-sm"
-                  style={{ gap: '0.35rem' }}
-                >
-                  <Brain size={14} /> Manage AI Memory
-                </button>
-              </div>
-
-              <div style={{ background: 'var(--bg-secondary)', padding: '1rem 1.25rem', borderRadius: 'var(--radius-md)', fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                🔒 <strong>Memory Sovereignty:</strong> You have 100% control over everything stored in memory. You can edit or erase memory items anytime.
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 3.4 VOICE */}
-        {activeSection === 'voice' && (
-          <div className="card-glass" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 0.35rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Mic size={17} color="var(--accent-primary)" /> Voice Recording & Reflection Settings
-            </h3>
-            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-              Customize how voice recordings are transcribed and incorporated into your daily records.
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
-              {[
-                { id: 'automatically_update', title: 'AUTOMATICALLY UPDATE', desc: 'Auto-detect meals, mood, workouts, and water from voice entries.' },
-                { id: 'ask_each_time', title: 'ASK ME EVERY TIME', desc: 'Review detected events before saving to records.' },
-                { id: 'never_update', title: 'TRANSCRIPT ONLY', desc: 'Save transcripts as reflections without auto-logging metrics.' }
-              ].map(opt => {
-                const active = (userProfile.voiceSettings?.updateMode || 'ask_each_time') === opt.id || (opt.id === 'automatically_update' && userProfile.voiceSettings?.updateMode === 'always_update');
-                return (
-                  <div
-                    key={opt.id}
-                    onClick={() => setUserProfile(prev => ({
-                      ...prev,
-                      voiceSettings: { ...(prev.voiceSettings || {}), updateMode: opt.id }
-                    }))}
-                    style={{
-                      background: active ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
-                      border: `2px solid ${active ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-                      padding: '1rem',
-                      borderRadius: 'var(--radius-md)',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <div style={{ fontWeight: 800, fontSize: '0.86rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
-                      {opt.title}
-                    </div>
-                    <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>{opt.desc}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* 3.5 NOTIFICATIONS */}
-        {activeSection === 'notifications' && (
-          <div className="card-glass" style={{ padding: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 0.35rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Bell size={17} color="var(--accent-primary)" /> Reminder & Nudge Preferences
-            </h3>
-            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-              Calm, pressure-free reminders tailored to your daily schedule.
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
-                  Morning Intention Nudge
-                </label>
-                <input
-                  type="time"
-                  value={reminderTime}
-                  onChange={e => setReminderTime(e.target.value)}
-                  className="input-field"
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
-                  Evening Reflection Reminder
-                </label>
-                <input
-                  type="time"
-                  value={eveningReviewTime}
-                  onChange={e => setEveningReviewTime(e.target.value)}
-                  className="input-field"
-                />
-              </div>
-            </div>
-
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.84rem' }}>
-              <input
-                type="checkbox"
-                checked={nudgesEnabled}
-                onChange={e => setNudgesEnabled(e.target.checked)}
-                style={{ width: 16, height: 16 }}
-              />
-              <span>Enable gentle mid-day hydration reminders</span>
-            </label>
-          </div>
-        )}
-
-        {/* 3.6 ACCESSIBILITY & ADAPTIVE MODES */}
-        {activeSection === 'accessibility' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div className="card-glass" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 0.35rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Zap size={17} color="var(--accent-primary)" /> Accessibility & Neurodivergent-Friendly Modes
-              </h3>
-              <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-                Designed with ADHD, autism, and sensory sensitivity principles in mind.
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem' }}>
-                <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                  <h4 style={{ fontSize: '0.92rem', margin: '0 0 0.3rem 0' }}>🎯 One Thing Mode</h4>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.6rem 0' }}>
-                    Removes all competing dashboard cards and shows only 1 single focus item.
-                  </p>
-                  <button onClick={toggleOneThingMode} className="btn btn-secondary btn-sm">
-                    {howIThrive?.oneThingModeActive ? 'Disable One Thing' : 'Enable One Thing Mode'}
-                  </button>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                  <h4 style={{ fontSize: '0.92rem', margin: '0 0 0.3rem 0' }}>🔋 Low Energy Mode</h4>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.6rem 0' }}>
-                    Simplifies targets down to essential micro-actions when exhausted.
-                  </p>
-                  <button onClick={toggleLowEnergyMode} className="btn btn-secondary btn-sm">
-                    {howIThrive?.lowEnergyModeActive ? 'Disable Low Energy' : 'Enable Low Energy Mode'}
-                  </button>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                  <h4 style={{ fontSize: '0.92rem', margin: '0 0 0.3rem 0' }}>🧘 Overwhelm Support</h4>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.6rem 0' }}>
-                    Instant grounding exercise with calming rhythm and gentle prompt.
-                  </p>
-                  <button onClick={() => setIsOverwhelmOpen(true)} className="btn btn-secondary btn-sm">
-                    Open Overwhelm Support
-                  </button>
-                </div>
-
-                <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-                  <h4 style={{ fontSize: '0.92rem', margin: '0 0 0.3rem 0' }}>🧩 Break It Down Tool</h4>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.6rem 0' }}>
-                    Breaks large, overwhelming habits into bite-sized 2-minute steps.
-                  </p>
-                  <button onClick={() => setIsBreakItDownOpen(true)} className="btn btn-secondary btn-sm">
-                    Open Break It Down
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 3.7 PRIVACY & DATA VAULT */}
+        {/* 3.3 PRIVACY & DATA VAULT */}
         {activeSection === 'privacy_data' && (
           <TrustCentreHub />
         )}

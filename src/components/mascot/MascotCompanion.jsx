@@ -4,18 +4,20 @@ import { Sparkles, Shirt } from 'lucide-react';
 import MascotWardrobeModal from './MascotWardrobeModal';
 import { MASCOT_WARDROBE } from '../../data/themes';
 
+import PipAccessories from './PipAccessories';
+
 export default function MascotCompanion({ message, mood = 'happy' }) {
   const { userProfile, howIThrive } = useWellness();
   const [showWardrobe, setShowWardrobe] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   // If mascot is turned off in How I Thrive
   if (howIThrive?.mascotInteractionLevel === 'off') {
     return null;
   }
 
-  const selectedHat = MASCOT_WARDROBE.hats.find(h => h.id === (userProfile.mascotHat || 'flower')) || MASCOT_WARDROBE.hats[1];
-  const selectedColor = MASCOT_WARDROBE.colors.find(c => c.id === (userProfile.mascotColor || 'sprout')) || MASCOT_WARDROBE.colors[0];
+  const selectedHatId = userProfile?.mascotHat || 'flower';
+  const selectedColor = MASCOT_WARDROBE.colors.find(c => c.id === (userProfile?.mascotColor || 'sprout')) || MASCOT_WARDROBE.colors[0];
+  const selectedBeanieColor = userProfile?.mascotBeanieColor || 'pink';
 
   const isReducedMotion = howIThrive?.animationLevel === 'reduced' || howIThrive?.animationLevel === 'minimal';
   const isMinimalInteraction = howIThrive?.mascotInteractionLevel === 'minimal';
@@ -43,7 +45,7 @@ export default function MascotCompanion({ message, mood = 'happy' }) {
           title="Click to customize Pip's outfit!"
         >
           <div className={isReducedMotion ? '' : 'animate-float'} style={{ position: 'relative', width: isMinimalInteraction ? 54 : 78, height: isMinimalInteraction ? 54 : 78 }}>
-            <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.12))' }}>
+            <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.12))', overflow: 'visible' }}>
               {/* Glow Aura */}
               <circle cx="50" cy="52" r="42" fill={selectedColor.hex} opacity="0.15" />
               
@@ -78,26 +80,9 @@ export default function MascotCompanion({ message, mood = 'happy' }) {
               {/* Smile */}
               <path d="M 44 58 Q 50 64, 56 58" stroke="#1b382b" strokeWidth="3" strokeLinecap="round" fill="none" />
 
-              {/* Sprout Leaf */}
-              {selectedHat.id === 'none' && (
-                <path d="M 50 16 Q 40 4, 30 10 Q 42 16, 50 16" fill="#40916c" />
-              )}
+              {/* Seamless Wearable Vector Accessory */}
+              <PipAccessories hatId={selectedHatId} beanieColorId={selectedBeanieColor} />
             </svg>
-
-            {/* Selected Hat */}
-            <div 
-              style={{
-                position: 'absolute',
-                top: selectedHat.id === 'sunglasses' ? (isMinimalInteraction ? 20 : 30) : -8,
-                left: selectedHat.id === 'sunglasses' ? (isMinimalInteraction ? 14 : 22) : (isMinimalInteraction ? 12 : 18),
-                fontSize: isMinimalInteraction ? '1.3rem' : (selectedHat.id === 'sunglasses' ? '1.8rem' : '2rem'),
-                filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.2))',
-                pointerEvents: 'none',
-                transform: selectedHat.id === 'flower' ? 'rotate(-10deg)' : 'none'
-              }}
-            >
-              {selectedHat.icon}
-            </div>
 
             {/* Wardrobe Edit Icon */}
             {!isMinimalInteraction && (

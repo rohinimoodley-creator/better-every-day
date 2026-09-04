@@ -1,14 +1,26 @@
 import React, { useState } from 'react';
 import { useWellness } from '../../context/WellnessContext';
 import { MASCOT_WARDROBE } from '../../data/themes';
+import PipAccessories from './PipAccessories';
 import { Sparkles } from 'lucide-react';
 
-export default function PipSproutAvatar({ size = 56, mood = 'happy', animated = true, onClick }) {
+export default function PipSproutAvatar({
+  size = 56,
+  mood = 'happy',
+  animated = true,
+  onClick,
+  hatId,
+  colorId,
+  beanieColorId
+}) {
   const { userProfile } = useWellness();
   const [isHovered, setIsHovered] = useState(false);
 
-  const selectedHat = MASCOT_WARDROBE.hats.find(h => h.id === (userProfile?.mascotHat || 'flower')) || MASCOT_WARDROBE.hats[1];
-  const selectedColor = MASCOT_WARDROBE.colors.find(c => c.id === (userProfile?.mascotColor || 'sprout')) || MASCOT_WARDROBE.colors[0];
+  const activeHatId = hatId !== undefined ? hatId : (userProfile?.mascotHat || 'flower');
+  const activeColorId = colorId !== undefined ? colorId : (userProfile?.mascotColor || 'sprout');
+  const activeBeanieColor = beanieColorId !== undefined ? beanieColorId : (userProfile?.mascotBeanieColor || 'pink');
+
+  const selectedColor = MASCOT_WARDROBE.colors.find(c => c.id === activeColorId) || MASCOT_WARDROBE.colors[0];
 
   return (
     <div 
@@ -27,7 +39,12 @@ export default function PipSproutAvatar({ size = 56, mood = 'happy', animated = 
       }}
       title={onClick ? "Click to style Pip's wardrobe & aura 🌱" : "Pip the Sprout 🌱"}
     >
-      <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.15))' }}>
+      <svg
+        viewBox="0 0 100 100"
+        width="100%"
+        height="100%"
+        style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.15))', overflow: 'visible' }}
+      >
         {/* Glow Aura */}
         <circle cx="50" cy="52" r="42" fill={selectedColor.hex} opacity={isHovered ? 0.35 : 0.18} />
         
@@ -62,26 +79,9 @@ export default function PipSproutAvatar({ size = 56, mood = 'happy', animated = 
         {/* Smile */}
         <path d="M 44 58 Q 50 64, 56 58" stroke="#1b382b" strokeWidth="3" strokeLinecap="round" fill="none" />
 
-        {/* Sprout Leaf */}
-        {selectedHat.id === 'none' && (
-          <path d="M 50 16 Q 40 4, 30 10 Q 42 16, 50 16" fill="#40916c" />
-        )}
+        {/* Seamless Wearable Vector Accessory */}
+        <PipAccessories hatId={activeHatId} beanieColorId={activeBeanieColor} />
       </svg>
-
-      {/* Selected Hat */}
-      <div 
-        style={{
-          position: 'absolute',
-          top: selectedHat.id === 'sunglasses' ? Math.round(size * 0.35) : -Math.round(size * 0.12),
-          left: selectedHat.id === 'sunglasses' ? Math.round(size * 0.26) : Math.round(size * 0.22),
-          fontSize: selectedHat.id === 'sunglasses' ? `${Math.round(size * 0.38)}px` : `${Math.round(size * 0.42)}px`,
-          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-          pointerEvents: 'none',
-          transform: selectedHat.id === 'flower' ? 'rotate(-10deg)' : 'none'
-        }}
-      >
-        {selectedHat.icon}
-      </div>
 
       {/* Subtle Wardrobe Edit Sparkle Indicator on Hover / Clickable */}
       {onClick && (

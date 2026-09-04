@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   DEFAULT_USER,
   DEFAULT_HOW_I_THRIVE,
+  DEFAULT_DAILY_RHYTHM,
   DEFAULT_VOICE_SETTINGS,
   DEFAULT_GRATITUDE_SETTINGS,
   DEFAULT_WELLNESS_INTELLIGENCE_SETTINGS,
@@ -363,7 +364,354 @@ export function WellnessProvider({ children }) {
     ];
   });
 
+  // 23. Custom Beverages (Added in Hydrate/Nourish)
+  const [customBeverages, setCustomBeverages] = useState(() => {
+    const saved = localStorage.getItem('bed_custom_beverages');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const addCustomBeverage = (bev) => {
+    const newBev = {
+      id: 'bev_' + Date.now(),
+      label: bev.label || 'Custom Drink',
+      icon: bev.icon || '🥤',
+      boost: bev.boost || 'Wholesome Hydration',
+      ...bev
+    };
+    setCustomBeverages(prev => [newBev, ...prev]);
+    return newBev;
+  };
+
+  // 24. Show Meal Log & Macro Summary Toggle (Nourish)
+  const [showMealSummary, setShowMealSummary] = useState(() => {
+    const saved = localStorage.getItem('bed_show_meal_summary');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  const toggleMealSummary = () => {
+    setShowMealSummary(prev => {
+      const next = !prev;
+      localStorage.setItem('bed_show_meal_summary', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // 25. 30-30 Micro-Movement & Posture Support (Move)
+  const [microMovementSettings, setMicroMovementSettings] = useState(() => {
+    const saved = localStorage.getItem('bed_micro_movement_settings');
+    return saved ? JSON.parse(saved) : {
+      enabled: true,
+      preference: 'choose', // 'choose' | 'steps' | 'stretch'
+      postureResetsEnabled: true,
+      lastBreakTime: Date.now() - 15 * 60 * 1000 // 15 mins ago
+    };
+  });
+
+  const [microMovementLogs, setMicroMovementLogs] = useState(() => {
+    const saved = localStorage.getItem('bed_micro_movement_logs');
+    return saved ? JSON.parse(saved) : [
+      { id: 'mm_1', date: 'Today', time: '09:30 AM', type: '30 Steps', status: 'completed' },
+      { id: 'mm_2', date: 'Today', time: '10:00 AM', type: 'Stretch & Reposition', status: 'completed' },
+      { id: 'mm_3', date: 'Today', time: '10:30 AM', type: 'Shoulder Reset', status: 'completed' },
+      { id: 'mm_4', date: 'Today', time: '11:00 AM', type: '30 Steps', status: 'completed' },
+      { id: 'mm_5', date: 'Today', time: '11:30 AM', type: 'Stretch & Reposition', status: 'completed' },
+      { id: 'mm_6', date: 'Today', time: '12:00 PM', type: '30 Steps', status: 'completed' }
+    ];
+  });
+
+  const toggleMicroMovement = (enabledVal) => {
+    setMicroMovementSettings(prev => {
+      const next = typeof enabledVal === 'boolean' ? enabledVal : !prev.enabled;
+      return { ...prev, enabled: next };
+    });
+  };
+
+  const setMicroMovementPreference = (pref) => {
+    setMicroMovementSettings(prev => ({
+      ...prev,
+      preference: pref
+    }));
+  };
+
+  const togglePostureResets = (enabledVal) => {
+    setMicroMovementSettings(prev => {
+      const next = typeof enabledVal === 'boolean' ? enabledVal : !prev.postureResetsEnabled;
+      return { ...prev, postureResetsEnabled: next };
+    });
+  };
+
+  const logMicroMovement = (type = '30 Steps', status = 'completed') => {
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const newLog = {
+      id: 'mm_' + Date.now(),
+      date: 'Today',
+      time: timeStr,
+      type,
+      status,
+      timestamp: Date.now()
+    };
+
+    setMicroMovementLogs(prev => [newLog, ...prev]);
+    setMicroMovementSettings(prev => ({
+      ...prev,
+      lastBreakTime: Date.now()
+    }));
+
+    return newLog;
+  };
+
+  const isWithinActiveWellnessDay = () => {
+    const rhythm = getWellnessDayInfo();
+    const now = new Date();
+    const currentH = now.getHours();
+    const currentM = now.getMinutes();
+    const currentTotalMin = currentH * 60 + currentM;
+
+    const [startH, startM] = rhythm.dayStartTime.split(':').map(Number);
+    const startTotalMin = startH * 60 + (startM || 0);
+
+    const [sleepH, sleepM] = rhythm.sleepTime.split(':').map(Number);
+    const sleepTotalMin = sleepH * 60 + (sleepM || 0);
+
+    if (rhythm.isOvernight) {
+      // e.g. starts 23:00, ends 07:30
+      return currentTotalMin >= startTotalMin || currentTotalMin <= sleepTotalMin;
+    } else {
+      // standard day schedule
+      return currentTotalMin >= startTotalMin && currentTotalMin <= sleepTotalMin;
+    }
+  };
+
+  const getMicroMovementStats = () => {
+    const completedToday = microMovementLogs.filter(l => l.status === 'completed');
+    const breaksTodayCount = completedToday.length;
+
+    let insight = 'You have not taken any movement breaks yet today.';
+    if (breaksTodayCount >= 6) {
+      insight = 'Nice work — you’ve interrupted several periods of prolonged sitting today.';
+    } else if (breaksTodayCount > 0) {
+      insight = 'Great rhythm — every small position change supports vitality and blood flow.';
+    }
+
+    return {
+      breaksTodayCount,
+      totalLogsCount: microMovementLogs.length,
+      insight,
+      isCurrentlyActive: isWithinActiveWellnessDay()
+    };
+  };
+
+  // 17. Dance Party (Flexible Durations, Built-In Sound & Custom MP4 Media)
+  const [dancePartySettings, setDancePartySettings] = useState(() => {
+    const saved = localStorage.getItem('bed_dance_party_settings');
+    return saved ? JSON.parse(saved) : {
+      defaultDuration: 15,
+      soundType: 'builtin', // 'builtin' | 'custom'
+      customMediaId: null,
+      customDuration: 22,
+      startOffset: 0
+    };
+  });
+
+  const [dancePartyLogs, setDancePartyLogs] = useState(() => {
+    const saved = localStorage.getItem('bed_dance_party_logs');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const updateDancePartySettings = (newSettings) => {
+    setDancePartySettings(prev => ({
+      ...prev,
+      ...newSettings
+    }));
+  };
+
+  const logDanceParty = (durationSec = 15, soundUsed = 'Better Every Day', customMediaName = '') => {
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const newLog = {
+      id: 'dp_' + Date.now(),
+      date: 'Today',
+      time: timeStr,
+      durationSec: Number(durationSec) || 15,
+      soundUsed,
+      customMediaName: customMediaName || null,
+      label: `🎉 Dance Party — ${durationSec} sec`,
+      timestamp: Date.now()
+    };
+
+    setDancePartyLogs(prev => [newLog, ...prev]);
+
+    // Gently increment active workout minutes slightly without turning it into a rigid gym workout
+    const minutesAdded = Math.max(1, Math.round(durationSec / 60));
+    setActiveWorkoutMinutes(prev => prev + minutesAdded);
+
+    return newLog;
+  };
+
+  // 18. 🐾 Pet Play (Movement & Companionship with All Pets)
+  const [petProfiles, setPetProfiles] = useState(() => {
+    const saved = localStorage.getItem('bed_pet_profiles');
+    return saved ? JSON.parse(saved) : [
+      { id: 'pet_1', name: 'Luna', type: 'Dog', icon: '🐶', photoUrl: null, createdAt: Date.now() - 30 * 86400000 },
+      { id: 'pet_2', name: 'Felix', type: 'Cat', icon: '🐱', photoUrl: null, createdAt: Date.now() - 20 * 86400000 }
+    ];
+  });
+
+  const [petPlayLogs, setPetPlayLogs] = useState(() => {
+    const saved = localStorage.getItem('bed_pet_play_logs');
+    return saved ? JSON.parse(saved) : [
+      { id: 'pp_1', petId: 'pet_1', petName: 'Luna', petIcon: '🐶', activityName: 'Playing fetch', category: 'Playing', durationMin: 30, notes: 'Tennis ball in the park', date: 'Today', timestamp: Date.now() - 3600000 },
+      { id: 'pp_2', petId: 'pet_1', petName: 'Luna', petIcon: '🐶', activityName: 'Tug-of-war', category: 'Playing', durationMin: 60, notes: 'Rope toy in the living room', date: 'Yesterday', timestamp: Date.now() - 86400000 },
+      { id: 'pp_3', petId: 'pet_1', petName: 'Luna', petIcon: '🐶', activityName: 'Running together', category: 'Moving Together', durationMin: 30, notes: 'Morning trail loop', date: '3 days ago', timestamp: Date.now() - 3 * 86400000 },
+      { id: 'pp_4', petId: 'pet_2', petName: 'Felix', petIcon: '🐱', activityName: 'Feather wand chase', category: 'Gentle Activities', durationMin: 20, notes: 'Hallway zoomies', date: '2 days ago', timestamp: Date.now() - 2 * 86400000 }
+    ];
+  });
+
+  const addPetProfile = (petData) => {
+    const newPet = {
+      id: 'pet_' + Date.now(),
+      name: petData.name?.trim() || 'My Pet',
+      type: petData.type || 'Dog',
+      icon: petData.icon || '🐾',
+      photoUrl: petData.photoUrl || null,
+      createdAt: Date.now()
+    };
+    setPetProfiles(prev => [...prev, newPet]);
+    return newPet;
+  };
+
+  const updatePetProfile = (id, petData) => {
+    setPetProfiles(prev => prev.map(p => p.id === id ? { ...p, ...petData } : p));
+    // Also update cached name in logs
+    if (petData.name || petData.icon) {
+      setPetPlayLogs(prev => prev.map(log => {
+        if (log.petId === id) {
+          return {
+            ...log,
+            petName: petData.name || log.petName,
+            petIcon: petData.icon || log.petIcon
+          };
+        }
+        return log;
+      }));
+    }
+  };
+
+  const deletePetProfile = (id, keepHistory = true) => {
+    setPetProfiles(prev => prev.filter(p => p.id !== id));
+    if (!keepHistory) {
+      setPetPlayLogs(prev => prev.filter(l => l.petId !== id));
+    }
+  };
+
+  const logPetPlayActivity = ({ petId, activityName, category = 'Playing', durationMin = 30, notes = '', linkedWorkoutId = null }) => {
+    const pet = petProfiles.find(p => p.id === petId) || petProfiles[0] || { id: 'pet_custom', name: 'Pet', icon: '🐾' };
+    const dur = Number(durationMin) || 15;
+
+    const newLog = {
+      id: 'pp_' + Date.now(),
+      petId: pet.id,
+      petName: pet.name,
+      petIcon: pet.icon,
+      activityName: activityName?.trim() || 'Play & Movement',
+      category,
+      durationMin: dur,
+      notes: notes?.trim() || '',
+      linkedWorkoutId: linkedWorkoutId || null,
+      date: 'Today',
+      timestamp: Date.now()
+    };
+
+    setPetPlayLogs(prev => [newLog, ...prev]);
+
+    // If not already linked to an existing Move workout, contribute once to active workout minutes
+    if (!linkedWorkoutId) {
+      setActiveWorkoutMinutes(prev => prev + dur);
+    }
+
+    return newLog;
+  };
+
+  const deletePetPlayLog = (id) => {
+    setPetPlayLogs(prev => prev.filter(l => l.id !== id));
+  };
+
+  const getPetPlayStats = (selectedPetId = 'all') => {
+    const relevantLogs = selectedPetId === 'all' 
+      ? petPlayLogs 
+      : petPlayLogs.filter(l => l.petId === selectedPetId);
+
+    const totalMinutes = relevantLogs.reduce((sum, l) => sum + (Number(l.durationMin) || 0), 0);
+    const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
+
+    // Activity counts & duration breakdown
+    const activityMap = {};
+    relevantLogs.forEach(l => {
+      const act = l.activityName || 'General Play';
+      if (!activityMap[act]) activityMap[act] = { name: act, minutes: 0, count: 0, category: l.category || 'Playing' };
+      activityMap[act].minutes += Number(l.durationMin) || 0;
+      activityMap[act].count += 1;
+    });
+
+    const breakdownList = Object.values(activityMap).sort((a, b) => b.minutes - a.minutes);
+    const topActivity = breakdownList[0]?.name || 'Playing';
+
+    // Friendly, celebration-focused insight (no guilt)
+    const petObj = petProfiles.find(p => p.id === selectedPetId);
+    const petLabel = petObj ? petObj.name : 'your pets';
+
+    let insight = `You spent ${totalHours} hours moving and bonding together this week! 🐾💚`;
+    if (breakdownList.length > 0) {
+      insight = `${topActivity} was your most common active moment with ${petLabel} this week.`;
+    }
+    if (totalMinutes === 0) {
+      insight = `Ready for some joyful play time with ${petLabel}? Any small movement together counts!`;
+    }
+
+    return {
+      totalMinutes,
+      totalHours,
+      sessionCount: relevantLogs.length,
+      breakdownList,
+      topActivity,
+      insight,
+      petName: petObj ? petObj.name : 'All Pets',
+      petIcon: petObj ? petObj.icon : '🐾'
+    };
+  };
+
   // Persist State to LocalStorage
+  useEffect(() => {
+    localStorage.setItem('bed_pet_profiles', JSON.stringify(petProfiles));
+  }, [petProfiles]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_pet_play_logs', JSON.stringify(petPlayLogs));
+  }, [petPlayLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_dance_party_settings', JSON.stringify(dancePartySettings));
+  }, [dancePartySettings]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_dance_party_logs', JSON.stringify(dancePartyLogs));
+  }, [dancePartyLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_micro_movement_settings', JSON.stringify(microMovementSettings));
+  }, [microMovementSettings]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_micro_movement_logs', JSON.stringify(microMovementLogs));
+  }, [microMovementLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_custom_beverages', JSON.stringify(customBeverages));
+  }, [customBeverages]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_show_meal_summary', JSON.stringify(showMealSummary));
+  }, [showMealSummary]);
+
   useEffect(() => {
     localStorage.setItem('bed_voice_recordings', JSON.stringify(voiceRecordings));
   }, [voiceRecordings]);
@@ -1358,6 +1706,174 @@ export function WellnessProvider({ children }) {
     setVisualSchedule(prev => prev.map(it => it.id === itemId ? { ...it, status: newStatus } : it));
   };
 
+  // Daily Rhythm & Personalized Wellness-Day Logic
+  const dailyRhythm = userProfile.howIThrive?.dailyRhythm || DEFAULT_DAILY_RHYTHM;
+
+  const updateDailyRhythm = (newRhythmData) => {
+    updateHowIThrive('dailyRhythm', {
+      ...dailyRhythm,
+      ...newRhythmData
+    });
+  };
+
+  const setTemporaryShiftOverride = (start, sleep) => {
+    updateHowIThrive('dailyRhythm', {
+      ...dailyRhythm,
+      isShiftOverrideActive: true,
+      todayStartOverride: start,
+      todaySleepOverride: sleep
+    });
+  };
+
+  const clearTemporaryShiftOverride = () => {
+    updateHowIThrive('dailyRhythm', {
+      ...dailyRhythm,
+      isShiftOverrideActive: false,
+      todayStartOverride: null,
+      todaySleepOverride: null
+    });
+  };
+
+  /**
+   * Resolves the user's active "Wellness Day" date string (YYYY-MM-DD)
+   * for any given timestamp based on their personal schedule rhythm.
+   * Overnight shifts (e.g. 16:00 to 08:00) keep activity in the same wellness period
+   * without an artificial midnight cutoff, while keeping calendar dates standard.
+   */
+  const getWellnessDayDate = (timestamp = new Date()) => {
+    const d = new Date(timestamp);
+    const effectiveStart = (dailyRhythm.isShiftOverrideActive && dailyRhythm.todayStartOverride) 
+      ? dailyRhythm.todayStartOverride 
+      : (dailyRhythm.dayStartTime || '07:00');
+    
+    const [startH, startM] = effectiveStart.split(':').map(Number);
+    const hour = d.getHours();
+    const minute = d.getMinutes();
+    const timeInMinutes = hour * 60 + minute;
+    const startInMinutes = startH * 60 + (startM || 0);
+
+    // If day starts in afternoon/evening (e.g. 16:00) and current time is before that start time (e.g. 02:00, 05:00, 07:00)
+    // this time belongs to the wellness day that started yesterday at startH:startM
+    if (startH >= 12 && timeInMinutes < startInMinutes) {
+      const yesterday = new Date(d);
+      yesterday.setDate(yesterday.getDate() - 1);
+      return yesterday.toISOString().split('T')[0];
+    }
+
+    return d.toISOString().split('T')[0];
+  };
+
+  const getWellnessDayInfo = () => {
+    const effectiveStart = (dailyRhythm.isShiftOverrideActive && dailyRhythm.todayStartOverride) 
+      ? dailyRhythm.todayStartOverride 
+      : (dailyRhythm.dayStartTime || '07:00');
+    const effectiveSleep = (dailyRhythm.isShiftOverrideActive && dailyRhythm.todaySleepOverride) 
+      ? dailyRhythm.todaySleepOverride 
+      : (dailyRhythm.sleepTime || '23:00');
+
+    const [startH] = effectiveStart.split(':').map(Number);
+    const [sleepH] = effectiveSleep.split(':').map(Number);
+    const isOvernight = startH > sleepH;
+    const currentWellnessDate = getWellnessDayDate();
+
+    return {
+      activeDate: currentWellnessDate,
+      dayStartTime: effectiveStart,
+      sleepTime: effectiveSleep,
+      isOvernight,
+      isShiftOverrideActive: dailyRhythm.isShiftOverrideActive || false,
+      variability: dailyRhythm.scheduleVariability || 'same',
+      rhythmLabel: isOvernight ? `Night/Rotating Shift (${effectiveStart} – ${effectiveSleep})` : `Daytime Rhythm (${effectiveStart} – ${effectiveSleep})`
+    };
+  };
+
+  const addCustomShift = (shiftData) => {
+    const newShift = {
+      id: 'shift_' + Date.now(),
+      label: shiftData.label || 'Custom Shift',
+      start: shiftData.start || '09:00',
+      sleep: shiftData.sleep || '01:00',
+      icon: shiftData.icon || '⚡'
+    };
+    const currentList = dailyRhythm.customShifts || [];
+    updateDailyRhythm({ customShifts: [...currentList, newShift] });
+    return newShift;
+  };
+
+  const deleteCustomShift = (shiftId) => {
+    const currentList = dailyRhythm.customShifts || [];
+    updateDailyRhythm({ customShifts: currentList.filter(s => s.id !== shiftId) });
+  };
+
+  const toggleSyncCycleRecommendations = (val) => {
+    setUserProfile(prev => ({
+      ...prev,
+      syncCycleRecommendations: typeof val === 'boolean' ? val : !prev.syncCycleRecommendations
+    }));
+  };
+
+  /**
+   * Estimates an appropriate daily water goal and pacing based on:
+   * 1. Dietary info / meals logged
+   * 2. Recorded exercise / active workout minutes / steps
+   * 3. Personalized Daily Rhythm wake & sleep hours
+   */
+  const getWaterRecommendation = () => {
+    let baseTargetMl = userProfile.hydrationGoalMl || 2250;
+    if (activeWorkoutMinutes >= 20) baseTargetMl += 250;
+    if (stepCount >= 7000) baseTargetMl += 250;
+
+    const cupsTarget = Math.max(4, Math.round(baseTargetMl / 250));
+    const currentCups = Math.min(cupsTarget, Math.floor(hydrationMl / 250));
+    const remainingCups = Math.max(0, cupsTarget - currentCups);
+
+    const rhythm = getWellnessDayInfo();
+    const [sleepH, sleepM] = rhythm.sleepTime.split(':').map(Number);
+    const now = new Date();
+    const currentH = now.getHours();
+    const currentM = now.getMinutes();
+
+    let remainingHours;
+    if (rhythm.isOvernight) {
+      if (currentH <= sleepH) {
+        remainingHours = (sleepH - currentH) + ((sleepM || 0) - currentM) / 60;
+      } else {
+        remainingHours = (24 - currentH + sleepH) + ((sleepM || 0) - currentM) / 60;
+      }
+    } else {
+      if (currentH > sleepH) {
+        remainingHours = 1;
+      } else {
+        remainingHours = (sleepH - currentH) + ((sleepM || 0) - currentM) / 60;
+      }
+    }
+
+    remainingHours = Math.max(1, Math.round(remainingHours));
+
+    let pacingText = 'Try approximately 1 cup every 2 hours.';
+    if (remainingCups <= 0) {
+      pacingText = 'Target met! Sip gently to thirst for the rest of your day.';
+    } else {
+      const hoursPerCup = Math.max(1, Math.round(remainingHours / remainingCups));
+      if (hoursPerCup <= 1) {
+        pacingText = `Try approximately 1 cup every hour before sleep (${rhythm.sleepTime}).`;
+      } else if (hoursPerCup === 2) {
+        pacingText = `Try approximately 1 cup every 2 hours before sleep (${rhythm.sleepTime}).`;
+      } else {
+        pacingText = `Try approximately 1 cup every ${hoursPerCup} hours before sleep (${rhythm.sleepTime}).`;
+      }
+    }
+
+    return {
+      targetMl: baseTargetMl,
+      cupsTarget,
+      currentCups,
+      remainingCups,
+      pacingText,
+      isComplete: remainingCups === 0
+    };
+  };
+
   // Derive Better Every Day Score
   const betterEveryDayScore = calculateBetterEveryDayScore({
     smallStepCompleted: smallStepState.isCompleted,
@@ -1521,7 +2037,42 @@ export function WellnessProvider({ children }) {
       deleteBodySignal,
       voiceRecordings,
       addVoiceRecording,
-      deleteVoiceRecording
+      deleteVoiceRecording,
+      dailyRhythm,
+      updateDailyRhythm,
+      setTemporaryShiftOverride,
+      clearTemporaryShiftOverride,
+      getWellnessDayDate,
+      getWellnessDayInfo,
+      addCustomShift,
+      deleteCustomShift,
+      customBeverages,
+      addCustomBeverage,
+      showMealSummary,
+      setShowMealSummary,
+      toggleMealSummary,
+      toggleSyncCycleRecommendations,
+      getWaterRecommendation,
+      microMovementSettings,
+      microMovementLogs,
+      toggleMicroMovement,
+      setMicroMovementPreference,
+      togglePostureResets,
+      logMicroMovement,
+      isWithinActiveWellnessDay,
+      getMicroMovementStats,
+      dancePartySettings,
+      dancePartyLogs,
+      logDanceParty,
+      updateDancePartySettings,
+      petProfiles,
+      petPlayLogs,
+      addPetProfile,
+      updatePetProfile,
+      deletePetProfile,
+      logPetPlayActivity,
+      deletePetPlayLog,
+      getPetPlayStats
     }}>
       {children}
     </WellnessContext.Provider>

@@ -119,16 +119,34 @@ export const JOURNAL_THEMES = [
   }
 ];
 
+export const BEANIE_COLORS = [
+  { id: 'cream', name: 'Cream', hex: '#f7f4ea', cuffHex: '#eae3d2', pompomHex: '#ffffff' },
+  { id: 'brown', name: 'Terracotta', hex: '#8d6e63', cuffHex: '#6d4c41', pompomHex: '#5d4037' },
+  { id: 'pink', name: 'Dusty Pink', hex: '#f48fb1', cuffHex: '#ec407a', pompomHex: '#f8bbd0' },
+  { id: 'blue', name: 'Sky Blue', hex: '#64b5f6', cuffHex: '#42a5f5', pompomHex: '#90caf9' },
+  { id: 'green', name: 'Sage Green', hex: '#81c784', cuffHex: '#66bb6a', pompomHex: '#a5d6a7' },
+  { id: 'yellow', name: 'Warm Honey', hex: '#ffd54f', cuffHex: '#ffca28', pompomHex: '#ffe082' },
+  { id: 'purple', name: 'Lavender', hex: '#ba68c8', cuffHex: '#ab47bc', pompomHex: '#ce93d8' },
+  { id: 'black', name: 'Charcoal', hex: '#37474f', cuffHex: '#263238', pompomHex: '#455a64' },
+  { id: 'coral', name: 'Sunset Coral', hex: '#e57373', cuffHex: '#ef5350', pompomHex: '#ef9a9a' }
+];
+
 export const MASCOT_WARDROBE = {
   hats: [
-    { id: 'none', name: 'Natural Leaf', icon: '🌱' },
-    { id: 'flower', name: 'Daisy Crown', icon: '🌼' },
-    { id: 'beanie', name: 'Cozy Beanie', icon: '🧶' },
-    { id: 'wizard', name: 'Starry Wizard', icon: '🧙' },
-    { id: 'headband', name: 'Workout Band', icon: '🏃' },
-    { id: 'chef', name: 'Chef Hat', icon: '👨‍🍳' },
-    { id: 'sunglasses', name: 'Cool Shades', icon: '🕶️' },
-    { id: 'halo', name: 'Golden Halo', icon: '😇' }
+    { id: 'none', name: 'Natural Leaf', category: 'nature', desc: 'A fresh little sprout sprouting directly from Pip' },
+    { id: 'flower', name: 'Daisy Crown', category: 'flowers', desc: 'A joyful white daisy blooming on Pip\'s head' },
+    { id: 'sunflower', name: 'Sunflower', category: 'flowers', desc: 'Radiant golden sunflower petals' },
+    { id: 'tulip', name: 'Spring Tulip', category: 'flowers', desc: 'A graceful pink tulip bloom' },
+    { id: 'sakura', name: 'Cherry Blossom', category: 'flowers', desc: 'Delicate pastel sakura blossom' },
+    { id: 'rose', name: 'Crimson Rose', category: 'flowers', desc: 'Elegant velvety rosebud' },
+    { id: 'hibiscus', name: 'Hibiscus', category: 'flowers', desc: 'Vibrant tropical flower with golden stamen' },
+    { id: 'beanie', name: 'Cozy Beanie', category: 'hats', desc: 'Warm knitted beanie hat with custom colors' },
+    { id: 'wizard', name: 'Starry Wizard', category: 'hats', desc: 'Magical pointed hat with glowing golden stars' },
+    { id: 'headband', name: 'Workout Band', category: 'hats', desc: 'Athletic sweatband with sporty stripes' },
+    { id: 'chef', name: 'Chef Hat', category: 'hats', desc: 'Puffed classic white chef toque' },
+    { id: 'glasses', name: 'Reading Glasses', category: 'eyewear', desc: 'Chic frames sitting perfectly over Pip\'s eyes' },
+    { id: 'sunglasses', name: 'Cool Shades', category: 'eyewear', desc: 'Dark tinted sunglasses with cool glint' },
+    { id: 'halo', name: 'Golden Halo', category: 'special', desc: 'A radiant golden halo floating above Pip' }
   ],
   colors: [
     { id: 'sprout', name: 'Sprout Green', hex: '#40916c', bodyColor: '#52b788', blush: '#ff9ebb' },

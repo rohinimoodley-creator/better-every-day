@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useWellness } from '../../context/WellnessContext';
 import DailyCheckInModal from '../checkin/DailyCheckInModal';
 import QuickSupportModal from './QuickSupportModal';
@@ -6,6 +6,8 @@ import GuideMeModal from './GuideMeModal';
 import CustomizeOverviewModal, { ALL_OVERVIEW_PILLARS } from './CustomizeOverviewModal';
 import PipSproutAvatar from '../mascot/PipSproutAvatar';
 import MascotWardrobeModal from '../mascot/MascotWardrobeModal';
+import OverwhelmModal from '../thrive/OverwhelmModal';
+import DancePartyModal from '../move/DancePartyModal';
 import {
   Sparkles,
   Heart,
@@ -20,7 +22,8 @@ import {
   Sliders,
   Wind,
   CheckCircle,
-  Compass
+  Compass,
+  Smile
 } from 'lucide-react';
 import { getCyclePhaseInfo } from '../../engine/cycleEngine';
 
@@ -34,11 +37,15 @@ export default function HomeScreen({ onNavigateTab }) {
     socialEvents,
     overviewFrequency,
     overviewPillars,
-    updateOverviewPillars
+    updateOverviewPillars,
+    microMovementSettings,
+    getMicroMovementStats
   } = useWellness();
 
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
+  const [isTakeAMomentOpen, setIsTakeAMomentOpen] = useState(false);
   const [isGuideMeOpen, setIsGuideMeOpen] = useState(false);
+  const [isDancePartyOpen, setIsDancePartyOpen] = useState(false);
   const [isCustomizeOverviewOpen, setIsCustomizeOverviewOpen] = useState(false);
   const [isWardrobeOpen, setIsWardrobeOpen] = useState(false);
   const [quickSupportMode, setQuickSupportMode] = useState(null); // null | 'motivation' | 'breathe'
@@ -102,73 +109,186 @@ export default function HomeScreen({ onNavigateTab }) {
 
   const isCheckedInToday = dailyCheckIn && (dailyCheckIn.date === todayDateStr || dailyCheckIn.mood);
 
+  const [isScheduleExpanded, setIsScheduleExpanded] = useState(false);
+  const [scheduleScope, setScheduleScope] = useState('today'); // 'today' | 'week' | 'month'
+
+  // Filter events by scope
+  const now = new Date();
+  const nextWeek = new Date(now);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  const nextWeekStr = nextWeek.toISOString().split('T')[0];
+
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const allUpcomingEvents = (socialEvents || [])
+    .filter(e => e.date >= todayDateStr && (e.status === 'accepted' || !e.status))
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+
+  const nextUpcomingEvent = allUpcomingEvents[0] || null;
+
+  const scopedScheduleEvents = useMemo(() => {
+    if (scheduleScope === 'today') {
+      return allUpcomingEvents.filter(e => e.date === todayDateStr);
+    } else if (scheduleScope === 'week') {
+      return allUpcomingEvents.filter(e => e.date >= todayDateStr && e.date <= nextWeekStr);
+    } else {
+      return allUpcomingEvents.filter(e => {
+        const d = new Date(e.date + 'T00:00:00');
+        return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+      });
+    }
+  }, [allUpcomingEvents, scheduleScope, todayDateStr, nextWeekStr, currentMonth, currentYear]);
+
   return (
     <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
       
-      {/* 1. GREETING + MASCOT & DAILY CHECK-IN (Next to Greeting) */}
+      {/* 1. GREETING + 3 COMPACT QUICK WELLNESS ACTIONS (Daily Check-In -> Take a Moment -> Quick Motivation) */}
       <div 
         className="card-glass"
         style={{
           background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, var(--accent-primary-light) 100%)',
-          padding: '1.5rem 1.75rem',
+          padding: '1.4rem 1.65rem',
           border: '1px solid var(--border-glass)',
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem'
+          flexDirection: 'column',
+          gap: '1.15rem'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {/* Integrated Pip the Sprout Mascot Avatar (Clickable to customize) */}
-          <PipSproutAvatar size={56} mood="happy" onClick={() => setIsWardrobeOpen(true)} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* Integrated Mascot Avatar (Clickable) */}
+            <PipSproutAvatar size={52} mood="happy" onClick={() => setIsWardrobeOpen(true)} />
 
-          <div>
-            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              {todayDateFormatted}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {todayDateFormatted}
+                </div>
+                {microMovementSettings?.enabled && (
+                  <span 
+                    onClick={() => navigateToWellness('move')}
+                    className="pill-badge primary" 
+                    style={{ fontSize: '0.68rem', cursor: 'pointer', padding: '2px 8px' }}
+                    title="Tap to open Micro-Movement in Move Hub"
+                  >
+                    🌱 {(getMicroMovementStats ? getMicroMovementStats().breaksTodayCount : 6)} movement breaks today
+                  </span>
+                )}
+                <span 
+                  onClick={() => setIsDancePartyOpen(true)}
+                  className="pill-badge" 
+                  style={{ 
+                    fontSize: '0.68rem', 
+                    cursor: 'pointer', 
+                    padding: '2px 8px',
+                    background: 'var(--accent-primary-light)',
+                    color: 'var(--accent-primary)',
+                    border: '1px solid var(--accent-primary)',
+                    fontWeight: 700
+                  }}
+                  title="Spontaneous movement burst — 10s dance party!"
+                >
+                  💃 10s dance break?
+                </span>
+              </div>
+              <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.1rem 0', letterSpacing: '-0.02em' }}>
+                {greeting.text}, {userName} 🌱
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.86rem', margin: 0 }}>
+                How are you taking care of yourself today?
+              </p>
             </div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.1rem 0', letterSpacing: '-0.02em' }}>
-              {greeting.text}, {userName} 🌱
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: 0 }}>
-              How are you taking care of yourself today?
-            </p>
           </div>
         </div>
 
-        {/* Daily Check-In Button (Next to Greeting) */}
-        <div>
-          {isCheckedInToday ? (
-            <button
-              onClick={() => setIsCheckInOpen(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                background: 'var(--bg-secondary)',
-                padding: '0.5rem 1rem',
-                borderRadius: 'var(--radius-pill)',
-                border: '1.5px solid var(--accent-primary)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                cursor: 'pointer'
-              }}
-              title="Click to view or update your Daily Check-In"
-            >
-              <CheckCircle size={15} color="var(--accent-primary)" />
-              <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Daily Check-In
-              </span>
-            </button>
-          ) : (
-            <button
-              onClick={() => setIsCheckInOpen(true)}
-              className="btn btn-primary"
-              style={{ padding: '0.55rem 1.25rem', fontSize: '0.85rem', fontWeight: 800, gap: '0.4rem', boxShadow: '0 3px 12px rgba(45, 106, 79, 0.25)' }}
-            >
-              <Sparkles size={15} />
-              <span>Daily Check-In</span>
-            </button>
-          )}
+        {/* Cohesive Quick Wellness Action Group (Strict order: Check-In -> Take a Moment -> Quick Motivation) */}
+        <div 
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '0.6rem',
+            background: 'var(--bg-secondary)',
+            padding: '0.6rem',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--border-subtle)'
+          }}
+        >
+          {/* 1. 💬 Daily Check-In */}
+          <button
+            onClick={() => setIsCheckInOpen(true)}
+            className="btn"
+            style={{
+              background: isCheckedInToday ? 'var(--accent-primary-light)' : 'var(--accent-primary)',
+              color: isCheckedInToday ? 'var(--accent-primary)' : '#ffffff',
+              border: `1.5px solid var(--accent-primary)`,
+              padding: '0.55rem 0.85rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.82rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.45rem',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            title="How am I doing today?"
+          >
+            <span>💬</span>
+            <span>1. Daily Check-In</span>
+            {isCheckedInToday && <CheckCircle size={13} color="var(--accent-primary)" />}
+          </button>
+
+          {/* 2. 🫧 Take a Moment */}
+          <button
+            onClick={() => setIsTakeAMomentOpen(true)}
+            className="btn"
+            style={{
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              border: '1px solid rgba(123, 97, 255, 0.35)',
+              padding: '0.55rem 0.85rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.45rem',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            title="Pause, breathe, and ground yourself"
+          >
+            <span>🫧</span>
+            <span>2. Take a Moment</span>
+          </button>
+
+          {/* 3. ✨ Quick Motivation */}
+          <button
+            onClick={() => setQuickSupportMode('motivation')}
+            className="btn"
+            style={{
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              border: '1px solid rgba(217, 119, 54, 0.35)',
+              padding: '0.55rem 0.85rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.45rem',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            title="Short, encouraging perspective"
+          >
+            <span>✨</span>
+            <span>3. Quick Motivation</span>
+          </button>
         </div>
       </div>
 
@@ -241,82 +361,7 @@ export default function HomeScreen({ onNavigateTab }) {
         </div>
       </div>
 
-      {/* 3. NEED A LITTLE SUPPORT? (Moved Above Wellness Overview) */}
-      <div 
-        className="card-glass"
-        style={{
-          padding: '1.25rem 1.4rem',
-          background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(224, 86, 96, 0.05) 100%)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.85rem'
-        }}
-      >
-        <div>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-            Need a little support? 💛
-          </h3>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-            Quick access to lift your spirit or reset your nervous system
-          </span>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-          <button
-            onClick={() => setQuickSupportMode('motivation')}
-            className="card-interactive"
-            style={{
-              padding: '0.85rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-subtle)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.65rem',
-              cursor: 'pointer',
-              textAlign: 'left'
-            }}
-          >
-            <span style={{ fontSize: '1.4rem' }}>🌸</span>
-            <div>
-              <div style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                Quick Motivation
-              </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                Gentle perspective
-              </div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setQuickSupportMode('breathe')}
-            className="card-interactive"
-            style={{
-              padding: '0.85rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-subtle)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.65rem',
-              cursor: 'pointer',
-              textAlign: 'left'
-            }}
-          >
-            <span style={{ fontSize: '1.4rem' }}>🫧</span>
-            <div>
-              <div style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                Quick Breathe
-              </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                1-min de-stress circle
-              </div>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* 4. CUSTOMIZABLE WEEKLY WELLNESS OVERVIEW */}
+      {/* 3. WEEKLY WELLNESS OVERVIEW (Clutter-free, Cleaned header) */}
       <div className="card-glass" style={{ padding: '1.25rem 1.4rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <div>
@@ -330,27 +375,6 @@ export default function HomeScreen({ onNavigateTab }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <button
-              onClick={() => setIsCustomizeOverviewOpen(true)}
-              style={{
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-pill)',
-                padding: '0.35rem 0.75rem',
-                color: 'var(--text-primary)',
-                fontSize: '0.74rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem'
-              }}
-              title="Choose what pillars appear in your overview"
-            >
-              <Sliders size={12} color="var(--accent-primary)" />
-              <span>Customize</span>
-            </button>
-
             <button
               onClick={() => onNavigateTab && onNavigateTab('WELLNESS')}
               style={{
@@ -466,13 +490,13 @@ export default function HomeScreen({ onNavigateTab }) {
         )}
       </div>
 
-      {/* 5. TODAY & UPCOMING SCHEDULE */}
+      {/* 4. SCHEDULE & RHYTHM (Next Upcoming Event + Review Full Schedule with Progressive Disclosure) */}
       <div className="card-glass" style={{ padding: '1.25rem 1.4rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <CalendarIcon size={16} color="var(--accent-primary)" />
             <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-              Today & Upcoming
+              Next Upcoming Event
             </h3>
           </div>
 
@@ -495,45 +519,131 @@ export default function HomeScreen({ onNavigateTab }) {
           </button>
         </div>
 
-        {upcomingEvents.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {upcomingEvents.map(evt => (
-              <div
-                key={evt.id}
-                onClick={() => onNavigateTab && onNavigateTab('WELLNESS', { category: 'calendar' })}
-                className="card-interactive"
-                style={{
-                  padding: '0.65rem 0.9rem',
-                  borderRadius: 'var(--radius-md)',
-                  background: 'var(--bg-secondary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '0.5rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.85rem' }}>
-                    {evt.category === 'Social' ? '🫶' : evt.category === 'Workout' ? '🏃' : '✨'}
-                  </span>
-                  <div>
-                    <strong style={{ fontSize: '0.86rem', color: 'var(--text-primary)' }}>{evt.title}</strong>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      {evt.date === todayDateStr ? 'Today' : evt.date} at {evt.time} {evt.location ? `• ${evt.location}` : ''}
-                    </div>
+        {nextUpcomingEvent ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            {/* Single Highlighted Next Upcoming Event */}
+            <div
+              onClick={() => onNavigateTab && onNavigateTab('WELLNESS', { category: 'calendar' })}
+              className="card-interactive"
+              style={{
+                padding: '0.95rem 1.15rem',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--bg-secondary)',
+                border: '1.5px solid var(--accent-primary-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '0.75rem',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={{ fontSize: '1.3rem' }}>
+                  {nextUpcomingEvent.category === 'Social' ? '🫶' : nextUpcomingEvent.category === 'Workout' ? '🏃' : '✨'}
+                </span>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.15rem' }}>
+                    <span className="pill-badge primary" style={{ fontSize: '0.66rem' }}>
+                      UP NEXT
+                    </span>
+                    <strong style={{ fontSize: '0.94rem', color: 'var(--text-primary)' }}>
+                      {nextUpcomingEvent.title}
+                    </strong>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    📅 {nextUpcomingEvent.date === todayDateStr ? 'Today' : nextUpcomingEvent.date} at {nextUpcomingEvent.time} {nextUpcomingEvent.location ? `• 📍 ${nextUpcomingEvent.location}` : ''}
                   </div>
                 </div>
-
-                <span style={{ fontSize: '0.72rem', color: 'var(--accent-primary)', fontWeight: 700 }}>
-                  View →
-                </span>
               </div>
-            ))}
+
+              <span style={{ fontSize: '0.76rem', color: 'var(--accent-primary)', fontWeight: 700 }}>
+                Details →
+              </span>
+            </div>
+
+            {/* Review Full Schedule Trigger */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsScheduleExpanded(!isScheduleExpanded)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ gap: '0.35rem', fontSize: '0.78rem' }}
+                >
+                  <CalendarIcon size={13} />
+                  <span>{isScheduleExpanded ? 'Hide Schedule' : 'Review Full Schedule'}</span>
+                </button>
+
+                {isScheduleExpanded && (
+                  <div style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-tertiary)', padding: '0.15rem', borderRadius: 'var(--radius-pill)' }}>
+                    {[
+                      { id: 'today', label: 'Rest of Today' },
+                      { id: 'week', label: 'Rest of This Week' },
+                      { id: 'month', label: 'Rest of This Month' }
+                    ].map(s => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setScheduleScope(s.id)}
+                        style={{
+                          padding: '0.25rem 0.6rem',
+                          borderRadius: 'var(--radius-pill)',
+                          border: 'none',
+                          background: scheduleScope === s.id ? 'var(--accent-primary)' : 'transparent',
+                          color: scheduleScope === s.id ? '#ffffff' : 'var(--text-muted)',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Revealed Scope Schedule List */}
+              {isScheduleExpanded && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', marginTop: '0.35rem' }}>
+                  {scopedScheduleEvents.length > 0 ? (
+                    scopedScheduleEvents.map(evt => (
+                      <div
+                        key={evt.id}
+                        onClick={() => onNavigateTab && onNavigateTab('WELLNESS', { category: 'calendar' })}
+                        style={{
+                          padding: '0.65rem 0.85rem',
+                          borderRadius: 'var(--radius-sm)',
+                          background: 'var(--bg-tertiary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          fontSize: '0.8rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          <span>{evt.category === 'Social' ? '🫶' : evt.category === 'Workout' ? '🏃' : '✨'}</span>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{evt.title}</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>
+                            ({evt.date === todayDateStr ? 'Today' : evt.date} • {evt.time})
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 600 }}>View</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
+                      No other events found for {scheduleScope === 'today' ? 'the rest of today' : scheduleScope === 'week' ? 'the rest of this week' : 'the rest of this month'}.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
-            No events scheduled for today. Tap Calendar to add a workout, dinner, or reminder.
+            No upcoming events scheduled. Tap Calendar to add a workout, dinner, or reminder.
           </p>
         )}
       </div>
@@ -575,6 +685,22 @@ export default function HomeScreen({ onNavigateTab }) {
       {isWardrobeOpen && (
         <MascotWardrobeModal
           onClose={() => setIsWardrobeOpen(false)}
+        />
+      )}
+
+      {isTakeAMomentOpen && (
+        <OverwhelmModal
+          isOpen={isTakeAMomentOpen}
+          onClose={() => setIsTakeAMomentOpen(false)}
+        />
+      )}
+
+      {/* 🎉 Dance Party Modal */}
+      {isDancePartyOpen && (
+        <DancePartyModal
+          isOpen={isDancePartyOpen}
+          onClose={() => setIsDancePartyOpen(false)}
+          initialDuration={10}
         />
       )}
 

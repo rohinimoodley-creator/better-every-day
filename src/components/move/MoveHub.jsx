@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { WORKOUTS_DATABASE } from '../../data/mockData';
 import { useWellness } from '../../context/WellnessContext';
 import ActivityTracker from './ActivityTracker';
+import MicroMovementSection from './MicroMovementSection';
+import PetPlaySection from './PetPlaySection';
 import WorkoutPlayer from './WorkoutPlayer';
 import CustomWorkoutModal from './CustomWorkoutModal';
 import PhotoActivityModal from './PhotoActivityModal';
-import { Play, Plus, Clock, Zap, Flame, Filter, Sparkles, CheckCircle, Camera, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import ExerciseBreakdownModal from './ExerciseBreakdownModal';
+import DancePartyModal from './DancePartyModal';
+import { Play, Plus, Clock, Zap, Flame, Filter, Sparkles, CheckCircle, Camera, ChevronDown, ChevronUp, BookOpen, ListTree, Dumbbell, Music } from 'lucide-react';
 
 export default function MoveHub() {
   const { activeWorkoutMinutes, completedWorkouts, setCompletedWorkouts } = useWellness();
@@ -14,6 +18,9 @@ export default function MoveHub() {
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [isBreakItDownOpen, setIsBreakItDownOpen] = useState(false);
+  const [isDancePartyOpen, setIsDancePartyOpen] = useState(false);
+  const [dancePartyDuration, setDancePartyDuration] = useState(15);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false); // Collapsed by default
   const [timeFilter, setTimeFilter] = useState('all'); // 'all' | 'quick' | 'standard' | 'deep'
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -39,7 +46,7 @@ export default function MoveHub() {
   };
 
   return (
-    <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+    <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.4rem', paddingBottom: '3.5rem' }}>
       
       {/* Header & Active Summary */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
@@ -59,6 +66,27 @@ export default function MoveHub() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
           <button 
+            onClick={() => {
+              setDancePartyDuration(15);
+              setIsDancePartyOpen(true);
+            }}
+            className="btn btn-secondary btn-sm"
+            style={{ gap: '0.35rem', border: '1.5px solid var(--accent-primary)', background: 'var(--accent-primary-light)', color: 'var(--accent-primary)' }}
+            title="Spontaneous joyful dance party (5s, 10s, 15s, 30s or custom)"
+          >
+            <Sparkles size={14} color="var(--accent-primary)" /> 🎉 Dance Party
+          </button>
+
+          <button 
+            onClick={() => setIsBreakItDownOpen(true)}
+            className="btn btn-secondary btn-sm"
+            style={{ gap: '0.35rem' }}
+            title="Break down exercise steps with mini-animations"
+          >
+            <Zap size={14} color="var(--accent-primary)" /> Break It Down 🧩
+          </button>
+
+          <button 
             onClick={() => setIsPhotoModalOpen(true)}
             className="btn btn-secondary btn-sm"
             style={{ gap: '0.35rem' }}
@@ -72,6 +100,88 @@ export default function MoveHub() {
             style={{ gap: '0.35rem' }}
           >
             <Plus size={14} /> Add Manually
+          </button>
+        </div>
+      </div>
+
+      {/* 🎉 Spontaneous Dance Party Card */}
+      <div 
+        className="card-glass card-interactive"
+        style={{
+          padding: '1.25rem 1.4rem',
+          background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(46, 125, 90, 0.08) 100%)',
+          border: '1.5px solid var(--accent-primary)',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: 'var(--radius-md)', 
+              background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%)', 
+              color: '#ffffff', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              fontSize: '1.4rem', 
+              flexShrink: 0,
+              boxShadow: '0 4px 12px rgba(46, 125, 90, 0.25)'
+            }}
+          >
+            🎉
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                🎉 Dance Party
+              </h3>
+              <span className="pill-badge primary" style={{ fontSize: '0.66rem', padding: '1px 6px' }}>
+                Zero Rules • Pure Joy
+              </span>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0 0' }}>
+              Move because it feels good. Choose 5s, 10s, 15s, 30s or enter any custom time! 💃
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {[
+            { val: 5, label: '⚡ 5s' },
+            { val: 10, label: '✨ 10s' },
+            { val: 15, label: '🎵 15s' },
+            { val: 30, label: '💃 30s' }
+          ].map(opt => (
+            <button
+              key={opt.val}
+              type="button"
+              onClick={() => {
+                setDancePartyDuration(opt.val);
+                setIsDancePartyOpen(true);
+              }}
+              className="btn btn-secondary btn-sm"
+              style={{ padding: '0.35rem 0.65rem', fontSize: '0.76rem', fontWeight: 700 }}
+            >
+              {opt.label}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => {
+              setDancePartyDuration(15);
+              setIsDancePartyOpen(true);
+            }}
+            className="btn btn-primary btn-sm"
+            style={{ padding: '0.45rem 1rem', fontSize: '0.82rem', fontWeight: 800, gap: '0.3rem' }}
+          >
+            <Play size={13} fill="#ffffff" /> Dance Now!
           </button>
         </div>
       </div>
@@ -119,6 +229,12 @@ export default function MoveHub() {
 
       {/* Live Activity & Step Tracker with Timer Modes */}
       <ActivityTracker />
+
+      {/* 30-30 Micro-Movement & Posture Support */}
+      <MicroMovementSection />
+
+      {/* 🐾 Pet Play Section */}
+      <PetPlaySection />
 
       {/* Collapsible Movement Library (Progressive Disclosure) */}
       <div className="card-glass" style={{ padding: '1.25rem' }}>
@@ -256,6 +372,23 @@ export default function MoveHub() {
           isOpen={isPhotoModalOpen}
           onClose={() => setIsPhotoModalOpen(false)}
           onSaveActivity={handleSaveCustom}
+        />
+      )}
+
+      {/* Break It Down Exercise Modal */}
+      {isBreakItDownOpen && (
+        <ExerciseBreakdownModal
+          isOpen={isBreakItDownOpen}
+          onClose={() => setIsBreakItDownOpen(false)}
+        />
+      )}
+
+      {/* 🎉 Dance Party Modal */}
+      {isDancePartyOpen && (
+        <DancePartyModal
+          isOpen={isDancePartyOpen}
+          onClose={() => setIsDancePartyOpen(false)}
+          initialDuration={dancePartyDuration}
         />
       )}
 

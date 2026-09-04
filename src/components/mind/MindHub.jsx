@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import GratitudeStudio from './GratitudeStudio';
+import JournalStudio from './JournalStudio';
 import MindsetAffirmations from './MindsetAffirmations';
-import { Sparkles, Heart, Sun } from 'lucide-react';
+import { Sparkles, Heart, BookOpen } from 'lucide-react';
 
 export default function MindHub() {
-  const [activeTab, setActiveTab] = useState('gratitude'); // 'gratitude' | 'motivation'
+  const [activeTab, setActiveTab] = useState('gratitude'); // 'gratitude' | 'journal' | 'motivation'
 
   return (
     <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -26,7 +27,7 @@ export default function MindHub() {
         </div>
 
         {/* Tab Switcher */}
-        <div style={{ display: 'flex', gap: '0.35rem', background: 'var(--bg-tertiary)', padding: '0.25rem', borderRadius: 'var(--radius-pill)' }}>
+        <div style={{ display: 'flex', gap: '0.35rem', background: 'var(--bg-tertiary)', padding: '0.25rem', borderRadius: 'var(--radius-pill)', flexWrap: 'wrap' }}>
           <button
             onClick={() => setActiveTab('gratitude')}
             style={{
@@ -42,6 +43,23 @@ export default function MindHub() {
             }}
           >
             🙏 Gratitude Studio
+          </button>
+
+          <button
+            onClick={() => setActiveTab('journal')}
+            style={{
+              padding: '0.4rem 0.95rem',
+              borderRadius: 'var(--radius-pill)',
+              border: 'none',
+              background: activeTab === 'journal' ? 'var(--bg-secondary)' : 'transparent',
+              color: activeTab === 'journal' ? 'var(--accent-primary)' : 'var(--text-muted)',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: activeTab === 'journal' ? 'var(--shadow-sm)' : 'none'
+            }}
+          >
+            📖 Mindful Journal
           </button>
 
           <button
@@ -64,11 +82,13 @@ export default function MindHub() {
       </div>
 
       {/* Tab Render */}
-      <div>
+      <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
         {activeTab === 'gratitude' && <GratitudeStudio />}
+        {activeTab === 'journal' && <JournalStudio />}
         {activeTab === 'motivation' && <MindsetAffirmations />}
       </div>
 
     </div>
   );
 }
+

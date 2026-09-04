@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
 import { useWellness } from '../../context/WellnessContext';
 import { getCyclePhaseInfo } from '../../engine/cycleEngine';
-import { Moon, Heart, Sparkles, Shield, AlertCircle, Calendar } from 'lucide-react';
+import { Moon, Heart, Sparkles, Shield, AlertCircle, Calendar, RefreshCw } from 'lucide-react';
+import CycleAwareSuggestionModal from './CycleAwareSuggestionModal';
 
 export default function MenstrualModule() {
-  const { userProfile, setUserProfile } = useWellness();
+  const {
+    userProfile,
+    setUserProfile,
+    syncCycleRecommendations = true,
+    toggleSyncCycleRecommendations
+  } = useWellness();
+
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   const isEnabled = userProfile.cycleTrackingEnabled;
   const cycleInfo = isEnabled && userProfile.lastPeriodStart
@@ -14,7 +22,6 @@ export default function MenstrualModule() {
   const [lastPeriodDate, setLastPeriodDate] = useState(userProfile.lastPeriodStart || '2026-08-10');
   const [cycleLength, setCycleLength] = useState(userProfile.cycleLength || 28);
   const [periodLength, setPeriodLength] = useState(userProfile.periodLength || 5);
-  const [shareWithPartner, setShareWithPartner] = useState(false);
 
   const toggleCycleTracking = (enabled) => {
     setUserProfile(prev => ({
@@ -67,6 +74,40 @@ export default function MenstrualModule() {
 
       {isEnabled ? (
         <div>
+          {/* Sub-Toggle: Sync Recommendations With My Cycle */}
+          <div 
+            style={{
+              background: 'var(--bg-tertiary)',
+              border: '1px solid var(--border-subtle)',
+              padding: '0.9rem 1.1rem',
+              borderRadius: 'var(--radius-md)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '1.25rem',
+              gap: '1rem'
+            }}
+          >
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)' }}>
+                <RefreshCw size={15} color="var(--accent-rose)" />
+                <span>Sync Recommendations With My Cycle</span>
+              </div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.2rem', lineHeight: 1.4 }}>
+                When enabled, Better Every Day offers supportive movement and nourishment suggestions aligned with your phase. You always retain full agency to accept, see, or skip any suggestion.
+              </div>
+            </div>
+
+            <label className="toggle-switch" style={{ flexShrink: 0 }}>
+              <input
+                type="checkbox"
+                checked={syncCycleRecommendations}
+                onChange={toggleSyncCycleRecommendations}
+              />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
           {/* Phase Card */}
           {cycleInfo && (
             <div 
@@ -78,14 +119,25 @@ export default function MenstrualModule() {
                 marginBottom: '1.5rem'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <span style={{ fontSize: '2rem' }}>{cycleInfo.icon}</span>
-                <div>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: cycleInfo.color }}>
-                    Day {cycleInfo.day} of {cycleInfo.totalDays} • Estimated {cycleInfo.phase} Phase
-                  </span>
-                  <h4 style={{ fontSize: '1.15rem', margin: '0.1rem 0 0 0' }}>{cycleInfo.headline}</h4>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <span style={{ fontSize: '2rem' }}>{cycleInfo.icon}</span>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: cycleInfo.color }}>
+                      Day {cycleInfo.day} of {cycleInfo.totalDays} • Estimated {cycleInfo.phase} Phase
+                    </span>
+                    <h4 style={{ fontSize: '1.15rem', margin: '0.1rem 0 0 0' }}>{cycleInfo.headline}</h4>
+                  </div>
                 </div>
+
+                <button
+                  onClick={() => setIsDemoModalOpen(true)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.75rem', gap: '0.35rem', borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)' }}
+                >
+                  <Sparkles size={13} />
+                  <span>Preview Suggestion Layer</span>
+                </button>
               </div>
 
               {/* 4 Pillars of Phase Guidance */}
@@ -173,7 +225,7 @@ export default function MenstrualModule() {
 
           {/* Non-Medical Notice */}
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-            ℹ️ <em>Cycle-based suggestions are provided as general lifestyle and wellness insights, not medical facts or fertility diagnoses.</em>
+            ℹ️ <em>Cycle-based suggestions are provided as supportive wellness insights, not medical advice or fertility management.</em>
           </div>
         </div>
       ) : (
@@ -183,6 +235,29 @@ export default function MenstrualModule() {
           </p>
         </div>
       )}
+
+      {/* Cycle-Aware Non-Blocking Suggestion Modal Demo */}
+      <CycleAwareSuggestionModal
+        isOpen={isDemoModalOpen}
+        onClose={() => setIsDemoModalOpen(false)}
+        cyclePhase={cycleInfo?.phase || 'Luteal'}
+        cycleDay={cycleInfo?.day || 22}
+        originalAction={{
+          title: 'High Intensity Interval Run (HIIT)',
+          category: 'Workout',
+          details: '45 mins strenuous tempo sprinting & cardio'
+        }}
+        suggestedAction={{
+          title: 'Mindful Mat Pilates & Mobility Flow',
+          category: 'Movement',
+          details: '30 mins low-cortisol movement aligned with energy curve',
+          benefit: 'Protects progesterone, avoids energy crashes, and supports joint mobility'
+        }}
+        onContinueOriginal={() => {}}
+        onAcceptSuggestion={() => {}}
+        onSkip={() => {}}
+      />
     </div>
   );
 }
+

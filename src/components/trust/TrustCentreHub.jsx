@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useWellness } from '../../context/WellnessContext';
+import PDFExportModal from '../profile/PDFExportModal';
 import {
   Shield,
   ShieldCheck,
@@ -51,6 +52,7 @@ export default function TrustCentreHub() {
   const [activeTrustTab, setActiveTrustTab] = useState('devices'); // 'devices' | 'tracked' | 'integrity' | 'privacy' | 'export'
   const [selectedPermissionDevice, setSelectedPermissionDevice] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
   const handleManualSyncAll = () => {
@@ -458,17 +460,45 @@ export default function TrustCentreHub() {
           ========================================================================= */}
       {activeTrustTab === 'export' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* PDF Export Section (Privacy-first granular selection) */}
+          <div className="card-glass" style={{ padding: '1.35rem', background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, var(--accent-primary-light) 100%)', border: '1.5px solid var(--accent-primary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
+                  <span className="pill-badge primary" style={{ fontSize: '0.68rem' }}>
+                    <FileText size={12} /> Printable Document
+                  </span>
+                </div>
+                <h4 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 800, color: 'var(--text-primary)' }}>
+                  Export as PDF Report 📄
+                </h4>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
+                  Compile your wellness tracking, journals, gratitude moments, and movement history into a clean, structured PDF.
+                </p>
+              </div>
+
+              <button 
+                type="button"
+                onClick={() => setIsPDFModalOpen(true)}
+                className="btn btn-primary"
+                style={{ gap: '0.35rem', fontWeight: 800, boxShadow: '0 3px 12px rgba(45, 106, 79, 0.25)' }}
+              >
+                <Download size={15} /> Choose & Export PDF
+              </button>
+            </div>
+          </div>
+
           {/* Full Archive Export */}
           <div className="card-glass" style={{ padding: '1.35rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
               <Download size={18} color="var(--accent-primary)" />
-              <h4 style={{ fontSize: '1.05rem', margin: 0 }}>Full Wellness Archive Export</h4>
+              <h4 style={{ fontSize: '1.05rem', margin: 0 }}>Full Wellness JSON Archive</h4>
             </div>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Download your complete personal wellness history in open format. You are never locked into Better Every Day.
+              Download your complete raw wellness history and device configurations in open JSON format.
             </p>
 
-            <button onClick={handleExportFullArchive} className="btn btn-primary">
+            <button onClick={handleExportFullArchive} className="btn btn-secondary">
               <Download size={14} /> Download Complete JSON Archive
             </button>
           </div>
@@ -569,6 +599,14 @@ export default function TrustCentreHub() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* PDF EXPORT MODAL */}
+      {isPDFModalOpen && (
+        <PDFExportModal
+          isOpen={isPDFModalOpen}
+          onClose={() => setIsPDFModalOpen(false)}
+        />
       )}
     </div>
   );

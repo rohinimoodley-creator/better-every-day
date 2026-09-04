@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useWellness } from '../../context/WellnessContext';
-import { ShieldCheck, Download, Trash2, AlertTriangle, X, Check } from 'lucide-react';
+import PDFExportModal from './PDFExportModal';
+import { ShieldCheck, Download, Trash2, AlertTriangle, X, Check, FileText } from 'lucide-react';
 
 export default function PrivacySecurityModal({ isOpen, onClose }) {
   const { userProfile, dailyCheckIn, loggedMeals, journalEntries } = useWellness();
   const [copiedData, setCopiedData] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -78,6 +80,14 @@ export default function PrivacySecurityModal({ isOpen, onClose }) {
         {/* Export Data */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
           <button 
+            onClick={() => setIsPDFModalOpen(true)}
+            className="btn btn-primary"
+            style={{ width: '100%', padding: '0.75rem', justifyContent: 'center', gap: '0.4rem' }}
+          >
+            <FileText size={16} /> Choose & Export as PDF Report
+          </button>
+
+          <button 
             onClick={handleExportJson}
             className="btn btn-secondary"
             style={{ width: '100%', padding: '0.75rem', justifyContent: 'center' }}
@@ -115,6 +125,13 @@ export default function PrivacySecurityModal({ isOpen, onClose }) {
           Done
         </button>
       </div>
+
+      {isPDFModalOpen && (
+        <PDFExportModal
+          isOpen={isPDFModalOpen}
+          onClose={() => setIsPDFModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

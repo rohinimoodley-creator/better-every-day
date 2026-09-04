@@ -1,4 +1,19 @@
+export const DEFAULT_DAILY_RHYTHM = {
+  dayStartTime: '07:00', // e.g. '16:00' for night-shift
+  sleepTime: '23:00',    // e.g. '08:00' for day-sleepers
+  scheduleVariability: 'same', // 'same' | 'changes'
+  shiftType: 'regular',  // 'regular' | 'night_shift' | 'rotating' | 'flexible' | 'custom'
+  isShiftOverrideActive: false,
+  todayStartOverride: null,
+  todaySleepOverride: null,
+  customShifts: [],
+  shiftNotes: ''
+};
+
 export const DEFAULT_HOW_I_THRIVE = {
+  // 1. Daily Rhythm & Non-Traditional Schedule Support
+  dailyRhythm: DEFAULT_DAILY_RHYTHM,
+
   // 1. Initial / Progressive Setup
   onboardingCompleted: true,
   feelPreference: 'calm_natural', // 'calm_natural', 'soft_gentle', 'fresh_bright', 'calm_dark', 'energetic', 'playful', 'custom', 'default'
@@ -66,8 +81,11 @@ export const DEFAULT_HOW_I_THRIVE = {
   seasonalSuggestions: true,
   customThemes: [],
 
-  // 14. Notification Personalization & Budget
+  // 14. Notification Personalization & Budget (Consolidated)
   notificationBudget: 3, // 'none' | 1 | 2 | 3 | 5 | 10 | 'unlimited'
+  reminderTime: '08:30', // Morning Intention Nudge
+  eveningReviewTime: '21:00', // Evening Reflection Reminder
+  nudgesEnabled: true, // Mid-day hydration nudges
   quietMode: false,
   focusMode: false,
   sleepModeSchedule: { start: '22:00', end: '07:00' },
@@ -129,6 +147,7 @@ export const DEFAULT_USER = {
   wellnessGoal: 'energy_vitality',
   affirmationStyle: 'soft_love',
   cycleTrackingEnabled: true,
+  syncCycleRecommendations: true,
   cycleLength: 28,
   periodLength: 5,
   lastPeriodStart: '2026-08-10',

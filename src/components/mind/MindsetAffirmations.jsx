@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useWellness } from '../../context/WellnessContext';
 import { useAudio } from '../../context/AudioContext';
 import { AFFIRMATIONS_DATA } from '../../data/mockData';
-import { Sparkles, Heart, RefreshCw, Bookmark, Share2, Volume2 } from 'lucide-react';
+import { Sparkles, RefreshCw, Bookmark, Share2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function MindsetAffirmations() {
@@ -50,11 +50,13 @@ export default function MindsetAffirmations() {
     }
   };
 
+  const [showSavedAffirmations, setShowSavedAffirmations] = useState(false);
+
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto' }}>
+    <div style={{ maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       
       {/* Style Toggle Bar */}
-      <div className="card-glass" style={{ padding: '1.25rem', marginBottom: '1.25rem', textAlign: 'center' }}>
+      <div className="card-glass" style={{ padding: '1.25rem', textAlign: 'center' }}>
         <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.6rem' }}>
           Select Your Daily Motivation Tone
         </span>
@@ -106,8 +108,7 @@ export default function MindsetAffirmations() {
           background: affirmationStyle === 'soft_love'
             ? 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(82, 183, 136, 0.08) 100%)'
             : 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(217, 119, 54, 0.08) 100%)',
-          borderColor: affirmationStyle === 'soft_love' ? 'var(--border-glass)' : 'rgba(217, 119, 54, 0.3)',
-          marginBottom: '1.25rem'
+          borderColor: affirmationStyle === 'soft_love' ? 'var(--border-glass)' : 'rgba(217, 119, 54, 0.3)'
         }}
       >
         <span className={`pill-badge ${affirmationStyle === 'soft_love' ? 'primary' : 'orange'}`} style={{ marginBottom: '1.5rem' }}>
@@ -129,7 +130,7 @@ export default function MindsetAffirmations() {
         </h3>
 
         {/* Action Controls */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button 
             onClick={nextAffirmation}
             className="btn btn-primary"
@@ -164,31 +165,58 @@ export default function MindsetAffirmations() {
         )}
       </div>
 
-      {/* Saved Favorites Section */}
-      {favoriteAffirmations.length > 0 && (
-        <div className="card-glass" style={{ padding: '1.25rem' }}>
-          <h4 style={{ fontSize: '1rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Bookmark size={16} color="var(--accent-primary)" /> Saved Affirmations ({favoriteAffirmations.length})
-          </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {favoriteAffirmations.map((fav, i) => (
-              <div 
-                key={i}
-                style={{
-                  background: 'var(--bg-tertiary)',
-                  padding: '0.75rem 1rem',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '0.88rem',
-                  fontStyle: 'italic',
-                  color: 'var(--text-secondary)'
-                }}
-              >
-                "{fav.text}"
-              </div>
-            ))}
+      {/* Progressive Disclosure: View My Affirmations */}
+      <div className="card-glass" style={{ padding: '1.25rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <div>
+            <h4 style={{ fontSize: '0.98rem', fontWeight: 800, margin: '0 0 0.15rem 0', color: 'var(--text-primary)' }}>
+              Saved Affirmations Vault
+            </h4>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+              {favoriteAffirmations.length} saved {favoriteAffirmations.length === 1 ? 'affirmation' : 'affirmations'} bookmarked.
+            </p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowSavedAffirmations(!showSavedAffirmations)}
+            className="btn btn-secondary btn-sm"
+            style={{ gap: '0.35rem', fontSize: '0.78rem' }}
+          >
+            <Bookmark size={13} color="var(--accent-primary)" />
+            <span>{showSavedAffirmations ? 'Hide Saved Affirmations' : `View My Affirmations (${favoriteAffirmations.length})`}</span>
+          </button>
         </div>
-      )}
+
+        {/* Revealed Saved Affirmations */}
+        {showSavedAffirmations && (
+          <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {favoriteAffirmations.length > 0 ? (
+              favoriteAffirmations.map((fav, i) => (
+                <div 
+                  key={i}
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    padding: '0.85rem 1rem',
+                    borderRadius: 'var(--radius-md)',
+                    borderLeft: '4px solid var(--accent-primary)',
+                    fontSize: '0.88rem',
+                    fontStyle: 'italic',
+                    color: 'var(--text-primary)',
+                    lineHeight: 1.45
+                  }}
+                >
+                  "{fav.text}"
+                </div>
+              ))
+            ) : (
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
+                No saved affirmations yet. Tap the bookmark icon on any affirmation to save it here.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
     </div>
   );

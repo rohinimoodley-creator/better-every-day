@@ -3,7 +3,7 @@ import { X, Plus, Trash2, Calendar, Sparkles } from 'lucide-react';
 import { useWellness } from '../../context/WellnessContext';
 
 export default function CustomWorkoutModal({ isOpen, onClose, onSave }) {
-  const { createSocialEvent, connectedProfiles } = useWellness();
+  const { createSocialEvent, connectedProfiles, petProfiles = [], logPetPlayActivity } = useWellness();
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Mobility');
@@ -15,6 +15,7 @@ export default function CustomWorkoutModal({ isOpen, onClose, onSave }) {
   ]);
   const [invitePartner, setInvitePartner] = useState(false);
   const [partnerId, setPartnerId] = useState(connectedProfiles[1]?.id || '');
+  const [selectedPetId, setSelectedPetId] = useState('');
 
   if (!isOpen) return null;
 
@@ -34,8 +35,9 @@ export default function CustomWorkoutModal({ isOpen, onClose, onSave }) {
     e.preventDefault();
     if (!title.trim()) return;
 
+    const newWorkoutId = 'custom_w_' + Date.now();
     const newWorkout = {
-      id: 'custom_w_' + Date.now(),
+      id: newWorkoutId,
       title,
       category,
       durationMin: Number(durationMin),
@@ -57,6 +59,16 @@ export default function CustomWorkoutModal({ isOpen, onClose, onSave }) {
         withUser: partner ? `${partner.name} (${partner.relation})` : 'Partner',
         category: 'Move',
         notes: `Let's crush this ${durationMin}-min ${title} session!`
+      });
+    }
+
+    if (selectedPetId && logPetPlayActivity) {
+      logPetPlayActivity({
+        petId: selectedPetId,
+        activityType: category || 'Exercise & Play',
+        durationMin: Number(durationMin),
+        notes: `Linked with routine: ${title}`,
+        linkedWorkoutId: newWorkoutId
       });
     }
 
@@ -174,6 +186,31 @@ export default function CustomWorkoutModal({ isOpen, onClose, onSave }) {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Pet Companion Tagging */}
+          <div style={{ background: 'var(--bg-tertiary)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', marginBottom: '1rem' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.4rem' }}>
+              🐾 Moving with a Pet Companion? (Optional)
+            </label>
+            <select
+              value={selectedPetId}
+              onChange={e => setSelectedPetId(e.target.value)}
+              className="select-field"
+              style={{ fontSize: '0.85rem' }}
+            >
+              <option value="">Just me (No pet tagged)</option>
+              {petProfiles.map(pet => (
+                <option key={pet.id} value={pet.id}>
+                  {pet.avatar || '🐾'} {pet.name} ({pet.type})
+                </option>
+              ))}
+            </select>
+            {selectedPetId && (
+              <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', margin: '0.4rem 0 0 0' }}>
+                ✨ This will log time spent together under Pet Play without duplicating your workout minutes.
+              </p>
+            )}
           </div>
 
           {/* Invite Partner Checkbox */}

@@ -19,7 +19,8 @@ import {
   Moon,
   Coffee,
   Heart,
-  Sliders
+  Sliders,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -31,7 +32,7 @@ const HYDRATION_PRESETS = [
   { amount: 1000, label: '1 Liter', icon: '🧊', desc: 'Full liter bottle (1000 ml)' }
 ];
 
-const BEVERAGE_TYPES = [
+const BUILTIN_BEVERAGE_TYPES = [
   { id: 'water', label: 'Pure Water', icon: '💧', boost: '100% Hydrating' },
   { id: 'lemon_water', label: 'Lemon / Fruit Water', icon: '🍋', boost: 'Digestive Glow' },
   { id: 'herbal_tea', label: 'Herbal Infusion', icon: '🍵', boost: 'Calming & Warm' },
@@ -45,7 +46,9 @@ export default function HydrateHub({ onNavigateTab }) {
     setUserProfile,
     hydrationMl,
     incrementHydration,
-    howIThrive
+    customBeverages = [],
+    addCustomBeverage,
+    getWaterRecommendation
   } = useWellness();
 
   const [selectedBeverage, setSelectedBeverage] = useState('water');
@@ -54,16 +57,32 @@ export default function HydrateHub({ onNavigateTab }) {
   const [goalEditing, setGoalEditing] = useState(false);
   const [newGoal, setNewGoal] = useState(userProfile.hydrationGoalMl || 2250);
 
+  // Custom beverage form state
+  const [showAddBeverage, setShowAddBeverage] = useState(false);
+  const [newBevName, setNewBevName] = useState('');
+  const [newBevIcon, setNewBevIcon] = useState('🍵');
+  const [newBevBoost, setNewBevBoost] = useState('');
+
+  const allBeverages = [...BUILTIN_BEVERAGE_TYPES, ...customBeverages];
+
   const goalMl = userProfile.hydrationGoalMl || 2250;
   const percentage = Math.min(100, Math.round((hydrationMl / goalMl) * 100));
   const remainingMl = Math.max(0, goalMl - hydrationMl);
   const cupsDrunk = (hydrationMl / 250).toFixed(1);
   const cupsTarget = (goalMl / 250).toFixed(0);
 
+  // Dynamic Personal Water Recommendation
+  const waterRec = getWaterRecommendation ? getWaterRecommendation() : {
+    cupsTarget: Number(cupsTarget),
+    currentCups: Math.floor(hydrationMl / 250),
+    remainingCups: Math.max(0, Number(cupsTarget) - Math.floor(hydrationMl / 250)),
+    pacingText: 'Try approximately 1 cup every 2 hours before sleep.'
+  };
+
   const handleQuickAdd = (amount) => {
     if (incrementHydration) {
       incrementHydration(amount);
-      const bev = BEVERAGE_TYPES.find(b => b.id === selectedBeverage)?.label || 'Water';
+      const bev = allBeverages.find(b => b.id === selectedBeverage)?.label || 'Water';
       setCelebrationMessage(`+${amount}ml ${bev} logged! 💧`);
       setTimeout(() => setCelebrationMessage(''), 2500);
 
@@ -95,6 +114,24 @@ export default function HydrateHub({ onNavigateTab }) {
       }));
       setGoalEditing(false);
     }
+  };
+
+  const handleCreateCustomBeverage = (e) => {
+    e.preventDefault();
+    if (!newBevName.trim()) return;
+
+    if (addCustomBeverage) {
+      const created = addCustomBeverage({
+        label: newBevName.trim(),
+        icon: newBevIcon || '🥤',
+        boost: newBevBoost.trim() || 'Custom Hydration'
+      });
+      setSelectedBeverage(created.id);
+    }
+
+    setNewBevName('');
+    setNewBevBoost('');
+    setShowAddBeverage(false);
   };
 
   return (
@@ -260,20 +297,125 @@ export default function HydrateHub({ onNavigateTab }) {
         </div>
       </div>
 
-      {/* 2. BEVERAGE TYPE SELECTOR & QUICK LOG PRESETS */}
-      <div className="card-glass" style={{ padding: '1.5rem' }}>
-        <div style={{ marginBottom: '1rem' }}>
-          <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginBottom: '0.2rem' }}>
-            1. Select Beverage Type
-          </span>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-            Choose what you're sipping to record wholesome hydration nuances:
-          </span>
+      {/* 2. PERSONAL WATER RECOMMENDATION & PACING CARD */}
+      <div 
+        className="card-glass"
+        style={{
+          padding: '1.4rem',
+          background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(64, 145, 108, 0.08) 100%)',
+          borderLeft: '4px solid var(--accent-primary)'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          <Sparkles size={16} color="var(--accent-primary)" />
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+            Personal Water Recommendation & Pacing
+          </h3>
         </div>
 
-        {/* Beverage Pills */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', marginTop: '0.85rem', marginBottom: '0.85rem' }}>
+          <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Personal Target</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)' }}>{waterRec.cupsTarget} cups</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>({waterRec.cupsTarget * 250} ml)</div>
+          </div>
+
+          <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Cups Remaining</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#3a86c8' }}>{waterRec.remainingCups} cups</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>({waterRec.currentCups} of {waterRec.cupsTarget} logged)</div>
+          </div>
+
+          <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Pacing Suggestion</div>
+            <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--accent-primary)', lineHeight: 1.35 }}>
+              {waterRec.pacingText}
+            </div>
+          </div>
+        </div>
+
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
+          Calculated dynamically from your daily rhythm, logged activity, and hydration target to ensure comfortable, sustained cellular flow without night waking.
+        </p>
+      </div>
+
+      {/* 3. BEVERAGE TYPE SELECTOR, CUSTOM BEVERAGE CREATOR & PRESETS */}
+      <div className="card-glass" style={{ padding: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginBottom: '0.1rem' }}>
+              1. Select Beverage Type
+            </span>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              Choose what you're sipping or add your own custom drink:
+            </span>
+          </div>
+
+          <button
+            onClick={() => setShowAddBeverage(prev => !prev)}
+            className="btn btn-secondary btn-sm"
+            style={{ fontSize: '0.78rem', gap: '0.35rem', padding: '0.35rem 0.65rem' }}
+          >
+            <Plus size={13} /> Add My Own Beverage
+          </button>
+        </div>
+
+        {/* Expandable Custom Beverage Creator Form */}
+        {showAddBeverage && (
+          <form onSubmit={handleCreateCustomBeverage} style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem', animation: 'fadeIn 0.2s ease-out' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>Create Custom Beverage</span>
+              <button type="button" onClick={() => setShowAddBeverage(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '80px 2fr 2fr auto', gap: '0.6rem', alignItems: 'flex-end' }}>
+              <div>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>Icon</label>
+                <input
+                  type="text"
+                  value={newBevIcon}
+                  onChange={e => setNewBevIcon(e.target.value)}
+                  className="input-field"
+                  style={{ textAlign: 'center', fontSize: '1.2rem', padding: '0.4rem' }}
+                  placeholder="🍵"
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>Beverage Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newBevName}
+                  onChange={e => setNewBevName(e.target.value)}
+                  className="input-field"
+                  placeholder="e.g. Matcha Latte, Bone Broth, Sparkling Water"
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>Benefit / Note (Optional)</label>
+                <input
+                  type="text"
+                  value={newBevBoost}
+                  onChange={e => setNewBevBoost(e.target.value)}
+                  className="input-field"
+                  placeholder="e.g. Antioxidant Boost"
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary btn-sm" style={{ padding: '0.6rem 1rem' }}>
+                Save Beverage
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Beverage Pills (Built-in + Custom) */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
-          {BEVERAGE_TYPES.map(bev => {
+          {allBeverages.map(bev => {
             const isSelected = selectedBeverage === bev.id;
             return (
               <button
@@ -296,6 +438,7 @@ export default function HydrateHub({ onNavigateTab }) {
               >
                 <span>{bev.icon}</span>
                 <span>{bev.label}</span>
+                {bev.boost && <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>• {bev.boost}</span>}
               </button>
             );
           })}
@@ -367,70 +510,7 @@ export default function HydrateHub({ onNavigateTab }) {
         </form>
       </div>
 
-      {/* 3. OPTIMAL HYDRATION RHYTHMS & CELLULAR SCIENCE */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
-        
-        {/* Rhythm Schedule Card */}
-        <div className="card-glass" style={{ padding: '1.4rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.75rem' }}>
-            <Clock size={16} color="#3a86c8" />
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-              Optimal Daily Rhythm
-            </h3>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.8rem' }}>
-              <Sun size={15} color="var(--accent-gold)" style={{ marginTop: 2, flexShrink: 0 }} />
-              <div>
-                <strong style={{ color: 'var(--text-primary)' }}>Morning Wakeup (250–500 ml):</strong>
-                <div style={{ color: 'var(--text-secondary)' }}>Replenishes fluids lost during sleep and jumpstarts gut motility.</div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.8rem' }}>
-              <Zap size={15} color="#3a86c8" style={{ marginTop: 2, flexShrink: 0 }} />
-              <div>
-                <strong style={{ color: 'var(--text-primary)' }}>Midday Focus (500–750 ml):</strong>
-                <div style={{ color: 'var(--text-secondary)' }}>Prevents the common 2:30 PM energy dip and tension headaches.</div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.8rem' }}>
-              <Moon size={15} color="#7b61ff" style={{ marginTop: 2, flexShrink: 0 }} />
-              <div>
-                <strong style={{ color: 'var(--text-primary)' }}>Evening Winddown (250 ml):</strong>
-                <div style={{ color: 'var(--text-secondary)' }}>Gentle warm herbal tea or water without overloading the bladder before sleep.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Body Signals Connection */}
-        <div className="card-glass" style={{ padding: '1.4rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.75rem' }}>
-            <Heart size={16} color="var(--accent-rose)" />
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-              Hydration & Body Signals
-            </h3>
-          </div>
-
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.45, margin: '0 0 0.75rem 0' }}>
-            Dehydration frequently disguises itself as sugar cravings, afternoon sluggishness, or dull temple tension.
-          </p>
-
-          <div style={{ background: 'var(--bg-secondary)', padding: '0.75rem 0.9rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
-              🧠 Did you know?
-            </div>
-            <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
-              Even a 1.5% drop in hydration can reduce working memory and elevate perceived task difficulty.
-            </div>
-          </div>
-        </div>
-
-      </div>
-
     </div>
   );
 }
+

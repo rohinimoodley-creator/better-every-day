@@ -1,48 +1,39 @@
 import React, { useState } from 'react';
 import { useWellness } from '../../context/WellnessContext';
 import { CONTENT_CATEGORIES } from '../../data/mockData';
-import ThemeCreatorModal from './ThemeCreatorModal';
-import BreakItDownModal from './BreakItDownModal';
-import OverwhelmModal from './OverwhelmModal';
+import DailyRhythmCard from './DailyRhythmCard';
+import AIMemoryModal from '../intelligence/AIMemoryModal';
+import CustomizeOverviewModal from '../home/CustomizeOverviewModal';
 import {
-  Sparkles,
-  Heart,
-  Target,
-  BatteryCharging,
-  Eye,
-  MessageSquare,
-  Clock,
-  Palette,
-  Bell,
-  RotateCcw,
-  ShieldCheck,
-  Check,
-  Zap,
   Sliders,
-  Volume2,
-  SlidersHorizontal,
   Flame,
-  Pause,
-  Play
+  Play,
+  BarChart2,
+  Brain,
+  Mic
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
 
 export default function HowIThriveHub() {
   const {
     howIThrive,
     updateHowIThrive,
-    resetHowIThrive,
     userProfile,
-    theme,
-    setTheme,
-    smallStepState
+    setUserProfile,
+    smallStepState,
+    overviewFrequency,
+    updateOverviewFrequency,
+    overviewPillars
   } = useWellness();
 
-  const [activeTab, setActiveTab] = useState('attention');
-  const [isThemeCreatorOpen, setIsThemeCreatorOpen] = useState(false);
-  const [isBreakItDownOpen, setIsBreakItDownOpen] = useState(false);
-  const [isOverwhelmOpen, setIsOverwhelmOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('rhythm');
+  const [isAIMemoryOpen, setIsAIMemoryOpen] = useState(false);
+  const [isCustomizeOverviewOpen, setIsCustomizeOverviewOpen] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
+
+  // Consolidated notification states
+  const [reminderTime, setReminderTime] = useState(howIThrive.reminderTime || '08:30');
+  const [eveningReviewTime, setEveningReviewTime] = useState(howIThrive.eveningReviewTime || '21:00');
+  const [nudgesEnabled, setNudgesEnabled] = useState(howIThrive.nudgesEnabled !== false);
 
   const triggerSaveNotification = () => {
     setShowSavedToast(true);
@@ -51,6 +42,11 @@ export default function HowIThriveHub() {
 
   const handleUpdate = (key, value) => {
     updateHowIThrive(key, value);
+    triggerSaveNotification();
+  };
+
+  const handleSaveNotifications = (updates) => {
+    updateHowIThrive(updates);
     triggerSaveNotification();
   };
 
@@ -68,6 +64,18 @@ export default function HowIThriveHub() {
     triggerSaveNotification();
   };
 
+  const tabs = [
+    { id: 'rhythm', label: '🌱 My Daily Rhythm', desc: 'Schedule & shifts' },
+    { id: 'overview', label: '📊 Home Wellness Overview', desc: 'Summary frequency' },
+    { id: 'streaks', label: '🎯 Flexible Streaks', desc: 'Shame-free pauses' },
+    { id: 'communication', label: '💬 Communication Tone', desc: 'Language & phrasing' },
+    { id: 'sensory', label: '🐝 Sensory & Mascot', desc: 'Animations & audio' },
+    { id: 'content', label: '📝 Content Preferences', desc: 'Exclusions & topics' },
+    { id: 'notifications', label: '🔔 Notification Budget', desc: 'Reminders & nudges' },
+    { id: 'ai_memory', label: '🤖 AI & Memory', desc: 'Personalized memory' },
+    { id: 'voice', label: '🎙️ Voice & Reflection', desc: 'Transcription modes' }
+  ];
+
   return (
     <div style={{ maxWidth: 880, margin: '0 auto' }}>
       
@@ -76,306 +84,140 @@ export default function HowIThriveHub() {
         className="card-glass" 
         style={{ 
           padding: '1.5rem', 
-          marginBottom: '1.5rem', 
+          marginBottom: '1.25rem', 
           background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, var(--accent-primary-light) 100%)',
           border: '2px solid var(--border-glass)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
           <span className="pill-badge primary">
-            <Sliders size={12} /> Adaptive Experience Engine
+            <Sliders size={12} /> Adaptive Personalization Engine
           </span>
         </div>
-        <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.4rem' }}>
+        <h2 style={{ fontSize: '1.65rem', fontWeight: 800, marginBottom: '0.35rem', color: 'var(--text-primary)' }}>
           How I Thrive 🌱
         </h2>
-        <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem 0', fontStyle: 'italic' }}>
-          "Better Every Day adapts to me. I don't have to adapt to the app."
+        <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', margin: '0 0 0.5rem 0', fontStyle: 'italic' }}>
+          "Better Every Day adapts to how I live, think, communicate, and prefer to use the app."
         </p>
-        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
-          Everyone works differently. Customize your attention styles, sensory inputs, communication tones, and schedules without needing to identify with any medical diagnosis.
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.45 }}>
+          Tailor your daily schedule, communication style, mascot companionship, audio thresholds, and notification volume with zero judgment.
         </p>
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
-        {[
-          { id: 'attention', label: '🎯 Attention & Tasks' },
-          { id: 'energy', label: '🔋 Energy & Overwhelm' },
-          { id: 'streaks', label: '⏸️ Flexible Streaks' },
-          { id: 'communication', label: '💬 Communication Tone' },
-          { id: 'sensory', label: '👂 Sensory & Mascot' },
-          { id: 'appearance', label: '🎨 Appearance & Themes' },
-          { id: 'content', label: '🚫 Content Filters' },
-          { id: 'notifications', label: '🔔 Notifications & Budget' },
-          { id: 'reset', label: '🛡️ Privacy & Reset' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: '0.45rem 0.9rem',
-              borderRadius: 'var(--radius-pill)',
-              border: activeTab === tab.id ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-              background: activeTab === tab.id ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
-              color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div 
+        className="card-glass"
+        style={{ 
+          display: 'flex', 
+          gap: '0.35rem', 
+          overflowX: 'auto', 
+          padding: '0.5rem 0.75rem', 
+          marginBottom: '1.25rem',
+          scrollbarWidth: 'none'
+        }}
+      >
+        {tabs.map(tab => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: '0.45rem 0.85rem',
+                borderRadius: 'var(--radius-pill)',
+                border: 'none',
+                background: isActive ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                color: isActive ? '#ffffff' : 'var(--text-primary)',
+                fontSize: '0.78rem',
+                fontWeight: isActive ? 800 : 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                transition: 'all 0.15s ease'
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* =========================================================================
-          TAB 1: ATTENTION & TASKS
+          TAB 1: MY DAILY RHYTHM
           ========================================================================= */}
-      {activeTab === 'attention' && (
-        <div className="card-glass" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>Attention & Task Structure</h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-            Choose how daily tasks are presented to prevent executive fatigue.
-          </p>
-
-          {/* Task Style: One at a time vs Full Day */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem' }}>
-              Daily Display Style
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem' }}>
-              {[
-                { id: 'one_at_a_time', title: '🎯 One Task at a Time (One Thing Mode)', desc: 'Focus strictly on the single next action. No distracting competing lists.' },
-                { id: 'full_day', title: '📋 Full Day Snapshot', desc: 'See all metrics, daily recommendations, and habits at once.' }
-              ].map(opt => {
-                const active = howIThrive.taskStyle === opt.id;
-                return (
-                  <div
-                    key={opt.id}
-                    onClick={() => handleUpdate('taskStyle', opt.id)}
-                    style={{
-                      background: active ? 'var(--accent-primary-light)' : 'var(--bg-tertiary)',
-                      border: `1px solid ${active ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-                      padding: '1rem',
-                      borderRadius: 'var(--radius-md)',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
-                      {opt.title}
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{opt.desc}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Progressive Complexity */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem' }}>
-              Progressive Interface Complexity
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-              {[
-                { id: 'simple', label: 'Simple (Essentials Only)', desc: '💧 Water, 🚶 Move, 🥗 Food, 💛 Mind' },
-                { id: 'standard', label: 'Standard (Balanced)', desc: 'Steps, Sleep, Macros, Guidance' },
-                { id: 'advanced', label: 'Advanced (Deep Insights)', desc: 'Micronutrients, Trends, Statistics' }
-              ].map(lvl => {
-                const active = howIThrive.complexityLevel === lvl.id;
-                return (
-                  <button
-                    key={lvl.id}
-                    type="button"
-                    onClick={() => handleUpdate('complexityLevel', lvl.id)}
-                    style={{
-                      background: active ? 'var(--accent-primary-light)' : 'var(--bg-tertiary)',
-                      border: active ? '2px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                      padding: '0.75rem 0.5rem',
-                      borderRadius: 'var(--radius-md)',
-                      textAlign: 'left',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>{lvl.label}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{lvl.desc}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Break It Down Launcher */}
-          <div style={{ background: 'var(--bg-tertiary)', padding: '1rem 1.25rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.25rem' }}>
-            <div>
-              <h4 style={{ fontSize: '0.95rem', margin: '0 0 0.2rem 0' }}>Break It Down Tool</h4>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
-                Break complex tasks like dinner, workouts, or evening routines into micro-steps.
-              </p>
-            </div>
-            <button 
-              onClick={() => setIsBreakItDownOpen(true)}
-              className="btn btn-primary btn-sm"
-              style={{ flexShrink: 0 }}
-            >
-              Open Break It Down
-            </button>
-          </div>
-
-          {/* Routine & Timer Pacing Toggles */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
-            <div style={{ background: 'var(--bg-secondary)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>
-                Routine Predictability
-              </label>
-              <select 
-                value={howIThrive.routineStyle || 'flexible'} 
-                onChange={e => handleUpdate('routineStyle', e.target.value)}
-                className="select-field"
-                style={{ fontSize: '0.82rem' }}
-              >
-                <option value="flexible">Flexible Routines (Adaptive)</option>
-                <option value="predictable">Predictable Routines (Consistent order)</option>
-              </select>
-            </div>
-
-            <div style={{ background: 'var(--bg-secondary)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>
-                Timers & Pacing
-              </label>
-              <select 
-                value={howIThrive.timerPreference || 'countdowns'} 
-                onChange={e => handleUpdate('timerPreference', e.target.value)}
-                className="select-field"
-                style={{ fontSize: '0.82rem' }}
-              >
-                <option value="countdowns">Visual Countdowns</option>
-                <option value="stopwatch">Open Stopwatch</option>
-                <option value="none">No Timers (Untimed)</option>
-              </select>
-            </div>
-          </div>
-        </div>
+      {activeTab === 'rhythm' && (
+        <DailyRhythmCard />
       )}
 
       {/* =========================================================================
-          TAB 2: ENERGY & OVERWHELM
+          TAB 2: HOME WELLNESS OVERVIEW FREQUENCY
           ========================================================================= */}
-      {activeTab === 'energy' && (
-        <div className="card-glass" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>Energy & Overwhelm Modes</h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-            Tools to protect your capacity on difficult, low-spoon, or overwhelmed days.
-          </p>
-
-          {/* Low Energy Mode Switch */}
-          <div 
-            style={{
-              background: howIThrive.lowEnergyMode ? 'var(--accent-secondary-light)' : 'var(--bg-tertiary)',
-              border: `1px solid ${howIThrive.lowEnergyMode ? 'var(--accent-secondary)' : 'var(--border-subtle)'}`,
-              padding: '1.25rem',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '1.25rem'
-            }}
-          >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-                <span style={{ fontSize: '1.3rem' }}>🔋</span>
-                <h4 style={{ fontSize: '1.05rem', margin: 0 }}>Low Energy Mode Today</h4>
-              </div>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, maxWidth: 480 }}>
-                Automatically scales recommendations down (30-min workout → 5-min stretch; meal prep → simple snack; 30-min journal → 1 sentence).
-              </p>
-            </div>
-
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={howIThrive.lowEnergyMode}
-                onChange={e => handleUpdate('lowEnergyMode', e.target.checked)}
-              />
-              <span className="toggle-slider" />
-            </label>
-          </div>
-
-          {/* Overwhelm Mode Launcher */}
-          <div 
-            style={{
-              background: 'linear-gradient(135deg, rgba(123, 97, 255, 0.08) 0%, rgba(214, 64, 98, 0.08) 100%)',
-              border: '1px solid rgba(123, 97, 255, 0.25)',
-              padding: '1.25rem',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '1.5rem'
-            }}
-          >
-            <div>
-              <h4 style={{ fontSize: '1.05rem', margin: '0 0 0.2rem 0' }}>🆘 I'm Overwhelmed (Emergency Soother)</h4>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
-                Temporarily pauses all lists and replaces the screen with Pause (breath), Reset (grounding), and One Small Thing.
-              </p>
-            </div>
-
-            <button 
-              onClick={() => setIsOverwhelmOpen(true)}
-              className="btn btn-primary btn-sm"
-              style={{ background: 'var(--accent-purple)' }}
-            >
-              Open Calm Space
-            </button>
-          </div>
-
-          {/* "Don't Rush Me" Instruction Speed */}
+      {activeTab === 'overview' && (
+        <div className="card-glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
-            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem' }}>
-              "Don't Rush Me" — Exercise & Breathing Pacing
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-              {[
-                { id: 'standard', label: 'Standard Pacing', desc: 'Normal automatic timing between steps' },
-                { id: 'slower', label: 'Slower Pacing', desc: '50% longer resting pauses between exercises' },
-                { id: 'manual_advance', label: 'Manual Advance ✋', desc: 'You choose when to click next. Never auto-advances.' }
-              ].map(sp => {
-                const active = howIThrive.instructionSpeed === sp.id;
-                return (
-                  <button
-                    key={sp.id}
-                    type="button"
-                    onClick={() => handleUpdate('instructionSpeed', sp.id)}
-                    style={{
-                      background: active ? 'var(--accent-primary-light)' : 'var(--bg-tertiary)',
-                      border: active ? '2px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                      padding: '0.75rem 0.5rem',
-                      borderRadius: 'var(--radius-md)',
-                      textAlign: 'left',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>{sp.label}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{sp.desc}</div>
-                  </button>
-                );
-              })}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
+              <span className="pill-badge primary" style={{ fontSize: '0.72rem' }}>
+                <BarChart2 size={12} /> Dashboard Rhythm
+              </span>
             </div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
+              Home Wellness Overview Frequency 📊
+            </h3>
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0 }}>
+              Choose how your wellness pillars are summarized on the Home screen.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.65rem' }}>
+            {[
+              { id: 'daily', label: 'Daily', desc: "Today's immediate meters" },
+              { id: 'weekly', label: 'Weekly (Default)', desc: '7-Day balanced habit breakdown' },
+              { id: 'monthly', label: 'Monthly', desc: '4-Week long-term habit trend' }
+            ].map(opt => {
+              const isSelected = overviewFrequency === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    updateOverviewFrequency && updateOverviewFrequency(opt.id);
+                    triggerSaveNotification();
+                  }}
+                  style={{
+                    padding: '0.85rem 0.65rem',
+                    borderRadius: 'var(--radius-md)',
+                    border: `2px solid ${isSelected ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
+                    background: isSelected ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    {opt.label}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    {opt.desc}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* =========================================================================
-          TAB 3: FLEXIBLE STREAKS & BREAKS
+          TAB 3: FLEXIBLE STREAKS & SHAME-FREE PAUSES
           ========================================================================= */}
       {activeTab === 'streaks' && (
         <div className="card-glass" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>Flexible Streaks & Shame-Free Pauses</h3>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
+            Flexible Streaks & Shame-Free Pauses 🎯
+          </h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-            Streaks must never punish you for being human. Pause your streak anytime to protect your progress.
+            Streaks must never punish you for being human. Pause your streak anytime to protect your consistency progress.
           </p>
 
           {/* Streak Status Box */}
@@ -447,7 +289,7 @@ export default function HowIThriveHub() {
             <label className="toggle-switch">
               <input
                 type="checkbox"
-                checked={howIThrive.streaksEnabled}
+                checked={howIThrive.streaksEnabled !== false}
                 onChange={e => handleUpdate('streaksEnabled', e.target.checked)}
               />
               <span className="toggle-slider" />
@@ -461,7 +303,9 @@ export default function HowIThriveHub() {
           ========================================================================= */}
       {activeTab === 'communication' && (
         <div className="card-glass" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>Communication Tone</h3>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
+            Communication Tone 💬
+          </h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
             Choose how Better Every Day and Pip speak with you across tasks, affirmations, and check-ins.
           </p>
@@ -536,7 +380,9 @@ export default function HowIThriveHub() {
           ========================================================================= */}
       {activeTab === 'sensory' && (
         <div className="card-glass" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>Sensory & Mascot Controls</h3>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
+            Sensory & Mascot Controls 🐝
+          </h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
             Fine-tune animation physics, sound triggers, and companion presence.
           </p>
@@ -583,7 +429,7 @@ export default function HowIThriveHub() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.4rem' }}>
               {[
                 { id: 'full', label: 'Full', desc: 'Regular quotes & tips' },
-                { id: 'occasional', label: 'Occasional', desc: 'Milestones & cheers only' },
+                { id: 'occasional', label: 'Occasional', desc: 'Milestones only' },
                 { id: 'minimal', label: 'Minimal', desc: 'Visual avatar only' },
                 { id: 'off', label: 'Off', desc: 'Disable companion' }
               ].map(m => {
@@ -640,84 +486,13 @@ export default function HowIThriveHub() {
       )}
 
       {/* =========================================================================
-          TAB 6: APPEARANCE & THEMES
-          ========================================================================= */}
-      {activeTab === 'appearance' && (
-        <div className="card-glass" style={{ padding: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <div>
-              <h3 style={{ fontSize: '1.25rem', margin: '0 0 0.2rem 0' }}>Appearance & Themes 🎨</h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
-                Customize color palettes, contrast ratios, and text size scaling.
-              </p>
-            </div>
-            <button 
-              onClick={() => setIsThemeCreatorOpen(true)}
-              className="btn btn-primary btn-sm"
-            >
-              <Palette size={14} /> Open Theme Creator
-            </button>
-          </div>
-
-          {/* High Contrast Mode Toggle */}
-          <div style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <div>
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block' }}>
-                High-Contrast Mode (WCAG AAA)
-              </span>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Bold borders, high-contrast foregrounds, and zero reliance on color alone.
-              </span>
-            </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={howIThrive.highContrast}
-                onChange={e => handleUpdate('highContrast', e.target.checked)}
-              />
-              <span className="toggle-slider" />
-            </label>
-          </div>
-
-          {/* Text Size Scaling */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>
-              Text Size Scaling
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-              {[
-                { id: 'standard', label: 'Standard Text (100%)' },
-                { id: 'large', label: 'Large Text (115%)' },
-                { id: 'extra_large', label: 'Extra Large (125%)' }
-              ].map(ts => (
-                <button
-                  key={ts.id}
-                  onClick={() => handleUpdate('textSize', ts.id)}
-                  style={{
-                    background: howIThrive.textSize === ts.id ? 'var(--accent-primary-light)' : 'var(--bg-tertiary)',
-                    border: howIThrive.textSize === ts.id ? '2px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                    padding: '0.65rem 0.5rem',
-                    borderRadius: 'var(--radius-md)',
-                    fontWeight: 700,
-                    fontSize: '0.8rem',
-                    color: 'var(--text-primary)',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {ts.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-          TAB 7: CONTENT FILTERS
+          TAB 6: CONTENT FILTERS
           ========================================================================= */}
       {activeTab === 'content' && (
         <div className="card-glass" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>Content Preferences & Exclusions</h3>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
+            Content Preferences & Exclusions 📝
+          </h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
             You control what categories appear in your recommendations, feeds, and searches. Private & non-diagnostic.
           </p>
@@ -786,17 +561,21 @@ export default function HowIThriveHub() {
       )}
 
       {/* =========================================================================
-          TAB 8: NOTIFICATIONS & BUDGET
+          TAB 7: NOTIFICATION BUDGET & CONSOLIDATED REMINDERS
           ========================================================================= */}
       {activeTab === 'notifications' && (
-        <div className="card-glass" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>Notification Budget & Smart Bundling</h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-            Never get overwhelmed by constant app pings. Set your strict daily notification ceiling.
-          </p>
+        <div className="card-glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
+          <div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
+              Notification Budget & Smart Bundling 🔔
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+              Never get overwhelmed by constant app pings. Consolidate schedules, daily limits, and gentle nudges.
+            </p>
+          </div>
 
           {/* Daily Budget Selector */}
-          <div style={{ marginBottom: '1.5rem' }}>
+          <div>
             <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>
               Daily Maximum Wellness Notification Budget
             </label>
@@ -822,8 +601,63 @@ export default function HowIThriveHub() {
             </div>
           </div>
 
+          {/* Consolidated Scheduled Reminders (Relocated from Main Notification tab) */}
+          <div style={{ background: 'var(--bg-secondary)', padding: '1.2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+            <h4 style={{ fontSize: '0.96rem', fontWeight: 700, margin: '0 0 0.3rem 0', color: 'var(--text-primary)' }}>
+              ⏰ Personalized Nudge Times
+            </h4>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 1rem 0' }}>
+              Calm, pressure-free reminders tailored to your daily schedule.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
+                  🌅 Morning Intention Nudge
+                </label>
+                <input
+                  type="time"
+                  value={reminderTime}
+                  onChange={e => {
+                    setReminderTime(e.target.value);
+                    handleSaveNotifications({ reminderTime: e.target.value });
+                  }}
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
+                  🌙 Evening Reflection Reminder
+                </label>
+                <input
+                  type="time"
+                  value={eveningReviewTime}
+                  onChange={e => {
+                    setEveningReviewTime(e.target.value);
+                    handleSaveNotifications({ eveningReviewTime: e.target.value });
+                  }}
+                  className="input-field"
+                />
+              </div>
+            </div>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.84rem' }}>
+              <input
+                type="checkbox"
+                checked={nudgesEnabled}
+                onChange={e => {
+                  setNudgesEnabled(e.target.checked);
+                  handleSaveNotifications({ nudgesEnabled: e.target.checked });
+                }}
+                style={{ width: 16, height: 16 }}
+              />
+              <span>Enable gentle mid-day hydration reminders</span>
+            </label>
+          </div>
+
           {/* Smart Bundling Preview */}
-          <div style={{ background: 'var(--accent-primary-light)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.25rem' }}>
+          <div style={{ background: 'var(--accent-primary-light)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-primary)', textTransform: 'uppercase' }}>
               💡 Smart Bundling Enabled
             </span>
@@ -836,38 +670,79 @@ export default function HowIThriveHub() {
       )}
 
       {/* =========================================================================
-          TAB 9: PRIVACY & RESET
+          TAB 8: AI & MEMORY
           ========================================================================= */}
-      {activeTab === 'reset' && (
-        <div className="card-glass" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem' }}>Privacy Guarantee & Reset Personalization</h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-            You maintain 100% control over your personalization settings.
-          </p>
-
-          <div style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem' }}>
-            <h4 style={{ fontSize: '0.95rem', marginBottom: '0.3rem' }}>🔒 Strict Non-Diagnostic Privacy</h4>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>
-              Your preferences are stored locally on your device. Better Every Day never assigns diagnostic labels (like ADHD or Autism) and never shares your sensory or executive function settings with other connected users.
-            </p>
-          </div>
-
-          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
-            <h4 style={{ fontSize: '0.95rem', marginBottom: '0.3rem' }}>Reset Personalization Settings</h4>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              This restores all How I Thrive settings to sensible defaults. Your logged check-ins, journals, and health logs will remain completely intact.
-            </p>
+      {activeTab === 'ai_memory' && (
+        <div className="card-glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem' }}>
+            <div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
+                <Brain size={18} color="var(--accent-primary)" /> AI Personalization & Memory Controls 🤖
+              </h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
+                View, manage, or clear the contextual memory Better Every Day uses to support you.
+              </p>
+            </div>
 
             <button
-              onClick={() => {
-                resetHowIThrive();
-                triggerSaveNotification();
-              }}
-              className="btn btn-secondary"
-              style={{ color: 'var(--accent-rose)' }}
+              onClick={() => setIsAIMemoryOpen(true)}
+              className="btn btn-primary btn-sm"
+              style={{ gap: '0.35rem' }}
             >
-              <RotateCcw size={15} /> Reset How I Thrive to Defaults
+              <Brain size={14} /> Manage AI Memory
             </button>
+          </div>
+
+          <div style={{ background: 'var(--bg-secondary)', padding: '1rem 1.25rem', borderRadius: 'var(--radius-md)', fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.5, border: '1px solid var(--border-subtle)' }}>
+            🔒 <strong>Memory Sovereignty:</strong> You have 100% control over everything stored in memory. The app remembers your preferred exercise intensity, hydration patterns, and wind-down preferences locally without external sharing. You can edit or erase memory items anytime.
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 9: VOICE RECORDING & REFLECTION
+          ========================================================================= */}
+      {activeTab === 'voice' && (
+        <div className="card-glass" style={{ padding: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
+            <Mic size={18} color="var(--accent-primary)" /> Voice Recording & Reflection Settings 🎙️
+          </h3>
+          <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+            Customize how voice recordings are transcribed and incorporated into your daily records.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
+            {[
+              { id: 'automatically_update', title: 'AUTOMATICALLY UPDATE', desc: 'Auto-detect meals, mood, workouts, and water from voice entries.' },
+              { id: 'ask_each_time', title: 'ASK ME EVERY TIME', desc: 'Review detected events before saving to records.' },
+              { id: 'never_update', title: 'TRANSCRIPT ONLY', desc: 'Save transcripts as reflections without auto-logging metrics.' }
+            ].map(opt => {
+              const active = (userProfile.voiceSettings?.updateMode || 'ask_each_time') === opt.id || (opt.id === 'automatically_update' && userProfile.voiceSettings?.updateMode === 'always_update');
+              return (
+                <div
+                  key={opt.id}
+                  onClick={() => {
+                    setUserProfile(prev => ({
+                      ...prev,
+                      voiceSettings: { ...(prev.voiceSettings || {}), updateMode: opt.id }
+                    }));
+                    triggerSaveNotification();
+                  }}
+                  style={{
+                    background: active ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                    border: `2px solid ${active ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
+                    padding: '1rem',
+                    borderRadius: 'var(--radius-md)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ fontWeight: 800, fontSize: '0.86rem', color: 'var(--text-primary)', marginBottom: '0.2rem' }}>
+                    {opt.title}
+                  </div>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>{opt.desc}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -896,9 +771,14 @@ export default function HowIThriveHub() {
       )}
 
       {/* Modals */}
-      <ThemeCreatorModal isOpen={isThemeCreatorOpen} onClose={() => setIsThemeCreatorOpen(false)} />
-      <BreakItDownModal isOpen={isBreakItDownOpen} onClose={() => setIsBreakItDownOpen(false)} />
-      <OverwhelmModal isOpen={isOverwhelmOpen} onClose={() => setIsOverwhelmOpen(false)} />
+      {isAIMemoryOpen && (
+        <AIMemoryModal isOpen={isAIMemoryOpen} onClose={() => setIsAIMemoryOpen(false)} />
+      )}
+
+      {isCustomizeOverviewOpen && (
+        <CustomizeOverviewModal isOpen={isCustomizeOverviewOpen} onClose={() => setIsCustomizeOverviewOpen(false)} />
+      )}
+
     </div>
   );
 }

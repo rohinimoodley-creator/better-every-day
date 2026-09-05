@@ -20,6 +20,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import ContextualPip from '../../mascot/ContextualPip';
 
 export default function RestHub({ onNavigateTab }) {
   const { userProfile, dailyCheckIn, howIThrive } = useWellness();
@@ -55,6 +56,9 @@ export default function RestHub({ onNavigateTab }) {
         <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
           Restorative sleep habits, recovery indicators, and calming evening wind-down rituals.
         </p>
+
+        {/* Contextual Sleepy / Cosy Pip */}
+        <ContextualPip context="rest" layout="subtle" size={32} style={{ marginTop: '0.75rem' }} />
       </div>
 
       {/* Sleep Quality Snapshot */}

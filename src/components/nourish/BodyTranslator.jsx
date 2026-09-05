@@ -4,6 +4,7 @@ import { lookupCraving } from '../../engine/bodyTranslator';
 import { CRAVINGS_DATABASE } from '../../data/mockData';
 import { Search, Sparkles, Heart, CheckCircle, HelpCircle, ArrowRight, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import ContextualPip from '../mascot/ContextualPip';
 
 export default function BodyTranslator() {
   const { cravingsLogs, logCraving } = useWellness();
@@ -72,12 +73,15 @@ export default function BodyTranslator() {
           <Sparkles size={12} /> Mindful Body Signals
         </span>
         <h3 style={{ fontSize: '1.35rem', marginBottom: '0.35rem' }}>The Body Translator 🧭</h3>
-        <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>
+        <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0', lineHeight: 1.45 }}>
           Cravings are not failures of willpower—they are gentle communication from your body about hunger, stress, fatigue, or dietary rhythm.
         </p>
 
+        {/* Contextual Nourish Pip (Non-judgmental) */}
+        <ContextualPip context="nourish" layout="subtle" size={32} style={{ marginBottom: '1rem' }} />
+
         {/* Primary Direct Input Form */}
-        <div style={{ marginTop: '1rem' }}>
+        <div>
           <label style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginBottom: '0.45rem' }}>
             What is your body telling you? 🧭
           </label>

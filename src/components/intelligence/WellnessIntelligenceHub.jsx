@@ -10,6 +10,7 @@ import IntelligenceDetailModal from './IntelligenceDetailModal';
 import IntelligenceExportModal from './IntelligenceExportModal';
 import AIMemoryModal from './AIMemoryModal';
 import RecommendationFeedbackModal from './RecommendationFeedbackModal';
+import ContextualPip from '../mascot/ContextualPip';
 import {
   BarChart2,
   Calendar,
@@ -294,6 +295,9 @@ export default function WellnessIntelligenceHub({ onNavigateTab }) {
           </button>
         </div>
       </div>
+
+      {/* Contextual Insights Pip */}
+      <ContextualPip context="insights" layout="subtle" size={32} style={{ marginBottom: '1rem' }} />
 
       {/* Main 6+ Categories Navigation Toolbar */}
       <div 

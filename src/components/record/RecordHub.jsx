@@ -37,6 +37,7 @@ import {
   Send
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import ContextualPip from '../mascot/ContextualPip';
 
 const VOICE_PRESETS = [
   {
@@ -376,6 +377,9 @@ export default function RecordHub({ onNavigateTab }) {
             Speak freely or write your thoughts. Better Every Day organizes your wellness moments with care.
           </p>
         </div>
+
+        {/* Contextual Quiet Listener Pip */}
+        <ContextualPip context="record" layout="subtle" size={34} />
 
         {/* Primary Toggle: Record (Voice) vs Write (Journal) */}
         <div style={{ display: 'flex', gap: '0.35rem', background: 'var(--bg-tertiary)', padding: '0.25rem', borderRadius: 'var(--radius-pill)' }}>

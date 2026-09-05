@@ -3,6 +3,7 @@ import { useWellness } from '../../context/WellnessContext';
 import LogPetPlayModal from './LogPetPlayModal';
 import PetProfileModal from './PetProfileModal';
 import PetPlayHistoryModal from './PetPlayHistoryModal';
+import ContextualPip from '../mascot/ContextualPip';
 import {
   Heart,
   Plus,
@@ -87,6 +88,9 @@ export default function PetPlaySection() {
           </button>
         </div>
       </div>
+
+      {/* Contextual Pet Play Pip */}
+      <ContextualPip context="pet_play" layout="subtle" size={32} style={{ marginBottom: '1rem' }} />
 
       {/* 2. Pet Selector Tabs */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.15rem' }}>

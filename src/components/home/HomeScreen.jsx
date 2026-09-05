@@ -157,8 +157,14 @@ export default function HomeScreen({ onNavigateTab }) {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* Integrated Mascot Avatar (Clickable) */}
-            <PipSproutAvatar size={52} mood="happy" onClick={() => setIsWardrobeOpen(true)} />
+            {/* Integrated Home Pip (Directly Customizable) */}
+            <PipSproutAvatar 
+              size={54} 
+              mood="happy" 
+              showCustomiseBadge={true} 
+              onClick={() => setIsWardrobeOpen(true)} 
+              title="Home Pip 🌱 Tap to style wardrobe & preferences"
+            />
 
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>

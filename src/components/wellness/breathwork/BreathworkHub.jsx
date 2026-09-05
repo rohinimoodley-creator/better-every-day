@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Wind, Play, Pause, RotateCcw, Sparkles, Heart, Volume2, ShieldCheck, Check } from 'lucide-react';
 import { useAudio } from '../../../context/AudioContext';
 import confetti from 'canvas-confetti';
+import ContextualPip from '../../mascot/ContextualPip';
 
 const BREATH_TECHNIQUES = [
   {
@@ -159,6 +160,9 @@ export default function BreathworkHub({ onNavigateTab }) {
         <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
           Regulate your heart rate, lower cortisol, and restore internal calm with rhythmic breath pacing.
         </p>
+
+        {/* Contextual Breathing Pip */}
+        <ContextualPip context="breathwork" layout="subtle" size={32} style={{ marginTop: '0.75rem' }} />
       </div>
 
       {/* Main Breathing Visualizer Card */}

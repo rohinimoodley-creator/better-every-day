@@ -3,6 +3,7 @@ import { useWellness } from '../../context/WellnessContext';
 import { useAudio } from '../../context/AudioContext';
 import { CheckCircle, Sparkles, Clock, Flame, ListPlus, PauseCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import ContextualPip from '../mascot/ContextualPip';
 
 export default function SmallStepCard({ smallStep, onBreakItDown }) {
   const { smallStepState, completeSmallStep, howIThrive } = useWellness();
@@ -80,37 +81,43 @@ export default function SmallStepCard({ smallStep, onBreakItDown }) {
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flexShrink: 0 }}>
-          <button
-            onClick={handleComplete}
-            className={`btn ${isDone ? 'btn-soft' : 'btn-primary'}`}
-            style={{
-              padding: '0.75rem 1.25rem',
-              boxShadow: isDone ? 'none' : '0 4px 14px rgba(217, 119, 54, 0.3)',
-              background: isDone ? 'var(--accent-primary-light)' : 'linear-gradient(135deg, #d97736 0%, #f48c42 100%)',
-              color: isDone ? 'var(--accent-primary)' : '#ffffff'
-            }}
-          >
-            {isDone ? (
-              <>
-                <CheckCircle size={18} /> Done Today!
-              </>
-            ) : (
-              <>
-                <Sparkles size={16} /> I Did This!
-              </>
-            )}
-          </button>
-
-          {onBreakItDown && (
-            <button
-              onClick={onBreakItDown}
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem' }}
-            >
-              <ListPlus size={12} /> Break It Down
-            </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
+          {isDone && (
+            <ContextualPip context="completion" layout="avatar-only" size={36} />
           )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <button
+              onClick={handleComplete}
+              className={`btn ${isDone ? 'btn-soft' : 'btn-primary'}`}
+              style={{
+                padding: '0.75rem 1.25rem',
+                boxShadow: isDone ? 'none' : '0 4px 14px rgba(217, 119, 54, 0.3)',
+                background: isDone ? 'var(--accent-primary-light)' : 'linear-gradient(135deg, #d97736 0%, #f48c42 100%)',
+                color: isDone ? 'var(--accent-primary)' : '#ffffff'
+              }}
+            >
+              {isDone ? (
+                <>
+                  <CheckCircle size={18} /> Done Today!
+                </>
+              ) : (
+                <>
+                  <Sparkles size={16} /> I Did This!
+                </>
+              )}
+            </button>
+
+            {onBreakItDown && !isDone && (
+              <button
+                onClick={onBreakItDown}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem' }}
+              >
+                <ListPlus size={12} /> Break It Down
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

@@ -3,6 +3,7 @@ import { useWellness } from '../../context/WellnessContext';
 import { useAudio } from '../../context/AudioContext';
 import { X, Heart, Wind, Compass, Sparkles, CheckCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import ContextualPip from '../mascot/ContextualPip';
 
 export default function OverwhelmModal({ isOpen, onClose }) {
   const { toggleOverwhelmMode, incrementHydration } = useWellness();
@@ -79,9 +80,13 @@ export default function OverwhelmModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: 1.45 }}>
-          You have nothing to prove. All statistics, schedules, and complex lists are paused. Choose one gentle action below:
-        </p>
+        {/* Contextual Calm Pip Companion (Level 1 Major Presence) */}
+        <ContextualPip 
+          context="take_a_moment" 
+          layout="banner" 
+          size={56} 
+          style={{ marginBottom: '1.25rem' }} 
+        />
 
         {/* 3 Pillars Selector */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1.5rem' }}>

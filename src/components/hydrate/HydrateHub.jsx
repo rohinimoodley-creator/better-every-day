@@ -23,6 +23,7 @@ import {
   X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import ContextualPip from '../mascot/ContextualPip';
 
 const HYDRATION_PRESETS = [
   { amount: 250, label: 'Glass', icon: '🥛', desc: 'Standard cup (250 ml)' },
@@ -237,6 +238,9 @@ export default function HydrateHub({ onNavigateTab }) {
             )}
           </div>
         </div>
+
+        {/* Contextual Hydrate Pip */}
+        <ContextualPip context="hydrate" layout="subtle" size={32} style={{ marginTop: '1.25rem', marginBottom: '1.25rem' }} />
 
         {/* Target Goal Modifier & Stats */}
         <div style={{ background: 'var(--bg-secondary)', padding: '1.1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>

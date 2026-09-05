@@ -5,6 +5,8 @@ import DailyRhythmCard from './DailyRhythmCard';
 import AIMemoryModal from '../intelligence/AIMemoryModal';
 import CustomizeOverviewModal from '../home/CustomizeOverviewModal';
 import SavedAudioModal from './SavedAudioModal';
+import PipSproutAvatar from '../mascot/PipSproutAvatar';
+import MascotWardrobeModal from '../mascot/MascotWardrobeModal';
 import {
   Sliders,
   Flame,
@@ -34,6 +36,7 @@ export default function HowIThriveHub() {
   const [isAIMemoryOpen, setIsAIMemoryOpen] = useState(false);
   const [isCustomizeOverviewOpen, setIsCustomizeOverviewOpen] = useState(false);
   const [isSavedAudioModalOpen, setIsSavedAudioModalOpen] = useState(false);
+  const [isWardrobeOpen, setIsWardrobeOpen] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
 
   // Consolidated notification states
@@ -392,6 +395,55 @@ export default function HowIThriveHub() {
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
             Fine-tune animation physics, sound triggers, and companion presence.
           </p>
+
+          {/* 1. Live Pip Personalisation Preview Card (Settings Pip) */}
+          <div
+            style={{
+              background: 'linear-gradient(135deg, var(--bg-secondary) 0%, var(--accent-primary-light) 100%)',
+              border: '1.5px solid var(--accent-primary)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              marginBottom: '1.5rem'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.1rem' }}>
+              <PipSproutAvatar
+                size={68}
+                mood="happy"
+                animated={howIThrive.animationLevel !== 'reduced' && howIThrive.animationLevel !== 'minimal'}
+                showCustomiseBadge={true}
+                onClick={() => setIsWardrobeOpen(true)}
+                title="Click to customize Pip's wardrobe"
+              />
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
+                  <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)' }}>
+                    Pip the Sprout
+                  </strong>
+                  <span className="pill-badge primary" style={{ fontSize: '0.7rem' }}>
+                    Personalisation Preview
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.35 }}>
+                  Customise Pip once here. Your chosen accessories and sensory settings automatically carry through every little moment.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsWardrobeOpen(true)}
+              className="btn btn-primary btn-sm"
+              style={{ padding: '0.5rem 0.95rem', gap: '0.35rem', fontWeight: 800, flexShrink: 0 }}
+            >
+              <Sparkles size={14} /> Style Wardrobe & Aura
+            </button>
+          </div>
 
           {/* Animation Level */}
           <div style={{ marginBottom: '1.5rem' }}>
@@ -995,6 +1047,10 @@ export default function HowIThriveHub() {
               : (Number(howIThrive.danceBreakPreferences?.durationSec) || 10)
           }
         />
+      )}
+
+      {isWardrobeOpen && (
+        <MascotWardrobeModal onClose={() => setIsWardrobeOpen(false)} />
       )}
 
     </div>

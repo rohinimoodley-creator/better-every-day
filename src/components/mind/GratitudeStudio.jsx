@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useWellness } from '../../context/WellnessContext';
 import { Heart, Plus, Trash2, Sparkles, Check, Bookmark, Calendar, ArrowRight, Share2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import ContextualPip from '../mascot/ContextualPip';
 
 const GRATITUDE_PROMPTS = [
   "A small sensory comfort that felt cozy today (warm coffee, clean sheets, cool breeze)",
@@ -142,6 +143,9 @@ export default function GratitudeStudio() {
       {activeSubTab === 'my_gratitude' ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           
+          {/* Contextual Pip for Gratitude */}
+          <ContextualPip context="gratitude" layout="subtle" size={34} />
+
           {/* New Gratitude Entry Form */}
           <form onSubmit={handleSaveEntry} className="card-glass" style={{ padding: '1.4rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>

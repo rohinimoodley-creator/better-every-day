@@ -51,6 +51,7 @@ export default function DanceBreakModal({ isOpen, onClose }) {
     : (Number(dancePrefs.durationSec) || 10);
 
   const [isDancing, setIsDancing] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [timeLeft, setTimeLeft] = useState(configuredDuration);
@@ -67,6 +68,7 @@ export default function DanceBreakModal({ isOpen, onClose }) {
   useEffect(() => {
     if (isOpen) {
       setIsCompleted(false);
+      setIsTransitioning(false);
       setIsPaused(false);
       setIsDancing(true);
       setTimeLeft(configuredDuration);
@@ -158,8 +160,7 @@ export default function DanceBreakModal({ isOpen, onClose }) {
 
   const handleDanceFinish = (duration) => {
     cleanupPlayback();
-    setIsDancing(false);
-    setIsCompleted(true);
+    setIsTransitioning(true);
 
     const quote = COMPLETION_MESSAGES[Math.floor(Math.random() * COMPLETION_MESSAGES.length)];
     setCompletionQuote(quote);
@@ -169,13 +170,20 @@ export default function DanceBreakModal({ isOpen, onClose }) {
       logDanceParty(duration, soundLabel, activeMediaDetails?.name);
     }
 
-    try {
-      confetti({
-        particleCount: 50,
-        spread: 80,
-        origin: { y: 0.6 }
-      });
-    } catch {}
+    // Gentle 320ms transition before revealing completion state
+    setTimeout(() => {
+      setIsDancing(false);
+      setIsCompleted(true);
+      setIsTransitioning(false);
+
+      try {
+        confetti({
+          particleCount: 50,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+      } catch {}
+    }, 320);
   };
 
   const handlePauseResume = () => {
@@ -279,7 +287,17 @@ export default function DanceBreakModal({ isOpen, onClose }) {
 
         {/* DANCE IN PROGRESS VIEW */}
         {!isCompleted ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', animation: 'fadeIn 0.2s ease-out' }}>
+          <div 
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              gap: '1rem', 
+              opacity: isTransitioning ? 0.4 : 1,
+              transform: isTransitioning ? 'scale(0.97)' : 'scale(1)',
+              transition: 'opacity 0.32s ease, transform 0.32s ease'
+            }}
+          >
             
             {/* Header Badge */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -290,7 +308,7 @@ export default function DanceBreakModal({ isOpen, onClose }) {
 
             {/* Joyful Animated Dancing Pip */}
             <div style={{ margin: '0.5rem 0' }}>
-              <PipDancingAvatar size={135} isPlaying={!isPaused} />
+              <PipDancingAvatar size={135} isPlaying={!isPaused && !isTransitioning} />
             </div>
 
             {/* Rotating Dance Encouragement Prompt */}
@@ -383,7 +401,7 @@ export default function DanceBreakModal({ isOpen, onClose }) {
           </div>
         ) : (
           /* COMPLETION CELEBRATION VIEW */
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.1rem', padding: '1rem 0', animation: 'fadeIn 0.25s ease-out' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.1rem', padding: '1rem 0', animation: 'fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)' }}>
             <div
               style={{
                 width: 70,
@@ -395,7 +413,8 @@ export default function DanceBreakModal({ isOpen, onClose }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '2.2rem',
-                boxShadow: '0 8px 24px rgba(46, 125, 90, 0.35)'
+                boxShadow: '0 8px 24px rgba(46, 125, 90, 0.35)',
+                animation: 'scaleUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
               }}
             >
               🎉

@@ -1,228 +1,294 @@
 import React from 'react';
 
 /**
- * Clean, supportive, visually clear SVG mini-animations for exercise steps.
- * Designed to be easy to understand, short, calming, and non-distracting.
+ * Rich, clear, calm, and continuous SVG animated exercise demonstrations.
+ * Built to visually demonstrate starting position, movement path, correct stance,
+ * ending position, and repetition, with full Slow Mode support.
  */
 
-export default function ExerciseMiniAnimation({ exerciseId, stepIndex }) {
-  // Common styling for figures
+export default function ExerciseMiniAnimation({ exerciseId, isSlowMode = false, activeStepIdx = null }) {
   const primaryColor = 'var(--accent-primary, #2d6a4f)';
   const secondaryColor = 'var(--accent-secondary, #d97736)';
   const bodyColor = 'var(--text-primary, #2d3748)';
   const guideColor = '#3a86c8';
 
+  const animDuration = isSlowMode ? '7s' : '3.6s';
+
   const containerStyle = {
     width: '100%',
-    height: 140,
-    background: 'var(--bg-tertiary, rgba(0,0,0,0.03))',
-    borderRadius: 'var(--radius-md, 8px)',
+    height: 190,
+    background: 'radial-gradient(circle at center, var(--bg-secondary) 0%, var(--bg-tertiary) 100%)',
+    borderRadius: 'var(--radius-lg, 12px)',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
     overflow: 'hidden',
-    border: '1px solid var(--border-subtle, rgba(0,0,0,0.08))'
+    border: '1.5px solid var(--border-subtle, rgba(0,0,0,0.08))',
+    boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.04)'
   };
 
-  // 1. SQUAT STEPS
-  if (exerciseId === 'squat') {
-    if (stepIndex === 0) {
-      // Step 1: Stand with feet shoulder-width apart
-      return (
-        <div style={containerStyle}>
-          <svg width="180" height="120" viewBox="0 0 180 120">
-            {/* Ground line */}
-            <line x1="20" y1="110" x2="160" y2="110" stroke="var(--border-subtle)" strokeWidth="2" strokeDasharray="4 4" />
-            {/* Head */}
-            <circle cx="90" cy="22" r="10" fill={primaryColor} />
-            {/* Torso */}
-            <line x1="90" y1="32" x2="90" y2="70" stroke={bodyColor} strokeWidth="5" strokeLinecap="round" />
-            {/* Arms at sides */}
-            <line x1="90" y1="40" x2="78" y2="65" stroke={bodyColor} strokeWidth="3.5" strokeLinecap="round" />
-            <line x1="90" y1="40" x2="102" y2="65" stroke={bodyColor} strokeWidth="3.5" strokeLinecap="round" />
-            {/* Legs shoulder-width apart */}
-            <line x1="90" y1="70" x2="72" y2="110" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
-            <line x1="90" y1="70" x2="108" y2="110" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
-            {/* Width arrow guide */}
-            <path d="M 68 114 L 112 114" stroke={guideColor} strokeWidth="1.5" strokeDasharray="2 2" />
-            <text x="90" y="118" fontSize="8" fill={guideColor} textAnchor="middle" fontWeight="bold">Shoulder Width</text>
-          </svg>
-        </div>
-      );
-    }
-    if (stepIndex === 1) {
-      // Step 2: Push hips back
-      return (
-        <div style={containerStyle}>
-          <svg width="180" height="120" viewBox="0 0 180 120">
-            <line x1="20" y1="110" x2="160" y2="110" stroke="var(--border-subtle)" strokeWidth="2" />
-            <circle cx="82" cy="26" r="10" fill={primaryColor} />
-            {/* Torso angled forward */}
-            <line x1="82" y1="36" x2="74" y2="72" stroke={bodyColor} strokeWidth="5" strokeLinecap="round" />
-            {/* Arms reaching forward for balance */}
-            <line x1="82" y1="44" x2="105" y2="44" stroke={bodyColor} strokeWidth="3.5" strokeLinecap="round" />
-            {/* Hips hinging backward */}
-            <line x1="74" y1="72" x2="80" y2="92" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
-            <line x1="80" y1="92" x2="84" y2="110" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
-            {/* Hinge arrow indicator */}
-            <path d="M 90 70 Q 60 72 58 80" fill="none" stroke={secondaryColor} strokeWidth="2.5" markerEnd="url(#arrow)" />
-            <circle cx="74" cy="72" r="4" fill={secondaryColor} />
-            <text x="50" y="66" fontSize="9" fill={secondaryColor} fontWeight="bold">Hips Back</text>
-          </svg>
-        </div>
-      );
-    }
-    if (stepIndex === 2 || stepIndex === 3) {
-      // Step 3 & 4: Bend knees & lower body to parallel
-      return (
-        <div style={containerStyle}>
-          <svg width="180" height="120" viewBox="0 0 180 120">
-            <line x1="20" y1="110" x2="160" y2="110" stroke="var(--border-subtle)" strokeWidth="2" />
-            {/* Head */}
-            <circle cx="78" cy="42" r="10" fill={primaryColor} className="pulse-slow" />
-            {/* Spine */}
-            <line x1="78" y1="52" x2="65" y2="82" stroke={bodyColor} strokeWidth="5" strokeLinecap="round" />
-            {/* Arms forward */}
-            <line x1="78" y1="58" x2="108" y2="58" stroke={bodyColor} strokeWidth="3.5" strokeLinecap="round" />
-            {/* Thigh parallel to ground */}
-            <line x1="65" y1="82" x2="98" y2="82" stroke={secondaryColor} strokeWidth="5" strokeLinecap="round" />
-            {/* Shin */}
-            <line x1="98" y1="82" x2="96" y2="110" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
-            {/* Alignment indicator */}
-            <line x1="60" y1="82" x2="120" y2="82" stroke={guideColor} strokeWidth="1" strokeDasharray="3 3" />
-            <text x="130" y="85" fontSize="8" fill={guideColor} fontWeight="bold">Parallel</text>
-          </svg>
-        </div>
-      );
-    }
-    // Step 5: Return to standing
-    return (
-      <div style={containerStyle}>
-        <svg width="180" height="120" viewBox="0 0 180 120">
-          <line x1="20" y1="110" x2="160" y2="110" stroke="var(--border-subtle)" strokeWidth="2" />
-          <circle cx="90" cy="22" r="10" fill={primaryColor} />
-          <line x1="90" y1="32" x2="90" y2="70" stroke={bodyColor} strokeWidth="5" strokeLinecap="round" />
-          <line x1="90" y1="40" x2="90" y2="65" stroke={bodyColor} strokeWidth="3.5" strokeLinecap="round" />
-          <line x1="90" y1="70" x2="78" y2="110" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
-          <line x1="90" y1="70" x2="102" y2="110" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
-          {/* Upward motion arrow */}
-          <path d="M 125 90 L 125 45 M 120 52 L 125 45 L 130 52" fill="none" stroke={primaryColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <text x="135" y="70" fontSize="8.5" fill={primaryColor} fontWeight="bold">Drive Up</text>
-        </svg>
-      </div>
-    );
-  }
-
-  // 2. PUSH-UP / WALL PUSH-UP STEPS
-  if (exerciseId === 'pushup') {
-    if (stepIndex === 0) {
-      // Hands shoulder-width
-      return (
-        <div style={containerStyle}>
-          <svg width="180" height="120" viewBox="0 0 180 120">
-            <line x1="140" y1="10" x2="140" y2="110" stroke="var(--border-subtle)" strokeWidth="3" />
-            <circle cx="95" cy="30" r="9" fill={primaryColor} />
-            <line x1="95" y1="39" x2="80" y2="85" stroke={bodyColor} strokeWidth="5" strokeLinecap="round" />
-            <line x1="95" y1="48" x2="140" y2="48" stroke={secondaryColor} strokeWidth="4" strokeLinecap="round" />
-            <line x1="80" y1="85" x2="65" y2="110" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
-            <text x="145" y="60" fontSize="8" fill="var(--text-muted)">Wall / Mat</text>
-          </svg>
-        </div>
-      );
-    }
-    if (stepIndex === 1) {
-      // Straight plank line
-      return (
-        <div style={containerStyle}>
-          <svg width="180" height="120" viewBox="0 0 180 120">
-            <line x1="20" y1="105" x2="160" y2="105" stroke="var(--border-subtle)" strokeWidth="2" />
-            <circle cx="130" cy="50" r="9" fill={primaryColor} />
-            {/* Straight body line */}
-            <line x1="130" y1="58" x2="45" y2="98" stroke={primaryColor} strokeWidth="5" strokeLinecap="round" />
-            {/* Arms vertical */}
-            <line x1="120" y1="62" x2="120" y2="105" stroke={bodyColor} strokeWidth="4" strokeLinecap="round" />
-            {/* Feet */}
-            <circle cx="45" cy="100" r="4" fill={bodyColor} />
-            <line x1="38" y1="52" x2="140" y2="52" stroke={guideColor} strokeWidth="1" strokeDasharray="3 3" />
-            <text x="85" y="46" fontSize="8.5" fill={guideColor} fontWeight="bold">Flat Spine</text>
-          </svg>
-        </div>
-      );
-    }
-    // Lowering & Pressing
-    return (
-      <div style={containerStyle}>
-        <svg width="180" height="120" viewBox="0 0 180 120">
-          <line x1="20" y1="105" x2="160" y2="105" stroke="var(--border-subtle)" strokeWidth="2" />
-          <circle cx="130" cy="72" r="9" fill={primaryColor} />
-          {/* Lowered plank */}
-          <line x1="130" y1="78" x2="45" y2="100" stroke={bodyColor} strokeWidth="5" strokeLinecap="round" />
-          {/* Bent elbow 45 deg */}
-          <path d="M 120 80 L 105 70 L 120 105" fill="none" stroke={secondaryColor} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-          <text x="90" y="62" fontSize="8.5" fill={secondaryColor} fontWeight="bold">45° Elbows</text>
-        </svg>
-      </div>
-    );
-  }
-
-  // 3. LUNGE STEPS
-  if (exerciseId === 'lunge') {
-    return (
-      <div style={containerStyle}>
-        <svg width="180" height="120" viewBox="0 0 180 120">
-          <line x1="20" y1="110" x2="160" y2="110" stroke="var(--border-subtle)" strokeWidth="2" />
-          {/* Head */}
-          <circle cx="85" cy="30" r="9" fill={primaryColor} />
-          {/* Torso vertical */}
-          <line x1="85" y1="39" x2="85" y2="72" stroke={bodyColor} strokeWidth="5" strokeLinecap="round" />
-          {/* Front Leg: 90 degrees */}
-          <line x1="85" y1="72" x2="115" y2="72" stroke={secondaryColor} strokeWidth="4.5" strokeLinecap="round" />
-          <line x1="115" y1="72" x2="115" y2="110" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
-          {/* Back Leg: 90 degrees dropping toward floor */}
-          <line x1="85" y1="72" x2="60" y2="92" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
-          <line x1="60" y1="92" x2="60" y2="110" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
-          {/* 90 deg guide markers */}
-          <rect x="110" y="72" width="6" height="6" fill="none" stroke={guideColor} strokeWidth="1" />
-          <text x="125" y="80" fontSize="8" fill={guideColor} fontWeight="bold">90° Front</text>
-        </svg>
-      </div>
-    );
-  }
-
-  // 4. PLANK / CORE HOLD
-  if (exerciseId === 'plank') {
-    return (
-      <div style={containerStyle}>
-        <svg width="180" height="120" viewBox="0 0 180 120">
-          <line x1="20" y1="105" x2="160" y2="105" stroke="var(--border-subtle)" strokeWidth="2" />
-          <circle cx="135" cy="65" r="9" fill={primaryColor} />
-          <line x1="135" y1="72" x2="45" y2="95" stroke={primaryColor} strokeWidth="5" strokeLinecap="round" />
-          {/* Forearm flat */}
-          <line x1="125" y1="76" x2="125" y2="105" stroke={bodyColor} strokeWidth="4" strokeLinecap="round" />
-          <line x1="125" y1="105" x2="145" y2="105" stroke={bodyColor} strokeWidth="4" strokeLinecap="round" />
-          {/* Gentle core activation glow */}
-          <circle cx="90" cy="85" r="7" fill="rgba(217, 93, 57, 0.25)" />
-          <text x="90" y="88" fontSize="7" fill={secondaryColor} textAnchor="middle" fontWeight="bold">Core</text>
-        </svg>
-      </div>
-    );
-  }
-
-  // 5. GENTLE NECK & SHOULDER RELEASE
   return (
-    <div style={containerStyle}>
-      <svg width="180" height="120" viewBox="0 0 180 120">
-        {/* Head gently tilted */}
-        <circle cx="90" cy="35" r="12" fill={primaryColor} />
-        <path d="M 82 28 Q 98 24 102 32" stroke={secondaryColor} strokeWidth="2" fill="none" strokeLinecap="round" />
-        {/* Torso & Shoulders rolling */}
-        <line x1="90" y1="47" x2="90" y2="95" stroke={bodyColor} strokeWidth="5" strokeLinecap="round" />
-        <line x1="70" y1="58" x2="110" y2="58" stroke={secondaryColor} strokeWidth="4" strokeLinecap="round" />
-        <path d="M 65 58 C 60 50, 60 65, 68 64" fill="none" stroke={guideColor} strokeWidth="1.5" />
-        <path d="M 115 58 C 120 50, 120 65, 112 64" fill="none" stroke={guideColor} strokeWidth="1.5" />
-        <text x="90" y="112" fontSize="8" fill="var(--text-muted)" textAnchor="middle">Slow gentle circles</text>
-      </svg>
+    <div style={containerStyle} aria-label={`${exerciseId} animation demonstration`}>
+      <style>{`
+        @keyframes squatLoop {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          15% {
+            transform: translateY(0);
+          }
+          45%, 60% {
+            transform: translateY(22px);
+          }
+          85% {
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes squatLegs {
+          0%, 100% {
+            d: path("M 90 70 L 76 110 M 90 70 L 104 110");
+          }
+          15% {
+            d: path("M 90 70 L 76 110 M 90 70 L 104 110");
+          }
+          45%, 60% {
+            d: path("M 90 86 L 68 86 L 72 110 M 90 86 L 112 86 L 108 110");
+          }
+          85% {
+            d: path("M 90 70 L 76 110 M 90 70 L 104 110");
+          }
+        }
+
+        @keyframes pushupLoop {
+          0%, 100% {
+            transform: rotate(0deg) translateY(0);
+          }
+          15% {
+            transform: rotate(0deg) translateY(0);
+          }
+          45%, 60% {
+            transform: rotate(-6deg) translateY(14px);
+          }
+          85% {
+            transform: rotate(0deg) translateY(0);
+          }
+        }
+
+        @keyframes lungeLegFront {
+          0%, 100% {
+            d: path("M 90 72 L 90 110 M 90 72 L 90 110");
+          }
+          15% {
+            d: path("M 90 72 L 108 72 L 108 110 M 90 72 L 72 90 L 72 110");
+          }
+          45%, 60% {
+            d: path("M 90 84 L 115 84 L 115 110 M 90 84 L 65 96 L 65 110");
+          }
+          85% {
+            d: path("M 90 72 L 90 110 M 90 72 L 90 110");
+          }
+        }
+
+        @keyframes gentlePulse {
+          0%, 100% { transform: scale(1); opacity: 0.85; }
+          50% { transform: scale(1.08); opacity: 1; }
+        }
+
+        @keyframes neckTilt {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(-14deg); }
+          50% { transform: rotate(0deg); }
+          75% { transform: rotate(14deg); }
+        }
+
+        @keyframes shoulderCircle {
+          0%, 100% { transform: translateY(0); }
+          25% { transform: translateY(-4px); }
+          50% { transform: translateY(2px); }
+          75% { transform: translateY(-2px); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .anim-squat-torso, .anim-squat-legs, .anim-pushup, .anim-lunge, .anim-neck, .anim-shoulder {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
+      {/* 1. SQUAT DEMONSTRATION */}
+      {exerciseId === 'squat' && (
+        <svg width="220" height="150" viewBox="0 0 220 150">
+          {/* Ground surface */}
+          <line x1="30" y1="130" x2="190" y2="130" stroke="var(--border-subtle)" strokeWidth="2.5" strokeDasharray="5 5" />
+          
+          {/* Stance indicator */}
+          <path d="M 72 135 L 148 135" stroke={guideColor} strokeWidth="1.5" strokeDasharray="3 3" />
+          <text x="110" y="145" fontSize="8.5" fill={guideColor} textAnchor="middle" fontWeight="bold">Feet Shoulder-Width</text>
+
+          {/* Animated Body Group */}
+          <g style={{ animation: `squatLoop ${animDuration} ease-in-out infinite`, transformOrigin: '110px 110px' }}>
+            {/* Head */}
+            <circle cx="110" cy="30" r="11" fill={primaryColor} />
+            {/* Smile / Eye indication */}
+            <circle cx="106" cy="28" r="1.5" fill="#ffffff" />
+            <circle cx="114" cy="28" r="1.5" fill="#ffffff" />
+            
+            {/* Torso */}
+            <line x1="110" y1="41" x2="110" y2="78" stroke={bodyColor} strokeWidth="6" strokeLinecap="round" />
+            
+            {/* Arms reaching forward for balance */}
+            <line x1="110" y1="52" x2="136" y2="52" stroke={secondaryColor} strokeWidth="4" strokeLinecap="round" />
+            <line x1="110" y1="52" x2="84" y2="52" stroke={secondaryColor} strokeWidth="4" strokeLinecap="round" />
+          </g>
+
+          {/* Animated Legs */}
+          <g style={{ animation: `squatLoop ${animDuration} ease-in-out infinite`, transformOrigin: '110px 110px' }}>
+            {/* Left leg */}
+            <line x1="110" y1="78" x2="88" y2="130" stroke={bodyColor} strokeWidth="5.5" strokeLinecap="round" />
+            {/* Right leg */}
+            <line x1="110" y1="78" x2="132" y2="130" stroke={bodyColor} strokeWidth="5.5" strokeLinecap="round" />
+          </g>
+
+          {/* Form Checkpoint Badge */}
+          <g opacity={isSlowMode ? "1" : "0.9"}>
+            <rect x="145" y="16" width="68" height="20" rx="10" fill="var(--bg-glass-card)" stroke="var(--border-subtle)" strokeWidth="1" />
+            <text x="179" y="29" fontSize="7.5" fill="var(--text-secondary)" textAnchor="middle" fontWeight="bold">
+              {isSlowMode ? '🐢 Slow Demo' : '✨ Smooth Loop'}
+            </text>
+          </g>
+        </svg>
+      )}
+
+      {/* 2. PUSH-UP DEMONSTRATION */}
+      {exerciseId === 'pushup' && (
+        <svg width="220" height="150" viewBox="0 0 220 150">
+          {/* Ground/Mat Line */}
+          <line x1="30" y1="125" x2="190" y2="125" stroke="var(--border-subtle)" strokeWidth="3" />
+          
+          {/* Plank Line Guide */}
+          <line x1="50" y1="118" x2="160" y2="65" stroke={guideColor} strokeWidth="1.2" strokeDasharray="3 3" opacity="0.6" />
+          <text x="105" y="55" fontSize="8" fill={guideColor} textAnchor="middle" fontWeight="bold">Straight Back & Core</text>
+
+          {/* Animated Body & Push Group */}
+          <g style={{ animation: `pushupLoop ${animDuration} ease-in-out infinite`, transformOrigin: '55px 120px' }}>
+            {/* Head */}
+            <circle cx="160" cy="72" r="10" fill={primaryColor} />
+            
+            {/* Torso straight through hips */}
+            <line x1="160" y1="78" x2="55" y2="120" stroke={bodyColor} strokeWidth="6" strokeLinecap="round" />
+            
+            {/* Arm pushing to mat */}
+            <path d="M 148 83 L 140 102 L 148 125" fill="none" stroke={secondaryColor} strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+            
+            {/* Feet anchor */}
+            <circle cx="55" cy="122" r="4" fill={bodyColor} />
+          </g>
+
+          {/* Form checkpoint tag */}
+          <g>
+            <rect x="145" y="16" width="68" height="20" rx="10" fill="var(--bg-glass-card)" stroke="var(--border-subtle)" strokeWidth="1" />
+            <text x="179" y="29" fontSize="7.5" fill="var(--text-secondary)" textAnchor="middle" fontWeight="bold">
+              {isSlowMode ? '🐢 Slow Demo' : '✨ Smooth Loop'}
+            </text>
+          </g>
+        </svg>
+      )}
+
+      {/* 3. STEP LUNGE DEMONSTRATION */}
+      {exerciseId === 'lunge' && (
+        <svg width="220" height="150" viewBox="0 0 220 150">
+          <line x1="30" y1="130" x2="190" y2="130" stroke="var(--border-subtle)" strokeWidth="2.5" />
+
+          {/* Animated Lunge Figure */}
+          <g style={{ animation: `squatLoop ${animDuration} ease-in-out infinite`, transformOrigin: '110px 110px' }}>
+            {/* Head */}
+            <circle cx="105" cy="32" r="10" fill={primaryColor} />
+            {/* Torso upright */}
+            <line x1="105" y1="42" x2="105" y2="80" stroke={bodyColor} strokeWidth="5.5" strokeLinecap="round" />
+            
+            {/* Hands on hips */}
+            <path d="M 105 52 L 118 64 L 112 75" fill="none" stroke={bodyColor} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M 105 52 L 92 64 L 98 75" fill="none" stroke={bodyColor} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+
+            {/* Front leg bending to 90 deg */}
+            <path d="M 105 80 L 140 80 L 140 130" fill="none" stroke={secondaryColor} strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+            
+            {/* Back leg dropping gently */}
+            <path d="M 105 80 L 75 105 L 75 130" fill="none" stroke={bodyColor} strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+
+          {/* 90 deg angle checkpoint */}
+          <text x="145" y="74" fontSize="8" fill={guideColor} fontWeight="bold">90° Front</text>
+          <text x="50" y="102" fontSize="8" fill={guideColor} fontWeight="bold">90° Back</text>
+        </svg>
+      )}
+
+      {/* 4. FOREARM PLANK HOLD DEMONSTRATION */}
+      {exerciseId === 'plank' && (
+        <svg width="220" height="150" viewBox="0 0 220 150">
+          <line x1="30" y1="125" x2="190" y2="125" stroke="var(--border-subtle)" strokeWidth="3" />
+
+          {/* Stable Straight Spine */}
+          <line x1="60" y1="105" x2="155" y2="85" stroke={primaryColor} strokeWidth="6" strokeLinecap="round" />
+          
+          {/* Head */}
+          <circle cx="165" cy="80" r="10" fill={primaryColor} />
+
+          {/* Forearms resting flat on mat */}
+          <line x1="145" y1="90" x2="145" y2="125" stroke={bodyColor} strokeWidth="4.5" strokeLinecap="round" />
+          <line x1="145" y1="125" x2="165" y2="125" stroke={secondaryColor} strokeWidth="4.5" strokeLinecap="round" />
+
+          {/* Toes on ground */}
+          <circle cx="60" cy="115" r="4" fill={bodyColor} />
+
+          {/* Calming Core Glow Pulse */}
+          <circle 
+            cx="110" 
+            cy="95" 
+            r="16" 
+            fill="rgba(217, 119, 54, 0.2)" 
+            style={{ animation: `gentlePulse ${isSlowMode ? '4s' : '2.5s'} ease-in-out infinite` }} 
+          />
+          <text x="110" y="99" fontSize="8" fill={secondaryColor} textAnchor="middle" fontWeight="bold">Tighten Tummy</text>
+          <text x="110" y="142" fontSize="8.5" fill="var(--text-muted)" textAnchor="middle">Breathe Smoothly & Hold</text>
+        </svg>
+      )}
+
+      {/* 5. NECK & SHOULDER RESET DEMONSTRATION */}
+      {exerciseId === 'stretch' && (
+        <svg width="220" height="150" viewBox="0 0 220 150">
+          {/* Seated base */}
+          <line x1="60" y1="135" x2="160" y2="135" stroke="var(--border-subtle)" strokeWidth="2.5" />
+
+          {/* Shoulders with gentle rolling */}
+          <g style={{ animation: `shoulderCircle ${animDuration} ease-in-out infinite` }}>
+            <line x1="110" y1="62" x2="110" y2="110" stroke={bodyColor} strokeWidth="6" strokeLinecap="round" />
+            <line x1="75" y1="72" x2="145" y2="72" stroke={secondaryColor} strokeWidth="5" strokeLinecap="round" />
+          </g>
+
+          {/* Head with gentle tilt animation */}
+          <g style={{ animation: `neckTilt ${animDuration} ease-in-out infinite`, transformOrigin: '110px 62px' }}>
+            <circle cx="110" cy="40" r="13" fill={primaryColor} />
+            <circle cx="106" cy="38" r="1.5" fill="#ffffff" />
+            <circle cx="114" cy="38" r="1.5" fill="#ffffff" />
+          </g>
+
+          {/* Motion guideline arrows */}
+          <path d="M 68 70 Q 60 60 70 54" fill="none" stroke={guideColor} strokeWidth="1.5" markerEnd="url(#arrow)" />
+          <path d="M 152 70 Q 160 60 150 54" fill="none" stroke={guideColor} strokeWidth="1.5" markerEnd="url(#arrow)" />
+          <text x="110" y="145" fontSize="8.5" fill="var(--text-muted)" textAnchor="middle">Slow ear-to-shoulder release</text>
+        </svg>
+      )}
+
+      {/* Interactive Helper Cue */}
+      <div style={{ position: 'absolute', bottom: 6, right: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-primary)', display: 'inline-block' }} />
+        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 600 }}>Visual Guide</span>
+      </div>
     </div>
   );
 }
+

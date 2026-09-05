@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Sparkles, X, ArrowRight } from 'lucide-react';
+import { Sparkles, X, ArrowRight, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import ContextualPip from '../mascot/ContextualPip';
+import { useAudio } from '../../context/AudioContext';
 
 export default function MicroMovementPromptModal({
   isOpen,
@@ -9,30 +11,39 @@ export default function MicroMovementPromptModal({
   onSkipBreak,
   preference = 'choose'
 }) {
+  const { playChime } = useAudio();
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [completedMessage, setCompletedMessage] = useState(false);
+  const [loggedType, setLoggedType] = useState('');
 
   if (!isOpen) return null;
 
   const handleSelectOption = (type) => {
-    setCompletedMessage(true);
+    setLoggedType(type);
+    setIsTransitioning(true);
+
+    try { playChime(528); } catch(e) {}
     try {
       confetti({
         particleCount: 25,
         spread: 45,
         origin: { y: 0.6 }
       });
-    } catch {
-      // Ignored for environments without canvas support
-    }
+    } catch {}
 
     if (onCompleteBreak) {
       onCompleteBreak(type);
     }
 
     setTimeout(() => {
+      setCompletedMessage(true);
+      setIsTransitioning(false);
+    }, 280);
+
+    setTimeout(() => {
       setCompletedMessage(false);
       onClose();
-    }, 1400);
+    }, 1700);
   };
 
   const handleSkip = () => {
@@ -45,22 +56,44 @@ export default function MicroMovementPromptModal({
   return (
     <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 1100 }}>
       <div 
-        className="modal-sheet" 
+        className="modal-sheet card-glass" 
         onClick={e => e.stopPropagation()} 
-        style={{ maxWidth: 440, textAlign: 'center', animation: 'scaleUp 0.2s ease-out' }}
+        style={{ 
+          maxWidth: 460, 
+          textAlign: 'center', 
+          padding: '1.75rem',
+          borderRadius: 'var(--radius-xl)',
+          border: '1.5px solid var(--accent-primary)',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+          animation: 'scaleUp 0.2s ease-out'
+        }}
       >
         {completedMessage ? (
-          <div style={{ padding: '1.5rem 0' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>💚</div>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-primary)', margin: '0 0 0.25rem 0' }}>
-              Nice reset 💚
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-              Your 30-minute interval has reset. Continue with your day with renewed focus.
-            </p>
+          <div style={{ padding: '1.25rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.85rem', animation: 'fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            <ContextualPip 
+              context="move" 
+              size={64} 
+              mood="celebrate"
+              message="Nice reset! 🌱"
+              showSpeechBubble={false}
+            />
+            <div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--accent-primary)', margin: '0 0 0.25rem 0' }}>
+                Nice reset 💚
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                {loggedType ? `Logged ${loggedType}. ` : ''}Your 30-minute interval has refreshed smoothly.
+              </p>
+            </div>
           </div>
         ) : (
-          <div>
+          <div
+            style={{
+              opacity: isTransitioning ? 0.35 : 1,
+              transform: isTransitioning ? 'scale(0.97)' : 'scale(1)',
+              transition: 'opacity 0.28s ease, transform 0.28s ease'
+            }}
+          >
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
               <div style={{ textAlign: 'left' }}>
@@ -74,7 +107,19 @@ export default function MicroMovementPromptModal({
 
               <button 
                 onClick={onClose}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%',
+                  width: 30,
+                  height: 30,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
               >
                 <X size={18} />
               </button>
@@ -98,7 +143,8 @@ export default function MicroMovementPromptModal({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
-                  textAlign: 'left'
+                  textAlign: 'left',
+                  transition: 'all 0.15s ease'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -132,7 +178,8 @@ export default function MicroMovementPromptModal({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
-                  textAlign: 'left'
+                  textAlign: 'left',
+                  transition: 'all 0.15s ease'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -178,3 +225,4 @@ export default function MicroMovementPromptModal({
     </div>
   );
 }
+

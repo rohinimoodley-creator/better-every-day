@@ -76,6 +76,7 @@ export default function DancePartyModal({ isOpen, onClose, initialDuration = 15 
   // Live Dance State
   const [timeLeft, setTimeLeft] = useState(durationSec);
   const [isPaused, setIsPaused] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [promptIdx, setPromptIdx] = useState(0);
   const [completionQuote, setCompletionQuote] = useState(COMPLETION_MESSAGES[0]);
 
@@ -91,6 +92,7 @@ export default function DancePartyModal({ isOpen, onClose, initialDuration = 15 
       loadMediaLibrary();
       setStage('setup');
       setIsPaused(false);
+      setIsTransitioning(false);
       setUploadError('');
     } else {
       cleanupPlayback();
@@ -113,33 +115,30 @@ export default function DancePartyModal({ isOpen, onClose, initialDuration = 15 
 
   const handleSelectMedia = async (mediaId) => {
     setSelectedMediaId(mediaId);
-    setStartOffsetSec(0);
-    const details = await getCustomMediaById(mediaId);
-    setActiveMediaDetails(details);
+    try {
+      const details = await getCustomMediaById(mediaId);
+      setActiveMediaDetails(details);
+    } catch {}
   };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check size limit: up to 100MB for local browser playback
-    if (file.size > 100 * 1024 * 1024) {
-      setUploadError('File is over 100MB. Please choose a smaller audio or video clip.');
-      return;
-    }
-
     setIsUploading(true);
     setUploadError('');
 
     try {
-      const saved = await saveCustomMedia(file, file.name.replace(/\.[^/.]+$/, ''));
+      const savedItem = await saveCustomMedia(file, file.name.replace(/\.[^/.]+$/, ''));
       await loadMediaLibrary();
-      await handleSelectMedia(saved.id);
+      setSelectedMediaId(savedItem.id);
+      setActiveMediaDetails(savedItem);
       setSoundType('custom');
     } catch (err) {
-      setUploadError('Could not process this media file. Please try another MP4 or audio file.');
+      setUploadError(err.message || 'Failed to process media file. Please choose an audio or MP4 file under 50MB.');
     } finally {
       setIsUploading(false);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -193,6 +192,7 @@ export default function DancePartyModal({ isOpen, onClose, initialDuration = 15 
     setTimeLeft(finalDuration);
     setStage('dancing');
     setIsPaused(false);
+    setIsTransitioning(false);
     setPromptIdx(Math.floor(Math.random() * DANCE_PROMPTS.length));
 
     // Rotating encouragement prompts
@@ -240,7 +240,7 @@ export default function DancePartyModal({ isOpen, onClose, initialDuration = 15 
 
   const handleDanceFinish = (completedDuration) => {
     cleanupPlayback();
-    setStage('completed');
+    setIsTransitioning(true);
 
     const quote = COMPLETION_MESSAGES[Math.floor(Math.random() * COMPLETION_MESSAGES.length)];
     setCompletionQuote(quote);
@@ -248,13 +248,18 @@ export default function DancePartyModal({ isOpen, onClose, initialDuration = 15 
     const soundLabel = soundType === 'builtin' ? 'Better Every Day' : (activeMediaDetails?.name || 'My Sound');
     logDanceParty(completedDuration, soundLabel, activeMediaDetails?.name);
 
-    try {
-      confetti({
-        particleCount: 50,
-        spread: 80,
-        origin: { y: 0.6 }
-      });
-    } catch {}
+    setTimeout(() => {
+      setStage('completed');
+      setIsTransitioning(false);
+
+      try {
+        confetti({
+          particleCount: 50,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+      } catch {}
+    }, 320);
   };
 
   const handlePauseResume = () => {
@@ -724,14 +729,16 @@ export default function DancePartyModal({ isOpen, onClose, initialDuration = 15 
               justifyContent: 'center',
               padding: '1.5rem 0.5rem',
               textAlign: 'center',
-              animation: 'fadeIn 0.25s ease-out'
+              opacity: isTransitioning ? 0.4 : 1,
+              transform: isTransitioning ? 'scale(0.97)' : 'scale(1)',
+              transition: 'opacity 0.32s ease, transform 0.32s ease'
             }}
           >
             {/* Dancing Mascot Pip Sprout */}
             <div
               style={{
                 marginBottom: '1rem',
-                animation: isPaused ? 'none' : 'bounce 0.8s infinite alternate ease-in-out'
+                animation: isPaused || isTransitioning ? 'none' : 'bounce 0.8s infinite alternate ease-in-out'
               }}
             >
               <PipSproutAvatar size={90} mood="celebrate" />

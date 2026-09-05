@@ -5,7 +5,7 @@ import MindsetAffirmations from './MindsetAffirmations';
 import { Sparkles, Heart, BookOpen } from 'lucide-react';
 
 export default function MindHub() {
-  const [activeTab, setActiveTab] = useState('gratitude'); // 'gratitude' | 'journal' | 'motivation'
+  const [activeTab, setActiveTab] = useState('gratitude'); // 'gratitude' | 'motivation'
 
   return (
     <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -46,23 +46,6 @@ export default function MindHub() {
           </button>
 
           <button
-            onClick={() => setActiveTab('journal')}
-            style={{
-              padding: '0.4rem 0.95rem',
-              borderRadius: 'var(--radius-pill)',
-              border: 'none',
-              background: activeTab === 'journal' ? 'var(--bg-secondary)' : 'transparent',
-              color: activeTab === 'journal' ? 'var(--accent-primary)' : 'var(--text-muted)',
-              fontSize: '0.82rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: activeTab === 'journal' ? 'var(--shadow-sm)' : 'none'
-            }}
-          >
-            📖 Mindful Journal
-          </button>
-
-          <button
             onClick={() => setActiveTab('motivation')}
             style={{
               padding: '0.4rem 0.95rem',
@@ -84,7 +67,6 @@ export default function MindHub() {
       {/* Tab Render */}
       <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
         {activeTab === 'gratitude' && <GratitudeStudio />}
-        {activeTab === 'journal' && <JournalStudio />}
         {activeTab === 'motivation' && <MindsetAffirmations />}
       </div>
 

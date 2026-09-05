@@ -7,7 +7,7 @@ import CustomizeOverviewModal, { ALL_OVERVIEW_PILLARS } from './CustomizeOvervie
 import PipSproutAvatar from '../mascot/PipSproutAvatar';
 import MascotWardrobeModal from '../mascot/MascotWardrobeModal';
 import OverwhelmModal from '../thrive/OverwhelmModal';
-import DancePartyModal from '../move/DancePartyModal';
+import DanceBreakModal from './DanceBreakModal';
 import {
   Sparkles,
   Heart,
@@ -179,17 +179,18 @@ export default function HomeScreen({ onNavigateTab }) {
                   onClick={() => setIsDancePartyOpen(true)}
                   className="pill-badge" 
                   style={{ 
-                    fontSize: '0.68rem', 
+                    fontSize: '0.7rem', 
                     cursor: 'pointer', 
-                    padding: '2px 8px',
+                    padding: '3px 10px',
                     background: 'var(--accent-primary-light)',
                     color: 'var(--accent-primary)',
-                    border: '1px solid var(--accent-primary)',
-                    fontWeight: 700
+                    border: '1.5px solid var(--accent-primary)',
+                    fontWeight: 800,
+                    transition: 'all 0.15s ease'
                   }}
-                  title="Spontaneous movement burst — 10s dance party!"
+                  title="Instant spontaneous movement burst — Dance Break!"
                 >
-                  💃 10s dance break?
+                  💃 Dance Break 🎉
                 </span>
               </div>
               <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.1rem 0', letterSpacing: '-0.02em' }}>
@@ -695,12 +696,11 @@ export default function HomeScreen({ onNavigateTab }) {
         />
       )}
 
-      {/* 🎉 Dance Party Modal */}
+      {/* 🎉 Dance Break Modal */}
       {isDancePartyOpen && (
-        <DancePartyModal
+        <DanceBreakModal
           isOpen={isDancePartyOpen}
           onClose={() => setIsDancePartyOpen(false)}
-          initialDuration={10}
         />
       )}
 

@@ -47,6 +47,21 @@ export default function DailyRhythmCard() {
     showToast('Day start time updated 🌱');
   };
 
+  const handleSleepTimeChange = (newTime) => {
+    updateDailyRhythm({ sleepTime: newTime });
+    showToast('Sleep time updated 🌙');
+  };
+
+  const handleVariabilityChange = (val) => {
+    updateDailyRhythm({ scheduleVariability: val });
+    showToast(`Schedule variability set to ${val === 'same' ? 'consistent' : 'flexible/shifts'} 🌱`);
+  };
+
+  const handleClearShiftOverride = () => {
+    clearTemporaryShiftOverride();
+    showToast('Reset today to default rhythm 🌱');
+  };
+
   const [editingShiftKey, setEditingShiftKey] = useState(null);
   const [shiftStartInput, setShiftStartInput] = useState('');
   const [shiftSleepInput, setShiftSleepInput] = useState('');

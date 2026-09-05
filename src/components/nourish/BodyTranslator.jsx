@@ -76,58 +76,27 @@ export default function BodyTranslator() {
           Cravings are not failures of willpower—they are gentle communication from your body about hunger, stress, fatigue, or dietary rhythm.
         </p>
 
-        {/* Search Input (Starts with clean input) */}
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
-            <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-muted)' }} />
-            <input
-              type="text"
-              placeholder="What is your body asking for? (e.g. Chocolate, Salty snacks, Sugar, Carbs, Warm comfort...)"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="input-field"
-              style={{ paddingLeft: '2.4rem' }}
-            />
-          </div>
-          <button type="submit" className="btn btn-primary">
-            Translate
-          </button>
-        </form>
-
-        {/* Quick Craving Chips */}
-        <div style={{ marginTop: '0.85rem' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.35rem' }}>
-            Or explore common body signals:
-          </span>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-            {CRAVINGS_DATABASE.map(c => {
-              const active = selectedCraving?.id === c.id;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => selectChip(c)}
-                  style={{
-                    padding: '0.35rem 0.75rem',
-                    borderRadius: 'var(--radius-pill)',
-                    border: active ? '1.5px solid var(--accent-secondary)' : '1px solid var(--border-subtle)',
-                    background: active ? 'var(--accent-secondary-light)' : 'var(--bg-tertiary)',
-                    color: active ? 'var(--accent-secondary)' : 'var(--text-secondary)',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.3rem',
-                    transition: 'all var(--transition-fast)'
-                  }}
-                >
-                  <span>{c.icon}</span>
-                  <span>{c.name}</span>
-                </button>
-              );
-            })}
-          </div>
+        {/* Primary Direct Input Form */}
+        <div style={{ marginTop: '1rem' }}>
+          <label style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginBottom: '0.45rem' }}>
+            What is your body telling you? 🧭
+          </label>
+          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <Search size={16} style={{ position: 'absolute', left: 12, top: 13, color: 'var(--text-muted)' }} />
+              <input
+                type="text"
+                placeholder='Type what you are experiencing in your own words (e.g. "I feel bloated", "I have a headache", "Unusually hungry", "Craving something sweet")...'
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="input-field"
+                style={{ paddingLeft: '2.4rem', fontSize: '0.86rem' }}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary" style={{ padding: '0.65rem 1.25rem', fontWeight: 700 }}>
+              Decode Signal
+            </button>
+          </form>
         </div>
       </div>
 
@@ -254,7 +223,7 @@ export default function BodyTranslator() {
         /* Helpful empty state prompt */
         <div className="card-glass" style={{ padding: '1.25rem', textAlign: 'center', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
           <p style={{ margin: 0, fontSize: '0.88rem' }}>
-            🔍 Type what you are craving in the box above or tap one of the chips to understand the body's message.
+            🔍 Type what you are experiencing in the box above to decode your body's signals with zero judgment.
           </p>
         </div>
       )}

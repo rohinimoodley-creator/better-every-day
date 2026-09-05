@@ -4,13 +4,18 @@ import { CONTENT_CATEGORIES } from '../../data/mockData';
 import DailyRhythmCard from './DailyRhythmCard';
 import AIMemoryModal from '../intelligence/AIMemoryModal';
 import CustomizeOverviewModal from '../home/CustomizeOverviewModal';
+import SavedAudioModal from './SavedAudioModal';
 import {
   Sliders,
   Flame,
   Play,
   BarChart2,
   Brain,
-  Mic
+  Mic,
+  Music,
+  Clock,
+  Upload,
+  Sparkles
 } from 'lucide-react';
 
 export default function HowIThriveHub() {
@@ -28,6 +33,7 @@ export default function HowIThriveHub() {
   const [activeTab, setActiveTab] = useState('rhythm');
   const [isAIMemoryOpen, setIsAIMemoryOpen] = useState(false);
   const [isCustomizeOverviewOpen, setIsCustomizeOverviewOpen] = useState(false);
+  const [isSavedAudioModalOpen, setIsSavedAudioModalOpen] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
 
   // Consolidated notification states
@@ -457,7 +463,7 @@ export default function HowIThriveHub() {
           </div>
 
           {/* Sound Controls */}
-          <div>
+          <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>
               Independent Audio Controls
             </label>
@@ -481,6 +487,191 @@ export default function HowIThriveHub() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* ========================================================================= */}
+          {/* 🎉 DANCE BREAK PREFERENCES                                                */}
+          {/* ========================================================================= */}
+          <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
+              <div>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  🎉 Dance Break Preferences
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0 0' }}>
+                  Configure your one-tap Home Dance Break duration and music.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsSavedAudioModalOpen(true)}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.78rem', gap: '0.35rem', whiteSpace: 'nowrap' }}
+              >
+                <Music size={13} color="var(--accent-primary)" />
+                <span>🎵 View Saved Audio</span>
+              </button>
+            </div>
+
+            {/* Duration Preference */}
+            {(() => {
+              const dancePrefs = howIThrive.danceBreakPreferences || {
+                durationSec: 10,
+                isCustom: false,
+                customDuration: 22,
+                soundType: 'builtin',
+                selectedMediaId: null,
+                startOffsetSec: 0
+              };
+
+              const updateDancePrefs = (updates) => {
+                handleUpdate('danceBreakPreferences', {
+                  ...dancePrefs,
+                  ...updates
+                });
+              };
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: 'var(--radius-md)', marginTop: '0.5rem' }}>
+                  
+                  {/* Duration Selector */}
+                  <div>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.35rem' }}>
+                      <Clock size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+                      Default Dance Duration
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.4rem' }}>
+                      {[
+                        { value: 5, label: '5 sec' },
+                        { value: 10, label: '10 sec' },
+                        { value: 15, label: '15 sec' },
+                        { value: 30, label: '30 sec' }
+                      ].map(p => {
+                        const isSelected = !dancePrefs.isCustom && Number(dancePrefs.durationSec) === p.value;
+                        return (
+                          <button
+                            key={p.value}
+                            type="button"
+                            onClick={() => updateDancePrefs({ isCustom: false, durationSec: p.value })}
+                            style={{
+                              padding: '0.45rem 0.25rem',
+                              borderRadius: 'var(--radius-md)',
+                              border: isSelected ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                              background: isSelected ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                              color: isSelected ? 'var(--accent-primary)' : 'var(--text-primary)',
+                              fontSize: '0.78rem',
+                              fontWeight: isSelected ? 800 : 600,
+                              cursor: 'pointer',
+                              textAlign: 'center',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            {p.label}
+                          </button>
+                        );
+                      })}
+
+                      {/* Custom Duration Button */}
+                      <button
+                        type="button"
+                        onClick={() => updateDancePrefs({ isCustom: true })}
+                        style={{
+                          padding: '0.45rem 0.25rem',
+                          borderRadius: 'var(--radius-md)',
+                          border: dancePrefs.isCustom ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                          background: dancePrefs.isCustom ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                          color: dancePrefs.isCustom ? 'var(--accent-primary)' : 'var(--text-primary)',
+                          fontSize: '0.78rem',
+                          fontWeight: dancePrefs.isCustom ? 800 : 600,
+                          cursor: 'pointer',
+                          textAlign: 'center',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        ⏱️ Custom
+                      </button>
+                    </div>
+
+                    {/* Custom Input */}
+                    {dancePrefs.isCustom && (
+                      <div style={{ marginTop: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.6rem', background: 'var(--bg-secondary)', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-sm)' }}>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Custom seconds:</span>
+                        <input
+                          type="number"
+                          min="3"
+                          max="300"
+                          value={dancePrefs.customDuration || 22}
+                          onChange={e => updateDancePrefs({ customDuration: Math.max(3, Number(e.target.value)) })}
+                          style={{
+                            width: 65,
+                            padding: '0.3rem 0.5rem',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1.5px solid var(--accent-primary)',
+                            background: 'var(--bg-primary)',
+                            color: 'var(--text-primary)',
+                            fontSize: '0.84rem',
+                            fontWeight: 800,
+                            textAlign: 'center'
+                          }}
+                        />
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                          (e.g. 7s, 12s, 22s, 45s, 60s)
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Audio Preference */}
+                  <div>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.35rem' }}>
+                      <Music size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+                      Preferred Dance Music
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => updateDancePrefs({ soundType: 'builtin' })}
+                        style={{
+                          padding: '0.6rem 0.75rem',
+                          borderRadius: 'var(--radius-md)',
+                          border: dancePrefs.soundType === 'builtin' ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                          background: dancePrefs.soundType === 'builtin' ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                          color: dancePrefs.soundType === 'builtin' ? 'var(--accent-primary)' : 'var(--text-primary)',
+                          fontWeight: 700,
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <div style={{ fontWeight: 800 }}>🎵 Better Every Day Tune</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Built-in upbeat melody</div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => updateDancePrefs({ soundType: 'custom' })}
+                        style={{
+                          padding: '0.6rem 0.75rem',
+                          borderRadius: 'var(--radius-md)',
+                          border: dancePrefs.soundType === 'custom' ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                          background: dancePrefs.soundType === 'custom' ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                          color: dancePrefs.soundType === 'custom' ? 'var(--accent-primary)' : 'var(--text-primary)',
+                          fontWeight: 700,
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          textAlign: 'left'
+                        }}
+                      >
+                        <div style={{ fontWeight: 800 }}>📁 Use My Own Audio</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Uploaded songs & clips</div>
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -777,6 +968,33 @@ export default function HowIThriveHub() {
 
       {isCustomizeOverviewOpen && (
         <CustomizeOverviewModal isOpen={isCustomizeOverviewOpen} onClose={() => setIsCustomizeOverviewOpen(false)} />
+      )}
+
+      {isSavedAudioModalOpen && (
+        <SavedAudioModal
+          isOpen={isSavedAudioModalOpen}
+          onClose={() => setIsSavedAudioModalOpen(false)}
+          selectedMediaId={howIThrive.danceBreakPreferences?.selectedMediaId}
+          onSelectMedia={(mediaId) => {
+            handleUpdate('danceBreakPreferences', {
+              ...(howIThrive.danceBreakPreferences || {}),
+              soundType: 'custom',
+              selectedMediaId: mediaId
+            });
+          }}
+          startOffsetSec={howIThrive.danceBreakPreferences?.startOffsetSec || 0}
+          onChangeOffset={(offset) => {
+            handleUpdate('danceBreakPreferences', {
+              ...(howIThrive.danceBreakPreferences || {}),
+              startOffsetSec: offset
+            });
+          }}
+          durationSec={
+            howIThrive.danceBreakPreferences?.isCustom
+              ? (Number(howIThrive.danceBreakPreferences?.customDuration) || 15)
+              : (Number(howIThrive.danceBreakPreferences?.durationSec) || 10)
+          }
+        />
       )}
 
     </div>

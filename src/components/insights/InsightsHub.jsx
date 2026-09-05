@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useWellness } from '../../context/WellnessContext';
 import {
   generateWellnessIntelligenceReport,
-  processUserFeedbackQuery,
   PATTERN_CONFIDENCE_TIERS,
   ALERT_PRIORITIES
 } from '../../engine/wellnessIntelligenceEngine';
@@ -37,7 +36,6 @@ import {
   ShieldCheck,
   ArrowRight,
   Flame,
-  MessageSquare,
   HelpCircle,
   Compass,
   FileText,
@@ -50,22 +48,12 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-const ASK_PROMPTS = [
-  "Why have I been feeling so tired lately?",
-  "Why am I hungrier than usual?",
-  "Is there a pattern between my sleep and mood?",
-  "What has changed in my routine this week?",
-  "What are my biggest wellness wins?",
-  "What small step should I focus on next?"
-];
-
 export const INSIGHTS_TABS = [
   { id: 'overview', label: 'Overview', icon: Target },
   { id: 'summary', label: 'Summary', icon: FileText },
   { id: 'patterns', label: 'Patterns', icon: Sparkles },
   { id: 'recommendations', label: 'Recommendations', icon: Lightbulb },
-  { id: 'kudos', label: 'Kudos', icon: Award },
-  { id: 'ask', label: 'Ask Better Every Day', icon: MessageSquare, isHighlight: true }
+  { id: 'kudos', label: 'Kudos', icon: Award }
 ];
 
 export default function InsightsHub({ onNavigateTab, initialTab = 'overview' }) {
@@ -96,10 +84,6 @@ export default function InsightsHub({ onNavigateTab, initialTab = 'overview' }) 
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isAIMemoryOpen, setIsAIMemoryOpen] = useState(false);
   const [feedbackModalRec, setFeedbackModalRec] = useState(null);
-
-  // Ask AI State
-  const [userQuery, setUserQuery] = useState('');
-  const [activeQueryResult, setActiveQueryResult] = useState(null);
 
   // Generate Report
   const report = useMemo(() => {
@@ -136,16 +120,7 @@ export default function InsightsHub({ onNavigateTab, initialTab = 'overview' }) 
     cravingsLogs
   ]);
 
-  const handleRunQuery = (question) => {
-    const q = question || userQuery;
-    if (!q.trim()) return;
-    const result = processUserFeedbackQuery(q, { report, userProfile });
-    setActiveQueryResult(result);
-    setUserQuery('');
-    try {
-      confetti({ particleCount: 20, spread: 40, origin: { y: 0.7 } });
-    } catch(e) {}
-  };
+
 
   const handleRecommendationThumbsUp = (recId) => {
     if (submitRecommendationFeedback) submitRecommendationFeedback(recId, 'helpful');
@@ -566,95 +541,7 @@ export default function InsightsHub({ onNavigateTab, initialTab = 'overview' }) 
         </div>
       )}
 
-      {/* 4.7 ASK BETTER EVERY DAY */}
-      {activeTab === 'ask' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div 
-            className="card-glass"
-            style={{
-              padding: '1.5rem',
-              background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, var(--accent-primary-light) 100%)',
-              border: '1px solid var(--border-glass)'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
-              <Sparkles size={16} color="var(--accent-primary)" />
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>
-                Ask Better Every Day 💬
-              </h3>
-            </div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-              Ask anything about your health trends, sleep, moods, cravings, and habits.
-            </p>
 
-            {/* Prompt presets */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1rem' }}>
-              {ASK_PROMPTS.map((promptText, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleRunQuery(promptText)}
-                  style={{
-                    padding: '0.4rem 0.75rem',
-                    borderRadius: 'var(--radius-pill)',
-                    border: '1px solid var(--border-subtle)',
-                    background: 'var(--bg-secondary)',
-                    color: 'var(--text-primary)',
-                    fontSize: '0.76rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    textAlign: 'left'
-                  }}
-                >
-                  "{promptText}"
-                </button>
-              ))}
-            </div>
-
-            {/* Custom Query Input */}
-            <form 
-              onSubmit={(e) => { e.preventDefault(); handleRunQuery(); }}
-              style={{ display: 'flex', gap: '0.5rem' }}
-            >
-              <input
-                type="text"
-                placeholder="Ask about your routine, fatigue, food patterns..."
-                value={userQuery}
-                onChange={e => setUserQuery(e.target.value)}
-                className="input-field"
-                style={{ flex: 1, fontSize: '0.85rem' }}
-              />
-              <button type="submit" className="btn btn-primary" style={{ gap: '0.3rem' }}>
-                <Sparkles size={14} /> Ask
-              </button>
-            </form>
-          </div>
-
-          {/* Query Result Card */}
-          {activeQueryResult && (
-            <div className="card-glass" style={{ padding: '1.5rem', borderLeft: '4px solid var(--accent-primary)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-                <span className="pill-badge primary" style={{ fontSize: '0.72rem' }}>
-                  Analysis for: "{activeQueryResult.question || activeQueryResult.topic}"
-                </span>
-              </div>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: 1.6, margin: '0 0 0.85rem 0' }}>
-                {activeQueryResult.response || activeQueryResult.answer}
-              </p>
-
-              {activeQueryResult.suggestions && (
-                <div style={{ background: 'var(--bg-secondary)', padding: '0.85rem', borderRadius: 'var(--radius-md)' }}>
-                  <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase' }}>
-                    Gentle Adjustment
-                  </span>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
-                    {activeQueryResult.suggestions}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Modals */}
       {selectedDetailItem && (

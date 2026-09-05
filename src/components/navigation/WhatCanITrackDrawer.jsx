@@ -68,7 +68,7 @@ export const EXPLORE_SECTIONS = [
       { id: 'i_summary', label: 'Progress Summary & Weekly Story', targetTab: 'INSIGHTS', params: { tab: 'summary' }, icon: FileText },
       { id: 'i_patterns', label: 'Patterns & Correlations', targetTab: 'INSIGHTS', params: { tab: 'patterns' }, icon: Sparkles },
       { id: 'i_recommendations', label: 'Actionable Recommendations & Observations', targetTab: 'INSIGHTS', params: { tab: 'recommendations' }, icon: Sparkles },
-      { id: 'i_ask', label: 'Ask Better Every Day (AI Query)', targetTab: 'INSIGHTS', params: { tab: 'ask' }, icon: Brain }
+      { id: 'i_kudos', label: 'Kudos & Milestones', targetTab: 'INSIGHTS', params: { tab: 'kudos' }, icon: Award }
     ]
   },
   {

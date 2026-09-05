@@ -392,50 +392,94 @@ export function generateWellnessIntelligenceReport({
   };
 }
 
-// Interactive "GET FEEDBACK" Consultation Q&A Processor
+// Interactive "GET FEEDBACK" Consultation Q&A Processor (Used by Daily Check-In & AI Intelligence)
 export function processUserFeedbackQuery(question, contextData = {}) {
-  const q = (question || '').toLowerCase();
+  const q = (question || '').toLowerCase().trim();
   const report = contextData.report || {};
+  const userProfile = contextData.userProfile || {};
+  const checkIn = contextData.checkIn || contextData.dailyCheckIn || {};
+  const userName = userProfile.name || 'friend';
 
   let response = {
     query: question,
+    topic: question,
+    answer: '',
+    response: '',
+    suggestions: '',
     whatsGoingWell: '',
     whatWeNoticed: '',
     whatCouldHelp: '',
     oneSmallNextStep: ''
   };
 
-  if (q.includes('how am i doing') || q.includes('overall') || q.includes('progress')) {
-    response.whatsGoingWell = "You've built real consistency with daily movement and mindful hydration without burning out.";
-    response.whatWeNoticed = "Your energy ratings are highest on days when you take a short morning walk or stretch.";
-    response.whatCouldHelp = "Protecting your water intake during busy work afternoons will keep your energy steady.";
-    response.oneSmallNextStep = "Drink one tall glass of water before your next meal.";
-  } else if (q.includes('wins') || q.includes('doing well') || q.includes('biggest')) {
-    response.whatsGoingWell = `You've completed ${report.overview?.highlights?.[0]?.stat || '4 active days'} and logged ${report.overview?.highlights?.[3]?.stat || 'multiple gratitude moments'}!`;
-    response.whatWeNoticed = "You've successfully preserved your streak with self-compassion and rest days when needed.";
-    response.whatCouldHelp = "Celebrate these small wins—they represent sustainable lifestyle shifts.";
-    response.oneSmallNextStep = "Take 30 seconds to acknowledge one thing you did well today.";
-  } else if (q.includes('focus') || q.includes('improve') || q.includes('what should i')) {
-    response.whatsGoingWell = "Your morning routine is strong and sets a positive tone for your day.";
-    response.whatWeNoticed = "Hydration tends to dip in the afternoon when you are immersed in work tasks.";
-    response.whatCouldHelp = "Keeping a designated water bottle beside your workstation eliminates friction.";
-    response.oneSmallNextStep = "Place a full water bottle by your desk before starting your afternoon tasks.";
-  } else if (q.includes('patterns') || q.includes('see')) {
+  if (q.includes('tired') || q.includes('fatigue') || q.includes('exhausted') || q.includes('sleepy') || q.includes('low energy') || q.includes('drained')) {
+    const sleepRating = checkIn.sleep || 3;
+    const sleepNote = sleepRating <= 2 ? "Your recent sleep was lighter or restless, " : "Even with reasonable rest, ";
+    response.answer = `It is completely normal to have days where your energy feels depleted. ${sleepNote}your body and nervous system are asking for restoration rather than output today.`;
+    response.suggestions = "Give yourself permission to slow down. Protect 15 minutes of quiet time this afternoon, avoid high-intensity strain, and keep hydration steady.";
+    response.whatsGoingWell = "You tuned into what your body is experiencing rather than pushing through on empty.";
+    response.whatWeNoticed = "Your energy recovers faster when you honor fatigue early with gentle micro-rests.";
+    response.whatCouldHelp = "A tall glass of cool water and a 5-minute horizontal rest or easy stretch.";
+    response.oneSmallNextStep = "Drink a tall glass of cool water and close your eyes for 3 quiet minutes.";
+  } else if (q.includes('chocolate') || q.includes('craving') || q.includes('crave') || q.includes('sweet') || q.includes('sugar') || q.includes('snack')) {
+    response.answer = "Craving chocolate is often your body's way of asking for a quick dopamine lift, comforting warmth, or extra magnesium when energy levels dip. There is zero guilt in honoring what you want.";
+    response.suggestions = "Enjoy a piece of rich dark chocolate mindfully—savor the aroma, melt, and taste—or pair it with a handful of nuts and water to keep your blood sugar steady.";
+    response.whatsGoingWell = "Listening to your cravings without shame is a superpower for sustainable wellbeing.";
+    response.whatWeNoticed = "Cravings often peak during afternoon energy transitions or high-focus work.";
+    response.whatCouldHelp = "Mindful savoring paired with water prevents the spike-and-crash cycle.";
+    response.oneSmallNextStep = "Enjoy a square of chocolate slowly with a glass of water.";
+  } else if (q.includes('exercis') || q.includes('workout') || q.includes('move') || q.includes('gym') || q.includes('don\'t feel like') || q.includes('unmotivated')) {
+    response.answer = "You never need to force a workout! Movement in Better Every Day is not an 'all-or-nothing' chore. It is about gentle circulation and feeling comfortable in your body.";
+    response.suggestions = "When motivation is low, lower the bar completely. A 30-second shoulder roll, gentle pet play, or light stretching on the couch counts 100% as movement today.";
+    response.whatsGoingWell = "You are releasing rigid expectations and honoring where your body is today.";
+    response.whatWeNoticed = "Micro-movement breaks keep your daily rhythm alive without creating fatigue or friction.";
+    response.whatCouldHelp = "A 30-second micro-movement or easy posture reset right where you are.";
+    response.oneSmallNextStep = "Do one 30-second gentle shoulder roll or light stretch.";
+  } else if (q.includes('lot on') || q.includes('mind') || q.includes('stress') || q.includes('overwhelm') || q.includes('anxious') || q.includes('racing') || q.includes('head')) {
+    response.answer = "Carrying a full mind takes real physical energy. When thoughts and to-do lists bounce around in your head, your nervous system remains on alert, creating fatigue.";
+    response.suggestions = "Give your brain a safe release valve. Doing a 2-minute voice note or jotting down 3 unstructured bullet points transfers that mental weight onto paper.";
+    response.whatsGoingWell = "Recognizing mental load is the first step toward reclaiming mental space.";
+    response.whatWeNoticed = "Short breathwork pauses or evening reflections quickly down-regulate stress levels.";
+    response.whatCouldHelp = "A 2-minute mind dump in Write/Record or 4 slow box breaths.";
+    response.oneSmallNextStep = "Take 3 deep, slow breaths and jot down 1 thought to let it go.";
+  } else if (q.includes('focus') || q.includes('improve') || q.includes('what should i') || q.includes('priority')) {
+    response.answer = "Today is all about keeping things calm and focused. You do not need a complicated 10-step plan—just one gentle priority to anchor your day.";
+    response.suggestions = "Focus on your daily rhythm: stay mindfully hydrated during your afternoon tasks, and give yourself a 5-minute wind-down pause tonight.";
+    response.whatsGoingWell = "Your willingness to check in and calibrate sets a strong foundation for every day.";
+    response.whatWeNoticed = "Singular, small focuses eliminate decision fatigue and build lifelong consistency.";
+    response.whatCouldHelp = "One single anchor habit—like drinking a glass of water before your next meal.";
+    response.oneSmallNextStep = report.oneSmallFocus?.actionStep || "Drink one tall glass of water before your next meal.";
+  } else if (q.includes('don\'t know') || q.includes('what i need') || q.includes('not sure') || q.includes('confused') || q.includes('lost')) {
+    response.answer = "It is completely okay to not have it all figured out today. When you're not sure what you need, let go of trying to solve anything and return to the simplest basics.";
+    response.suggestions = "Pause for 60 seconds. Place one hand over your chest, breathe in slowly for 4 seconds, exhale for 6, and take a sip of water. That is more than enough for right now.";
+    response.whatsGoingWell = "You checked in with yourself with honesty instead of forcing certainty.";
+    response.whatWeNoticed = "Returning to simple sensory anchors (breath, temperature, water) provides instant grounding.";
+    response.whatCouldHelp = "A slow, calming breath and giving yourself permission to just be.";
+    response.oneSmallNextStep = "Take three deep breaths, drink a sip of water, and give yourself grace.";
+  } else if (q.includes('wins') || q.includes('doing well') || q.includes('biggest') || q.includes('progress') || q.includes('how am i')) {
+    response.answer = `You've built real consistency with your daily wellbeing rhythms! You've logged ${report.overview?.highlights?.[0]?.stat || 'active days'} and preserved your positive streak with self-compassion.`;
+    response.suggestions = "Take a moment to celebrate these small wins—they represent genuine, sustainable lifestyle shifts.";
     response.whatsGoingWell = "You're establishing predictable rhythms between physical activity and emotional wellbeing.";
+    response.whatWeNoticed = "You've successfully preserved your rhythm without burnout.";
+    response.whatCouldHelp = "Acknowledge one win today, no matter how small.";
+    response.oneSmallNextStep = "Take 30 seconds to acknowledge one thing you did well today.";
+  } else if (q.includes('pattern') || q.includes('see') || q.includes('correlation')) {
+    response.answer = "Your wellness patterns show that your energy and mood are highest on days when you include early hydration and brief micro-movements.";
+    response.suggestions = "Evening gratitude reflections also correlate with lower next-day afternoon stress ratings.";
+    response.whatsGoingWell = "You're building healthy self-awareness around your natural daily rhythms.";
     response.whatWeNoticed = "Evening gratitude entries correlate with lower next-day afternoon stress ratings.";
     response.whatCouldHelp = "Continuing your 3-bullet evening reflection takes under 2 minutes and pays dividends.";
     response.oneSmallNextStep = "Jot down 1 thing you appreciated today before going to sleep.";
-  } else if (q.includes('since i joined') || q.includes('changed') || q.includes('journey')) {
-    response.whatsGoingWell = `Since joining on ${report.myStory?.dateJoined || 'Aug 1'}, you've logged consistent walks and over 38 liters of water!`;
-    response.whatWeNoticed = "You've shifted from sporadic efforts to steady, daily self-care rituals.";
-    response.whatCouldHelp = "Trust your pacing. Consistency beats intensity every single time.";
-    response.oneSmallNextStep = "Keep showing up for just 5 minutes today.";
   } else {
+    response.answer = `You are actively showing up for yourself, ${userName}. By tuning into your body's signals and taking small steps, you are cultivating sustainable wellbeing.`;
+    response.suggestions = "Focus on 1 small action at a time to keep decision fatigue at zero.";
     response.whatsGoingWell = "You are actively showing up for yourself and tuning into your body's needs.";
     response.whatWeNoticed = "Your habits are taking root in small, manageable steps.";
     response.whatCouldHelp = "Focusing on 1 small action at a time prevents decision fatigue.";
     response.oneSmallNextStep = report.oneSmallFocus?.actionStep || "Take a deep breath and sip a glass of water.";
   }
 
+  // Ensure response field aliases are populated
+  response.response = response.answer;
   return response;
 }

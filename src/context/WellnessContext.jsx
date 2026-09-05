@@ -501,6 +501,93 @@ export function WellnessProvider({ children }) {
     };
   };
 
+  // 26. Move Hub Plans & Custom Exercises (Saved, Favourites, Custom Library)
+  const [savedPlanIds, setSavedPlanIds] = useState(() => {
+    const saved = localStorage.getItem('bed_saved_plan_ids');
+    return saved ? JSON.parse(saved) : ['w_1', 'w_2'];
+  });
+
+  const [favouritePlanIds, setFavouritePlanIds] = useState(() => {
+    const saved = localStorage.getItem('bed_favourite_plan_ids');
+    return saved ? JSON.parse(saved) : ['w_1'];
+  });
+
+  const [customExercises, setCustomExercises] = useState(() => {
+    const saved = localStorage.getItem('bed_custom_exercises');
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 'ce_1',
+        name: 'Desk Wrist & Forearm Release',
+        category: 'Mobility & Stretching',
+        durationSec: 60,
+        reps: 10,
+        notes: 'Gentle circular movements while sitting at desk.',
+        tip: 'Keep shoulders relaxed and breathe steadily.'
+      },
+      {
+        id: 'ce_2',
+        name: 'Morning Sunshine Calf Raises',
+        category: 'Walking & Balance',
+        durationSec: 90,
+        reps: 15,
+        notes: 'Slow rise on toes by the kitchen counter.',
+        tip: 'Hold at the top for 1 second.'
+      }
+    ];
+  });
+
+  const savePlanToHub = (planId) => {
+    setSavedPlanIds(prev => {
+      if (prev.includes(planId)) return prev;
+      const next = [...prev, planId];
+      localStorage.setItem('bed_saved_plan_ids', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const removePlanFromHub = (planId) => {
+    setSavedPlanIds(prev => {
+      const next = prev.filter(id => id !== planId);
+      localStorage.setItem('bed_saved_plan_ids', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const toggleFavouritePlan = (planId) => {
+    setFavouritePlanIds(prev => {
+      const next = prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId];
+      localStorage.setItem('bed_favourite_plan_ids', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const addCustomExercise = (exerciseData) => {
+    const newEx = {
+      id: 'ce_' + Date.now(),
+      name: exerciseData.name || 'Custom Movement',
+      category: exerciseData.category || 'Mobility & Stretching',
+      durationSec: Number(exerciseData.durationSec) || 60,
+      reps: Number(exerciseData.reps) || 0,
+      notes: exerciseData.notes || '',
+      tip: exerciseData.tip || 'Move at your own gentle pace.',
+      createdAt: Date.now()
+    };
+    setCustomExercises(prev => {
+      const next = [newEx, ...prev];
+      localStorage.setItem('bed_custom_exercises', JSON.stringify(next));
+      return next;
+    });
+    return newEx;
+  };
+
+  const deleteCustomExercise = (exerciseId) => {
+    setCustomExercises(prev => {
+      const next = prev.filter(e => e.id !== exerciseId);
+      localStorage.setItem('bed_custom_exercises', JSON.stringify(next));
+      return next;
+    });
+  };
+
   // 17. Dance Party (Flexible Durations, Built-In Sound & Custom MP4 Media)
   const [dancePartySettings, setDancePartySettings] = useState(() => {
     const saved = localStorage.getItem('bed_dance_party_settings');
@@ -2072,7 +2159,15 @@ export function WellnessProvider({ children }) {
       deletePetProfile,
       logPetPlayActivity,
       deletePetPlayLog,
-      getPetPlayStats
+      getPetPlayStats,
+      savedPlanIds,
+      favouritePlanIds,
+      customExercises,
+      savePlanToHub,
+      removePlanFromHub,
+      toggleFavouritePlan,
+      addCustomExercise,
+      deleteCustomExercise
     }}>
       {children}
     </WellnessContext.Provider>

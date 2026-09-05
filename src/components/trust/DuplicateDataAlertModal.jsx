@@ -3,6 +3,9 @@ import { useWellness } from '../../context/WellnessContext';
 import { Layers, ArrowRight, X, ShieldCheck } from 'lucide-react';
 
 export default function DuplicateDataAlertModal({ onNavigateTab }) {
+  // Hidden popup for now as requested
+  return null;
+
   const {
     duplicateSuggestions,
     duplicateAlertDismissed,

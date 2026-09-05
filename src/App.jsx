@@ -137,8 +137,8 @@ function AppContent() {
         onClose={() => setIsBodySignalsOpen(false)}
       />
 
-      {/* Duplicate Data Pop-Up Notification */}
-      <DuplicateDataAlertModal onNavigateTab={handleNavigate} />
+      {/* Duplicate Data Pop-Up Notification (Hidden for now) */}
+      {/* <DuplicateDataAlertModal onNavigateTab={handleNavigate} /> */}
 
       <FloatingVoiceButton />
       <Navbar activeTab={activeTab} onSelectTab={handleNavigate} />

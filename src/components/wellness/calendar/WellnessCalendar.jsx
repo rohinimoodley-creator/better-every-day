@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useWellness } from '../../../context/WellnessContext';
-import { getCyclePhaseInfo } from '../../../engine/cycleEngine';
+import { getCyclePhaseInfo, getCyclePhaseForDate } from '../../../engine/cycleEngine';
 import {
   Calendar as CalendarIcon,
   Plus,
@@ -17,7 +17,8 @@ import {
   Trash2,
   Edit3,
   Users,
-  Activity
+  Activity,
+  Moon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -49,7 +50,11 @@ export default function WellnessCalendar({ onNavigateTab }) {
   // Cycle Info if enabled
   const isCycleEnabled = userProfile?.cycleTrackingEnabled;
   const cycleInfo = isCycleEnabled && userProfile?.lastPeriodStart
-    ? getCyclePhaseInfo(userProfile.lastPeriodStart, userProfile.cycleLength || 28)
+    ? getCyclePhaseInfo(userProfile.lastPeriodStart, userProfile.cycleLength || 28, userProfile.periodLength || 5)
+    : null;
+
+  const selectedDatePhase = isCycleEnabled && userProfile?.lastPeriodStart
+    ? getCyclePhaseForDate(selectedDate, userProfile.lastPeriodStart, userProfile.cycleLength || 28, userProfile.periodLength || 5)
     : null;
 
   const handleOpenCreate = (prefillDate = null) => {
@@ -231,7 +236,7 @@ export default function WellnessCalendar({ onNavigateTab }) {
           className="card-glass"
           style={{
             padding: '0.75rem 1.1rem',
-            background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(224, 86, 96, 0.08) 100%)',
+            background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(214, 64, 98, 0.08) 100%)',
             borderLeft: '4px solid var(--accent-rose)',
             display: 'flex',
             alignItems: 'center',
@@ -240,16 +245,19 @@ export default function WellnessCalendar({ onNavigateTab }) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '1.1rem' }}>🌸</span>
+            <span style={{ fontSize: '1.1rem' }}>{cycleInfo.icon}</span>
             <div>
               <strong style={{ fontSize: '0.84rem', color: 'var(--text-primary)' }}>
-                {cycleInfo.phase} Phase (Day {cycleInfo.currentDay})
+                {cycleInfo.phase} Phase (Cycle Day {cycleInfo.day})
               </strong>
               <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-                {cycleInfo.movementAdvice}
+                {cycleInfo.headline} — {cycleInfo.recommendationTip}
               </div>
             </div>
           </div>
+          <span className="pill-badge rose" style={{ fontSize: '0.68rem', flexShrink: 0 }}>
+            Cycle Synced
+          </span>
         </div>
       )}
 
@@ -307,7 +315,7 @@ export default function WellnessCalendar({ onNavigateTab }) {
           {/* Day Cells */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.35rem' }}>
             {Array.from({ length: firstDayIndex }).map((_, i) => (
-              <div key={`empty-${i}`} style={{ minHeight: 64, opacity: 0.3 }} />
+              <div key={`empty-${i}`} style={{ minHeight: 68, opacity: 0.3 }} />
             ))}
 
             {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -317,12 +325,17 @@ export default function WellnessCalendar({ onNavigateTab }) {
               const dayEvents = socialEvents?.filter(e => e.date === dateStr) || [];
               const isToday = dateStr === new Date().toISOString().split('T')[0];
 
+              // Dynamic Cycle Phase for this specific date
+              const dayPhase = isCycleEnabled && userProfile?.lastPeriodStart
+                ? getCyclePhaseForDate(dateStr, userProfile.lastPeriodStart, userProfile.cycleLength || 28, userProfile.periodLength || 5)
+                : null;
+
               return (
                 <div
                   key={dateStr}
                   onClick={() => setSelectedDate(dateStr)}
                   style={{
-                    minHeight: 64,
+                    minHeight: 68,
                     padding: '0.35rem',
                     borderRadius: 'var(--radius-sm)',
                     background: isSelected ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
@@ -343,7 +356,32 @@ export default function WellnessCalendar({ onNavigateTab }) {
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
+                  {/* Cycle Phase Badge (Subtle Context) */}
+                  {dayPhase && (
+                    <div 
+                      style={{
+                        fontSize: '0.58rem',
+                        fontWeight: 700,
+                        padding: '1px 3px',
+                        borderRadius: '3px',
+                        background: dayPhase.bg,
+                        color: dayPhase.color,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '2px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        marginTop: '2px'
+                      }}
+                      title={dayPhase.label}
+                    >
+                      <span style={{ fontSize: '0.62rem' }}>{dayPhase.icon}</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{dayPhase.shortLabel}</span>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden', marginTop: '2px' }}>
                     {dayEvents.slice(0, 2).map(ev => {
                       const badge = getCategoryBadge(ev.category);
                       return (
@@ -375,12 +413,28 @@ export default function WellnessCalendar({ onNavigateTab }) {
 
       {/* 5. Schedule List for Selected Date */}
       <div className="card-glass" style={{ padding: '1.25rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <div>
             <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
               Events for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </h3>
-            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+            
+            {/* Contextual Cycle Phase on Selected Date */}
+            {selectedDatePhase && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.25rem' }}>
+                <span style={{ fontSize: '0.85rem' }}>{selectedDatePhase.icon}</span>
+                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: selectedDatePhase.color }}>
+                  {selectedDatePhase.label} (Cycle Day {selectedDatePhase.cycleDay})
+                </span>
+                {selectedDatePhase.isPrediction && (
+                  <span style={{ fontSize: '0.68rem', background: 'var(--bg-tertiary)', padding: '1px 5px', borderRadius: 'var(--radius-pill)', color: 'var(--text-muted)' }}>
+                    Recalculates with your logs
+                  </span>
+                )}
+              </div>
+            )}
+
+            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.15rem' }}>
               {filteredEvents.filter(e => e.date === selectedDate).length} event(s) scheduled
             </span>
           </div>

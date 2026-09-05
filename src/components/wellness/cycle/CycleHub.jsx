@@ -1,13 +1,14 @@
 import React from 'react';
 import { useWellness } from '../../../context/WellnessContext';
 import MenstrualModule from '../../profile/MenstrualModule';
+import MenstrualEducationSection from './MenstrualEducationSection';
 import { Moon, Heart, Sparkles, Shield, Calendar } from 'lucide-react';
 
 export default function CycleHub({ onNavigateTab }) {
   const { userProfile } = useWellness();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: 880, margin: '0 auto' }}>
       
       {/* Header */}
       <div>
@@ -25,6 +26,9 @@ export default function CycleHub({ onNavigateTab }) {
       </div>
 
       <MenstrualModule />
+
+      {/* Optional Menstrual Cycle Education Section */}
+      <MenstrualEducationSection />
     </div>
   );
 }

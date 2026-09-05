@@ -204,10 +204,42 @@ export function WellnessProvider({ children }) {
     return saved ? JSON.parse(saved) : INITIAL_JOURNAL_ENTRIES;
   });
 
-  // 10. Discovered Gratitude Queue
+  // 10. Discovered Gratitude Queue (AI Suggestions from Daily Interactions)
   const [discoveredGratitude, setDiscoveredGratitude] = useState(() => {
     const saved = localStorage.getItem('bed_discovered_gratitude');
     return saved ? JSON.parse(saved) : INITIAL_DISCOVERED_GRATITUDE;
+  });
+
+  // 10b. Personal Saved Gratitude Collection (My Gratitude)
+  const [savedGratitudeEntries, setSavedGratitudeEntries] = useState(() => {
+    const saved = localStorage.getItem('bed_saved_gratitude');
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 'g_1',
+        date: 'Today, 09:15 AM',
+        items: [
+          'Warm morning tea in the quiet sunlight before starting work.',
+          'A kind text from Maya checking in on my energy.',
+          'Taking a deep belly breath when feeling rushed.'
+        ]
+      },
+      {
+        id: 'g_2',
+        date: 'Yesterday, 08:40 PM',
+        items: [
+          'Finishing a 20-minute gentle stretch after sitting all day.',
+          'The sound of rainfall outside while resting.'
+        ]
+      },
+      {
+        id: 'g_3',
+        date: 'Aug 20, 2026',
+        items: [
+          'I’m grateful for the walk I made time for today.',
+          'I’m grateful Luna cuddled with me on the sofa.'
+        ]
+      }
+    ];
   });
 
   // 11. Social Calendar Events & Invitations
@@ -842,6 +874,10 @@ export function WellnessProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('bed_discovered_gratitude', JSON.stringify(discoveredGratitude));
   }, [discoveredGratitude]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_saved_gratitude', JSON.stringify(savedGratitudeEntries));
+  }, [savedGratitudeEntries]);
 
   useEffect(() => {
     localStorage.setItem('bed_social_events', JSON.stringify(socialEvents));
@@ -2434,8 +2470,39 @@ export function WellnessProvider({ children }) {
       addJournalEntry,
       deleteJournalEntry,
       discoveredGratitude,
-      approveDiscoveredGratitude,
-      rejectDiscoveredGratitude,
+      setDiscoveredGratitude,
+      savedGratitudeEntries,
+      setSavedGratitudeEntries,
+      addPersonalGratitude: (itemsOrText) => {
+        const items = Array.isArray(itemsOrText) ? itemsOrText : [itemsOrText];
+        const validItems = items.map(i => (typeof i === 'string' ? i.trim() : i?.text || '')).filter(t => t.length > 0);
+        if (validItems.length === 0) return null;
+        const newEntry = {
+          id: 'g_' + Date.now(),
+          date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          items: validItems
+        };
+        setSavedGratitudeEntries(prev => [newEntry, ...prev]);
+        return newEntry;
+      },
+      deletePersonalGratitude: (entryId) => {
+        setSavedGratitudeEntries(prev => prev.filter(e => e.id !== entryId));
+      },
+      approveDiscoveredGratitude: (id) => {
+        const item = discoveredGratitude.find(g => g.id === id);
+        if (item) {
+          setDiscoveredGratitude(prev => prev.map(g => g.id === id ? { ...g, status: 'added' } : g));
+          const newEntry = {
+            id: 'g_' + Date.now(),
+            date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            items: [item.text]
+          };
+          setSavedGratitudeEntries(prev => [newEntry, ...prev]);
+        }
+      },
+      rejectDiscoveredGratitude: (id) => {
+        setDiscoveredGratitude(prev => prev.map(g => g.id === id ? { ...g, status: 'rejected' } : g));
+      },
       saveDiscoveredGratitudeForLater,
       applyParsedVoiceUpdates,
       voiceSettings: userProfile.voiceSettings || DEFAULT_VOICE_SETTINGS,

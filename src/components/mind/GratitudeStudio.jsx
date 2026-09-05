@@ -19,7 +19,9 @@ import {
   Utensils,
   Droplets,
   Moon,
-  Smile
+  Smile,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import ContextualPip from '../mascot/ContextualPip';
@@ -52,6 +54,7 @@ export default function GratitudeStudio({ defaultTab = 'my_gratitude' }) {
     { id: 2, text: '' }
   ]);
 
+  const [isCollectionRevealed, setIsCollectionRevealed] = useState(false);
   const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [keepSuccessMessage, setKeepSuccessMessage] = useState(null);
@@ -340,9 +343,20 @@ export default function GratitudeStudio({ defaultTab = 'my_gratitude' }) {
             </div>
           </form>
 
-          {/* User's Gratitude Collection */}
-          <div className="card-glass" style={{ padding: '1.35rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          {/* User's Gratitude Collection (Progressive Disclosure) */}
+          <div className="card-glass" style={{ padding: '1.25rem' }}>
+            <div 
+              onClick={() => setIsCollectionRevealed(prev => !prev)}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                cursor: 'pointer',
+                userSelect: 'none',
+                flexWrap: 'wrap',
+                gap: '0.6rem'
+              }}
+            >
               <div>
                 <h4 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
                   My Gratitude Collection 📖
@@ -352,65 +366,79 @@ export default function GratitudeStudio({ defaultTab = 'my_gratitude' }) {
                 </p>
               </div>
 
-              {/* Search filter */}
-              <div style={{ position: 'relative', width: '220px' }}>
-                <input
-                  type="text"
-                  placeholder="Search moments..."
-                  value={searchHistoryQuery}
-                  onChange={e => setSearchHistoryQuery(e.target.value)}
-                  className="input-field"
-                  style={{ fontSize: '0.78rem', padding: '0.4rem 0.65rem 0.4rem 1.8rem', width: '100%', boxSizing: 'border-box' }}
-                />
-                <Search size={13} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              </div>
+              <button
+                type="button"
+                className={`btn ${isCollectionRevealed ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', gap: '0.3rem' }}
+                onClick={(e) => { e.stopPropagation(); setIsCollectionRevealed(prev => !prev); }}
+              >
+                <span>{isCollectionRevealed ? 'Hide Collection' : `View My Gratitude Collection (${savedGratitudeEntries.length})`}</span>
+                {isCollectionRevealed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
             </div>
 
-            {/* List of Saved Entries */}
-            {filteredSavedEntries.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                {filteredSavedEntries.map(entry => (
-                  <div
-                    key={entry.id}
-                    style={{
-                      padding: '1rem 1.2rem',
-                      background: 'var(--bg-secondary)',
-                      borderLeft: '4px solid var(--accent-primary)',
-                      borderRadius: 'var(--radius-md)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.45rem'
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                        📅 {entry.date}
-                      </span>
-                      {deletePersonalGratitude && (
-                        <button
-                          type="button"
-                          onClick={() => deletePersonalGratitude(entry.id)}
-                          style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px' }}
-                          title="Delete entry"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      )}
-                    </div>
+            {isCollectionRevealed && (
+              <div style={{ marginTop: '1.15rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.15rem', animation: 'fadeIn 0.2s ease-out' }}>
+                {/* Search filter */}
+                <div style={{ position: 'relative', width: '100%', maxWidth: 260, marginBottom: '1rem' }}>
+                  <input
+                    type="text"
+                    placeholder="Search moments..."
+                    value={searchHistoryQuery}
+                    onChange={e => setSearchHistoryQuery(e.target.value)}
+                    className="input-field"
+                    style={{ fontSize: '0.78rem', padding: '0.4rem 0.65rem 0.4rem 1.8rem', width: '100%', boxSizing: 'border-box' }}
+                  />
+                  <Search size={13} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                </div>
 
-                    <ul style={{ margin: 0, paddingLeft: '1.1rem', fontSize: '0.86rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
-                      {entry.items?.map((item, i) => (
-                        <li key={i} style={{ marginBottom: '0.2rem' }}>
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
+                {/* List of Saved Entries */}
+                {filteredSavedEntries.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    {filteredSavedEntries.map(entry => (
+                      <div
+                        key={entry.id}
+                        style={{
+                          padding: '1rem 1.2rem',
+                          background: 'var(--bg-secondary)',
+                          borderLeft: '4px solid var(--accent-primary)',
+                          borderRadius: 'var(--radius-md)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.45rem'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                            📅 {entry.date}
+                          </span>
+                          {deletePersonalGratitude && (
+                            <button
+                              type="button"
+                              onClick={() => deletePersonalGratitude(entry.id)}
+                              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px' }}
+                              title="Delete entry"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
+                        </div>
+
+                        <ul style={{ margin: 0, paddingLeft: '1.1rem', fontSize: '0.86rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                          {entry.items?.map((item, i) => (
+                            <li key={i} style={{ marginBottom: '0.2rem' }}>
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.84rem' }}>
-                No gratitude moments match your search. Capture a new moment above!
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.84rem' }}>
+                    No gratitude moments match your search. Capture a new moment above!
+                  </div>
+                )}
               </div>
             )}
           </div>

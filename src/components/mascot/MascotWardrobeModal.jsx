@@ -3,6 +3,7 @@ import { useWellness } from '../../context/WellnessContext';
 import { MASCOT_WARDROBE, BEANIE_COLORS } from '../../data/themes';
 import PipSproutAvatar from './PipSproutAvatar';
 import { X, Check, Palette } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 export default function MascotWardrobeModal({ onClose }) {
   const { userProfile, setUserProfile } = useWellness();
@@ -15,6 +16,7 @@ export default function MascotWardrobeModal({ onClose }) {
   const [customName, setCustomName] = useState('My Purple 💜');
   const [showColorWheel, setShowColorWheel] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
+  const [colorSaveToast, setColorSaveToast] = useState('');
 
   const customColorsList = userProfile.customMascotColors || [];
 
@@ -34,6 +36,19 @@ export default function MascotWardrobeModal({ onClose }) {
       customMascotColors: [...(prev.customMascotColors || []), newColorObj],
       mascotColor: newColorId
     }));
+
+    // Success confirmation & automatic close back to previous screen
+    setColorSaveToast('Color saved! ✨');
+    setShowColorWheel(false);
+    setTimeout(() => setColorSaveToast(''), 2500);
+
+    try {
+      confetti({
+        particleCount: 25,
+        spread: 40,
+        origin: { y: 0.6 }
+      });
+    } catch(err) {}
   };
 
   const handleDeleteCustomColor = (id, e) => {
@@ -157,10 +172,17 @@ export default function MascotWardrobeModal({ onClose }) {
 
         {/* 1. Pip's Aura & Body Color */}
         <div style={{ marginBottom: '1.25rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem', margin: 0 }}>
-              <Palette size={14} color="var(--accent-primary)" /> Pip's Body & Aura Color
-            </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.4rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem', margin: 0 }}>
+                <Palette size={14} color="var(--accent-primary)" /> Pip's Body & Aura Color
+              </label>
+              {colorSaveToast && (
+                <span className="pill-badge primary" style={{ fontSize: '0.7rem', animation: 'fadeIn 0.2s ease-out' }}>
+                  ✓ {colorSaveToast}
+                </span>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => setShowColorWheel(!showColorWheel)}

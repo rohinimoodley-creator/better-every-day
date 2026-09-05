@@ -175,6 +175,13 @@ export function WellnessProvider({ children }) {
   const [activeWorkoutMinutes, setActiveWorkoutMinutes] = useState(15);
   const [completedWorkouts, setCompletedWorkouts] = useState(['w_1']);
 
+  const [socialActivities, setSocialActivities] = useState(() => {
+    const saved = localStorage.getItem('bed_social_activities');
+    return saved ? JSON.parse(saved) : [
+      { id: 'act_1', name: 'Hiking', icon: '🥾', durationMinutes: 45, date: new Date().toISOString().split('T')[0], location: 'Sunset Hill Trail', notes: 'Enjoyed fresh air with a friend' }
+    ];
+  });
+
   // 7. Meals & Nutrition Tracking
   const [loggedMeals, setLoggedMeals] = useState(() => {
     const saved = localStorage.getItem('bed_logged_meals');
@@ -624,6 +631,40 @@ export function WellnessProvider({ children }) {
     });
   };
 
+  // 27. Social & Recreational Physical Activities (No judgment, Pure Joy)
+  const logSocialActivity = (activityData) => {
+    const newActivity = {
+      id: 'soc_' + Date.now(),
+      activityName: activityData.activityName?.trim() || activityData.category || 'Joyful Movement',
+      category: activityData.category || 'Social Activity',
+      durationMinutes: Number(activityData.durationMinutes) || 30,
+      date: activityData.date || new Date().toISOString().split('T')[0],
+      companions: activityData.companions || 'Friends',
+      location: activityData.location || '',
+      notes: activityData.notes || '',
+      feeling: activityData.feeling || 'Joyful & Energized',
+      createdAt: Date.now()
+    };
+    setSocialActivities(prev => {
+      const next = [newActivity, ...prev];
+      localStorage.setItem('bed_social_activities', JSON.stringify(next));
+      return next;
+    });
+    // Add active movement minutes
+    if (newActivity.durationMinutes > 0) {
+      setActiveWorkoutMinutes(prev => prev + newActivity.durationMinutes);
+    }
+    return newActivity;
+  };
+
+  const deleteSocialActivity = (activityId) => {
+    setSocialActivities(prev => {
+      const next = prev.filter(a => a.id !== activityId);
+      localStorage.setItem('bed_social_activities', JSON.stringify(next));
+      return next;
+    });
+  };
+
   // 17. Dance Party (Flexible Durations, Built-In Sound & Custom MP4 Media)
   const [dancePartySettings, setDancePartySettings] = useState(() => {
     const saved = localStorage.getItem('bed_dance_party_settings');
@@ -954,6 +995,10 @@ export function WellnessProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('bed_social_feed_posts', JSON.stringify(socialFeedPosts));
   }, [socialFeedPosts]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_social_activities', JSON.stringify(socialActivities));
+  }, [socialActivities]);
 
   // Actions & Mutators
   const recordCheckIn = (newCheckIn) => {
@@ -2700,7 +2745,10 @@ export function WellnessProvider({ children }) {
       removePlanFromHub,
       toggleFavouritePlan,
       addCustomExercise,
-      deleteCustomExercise
+      deleteCustomExercise,
+      socialActivities,
+      logSocialActivity,
+      deleteSocialActivity
     }}>
       {children}
     </WellnessContext.Provider>

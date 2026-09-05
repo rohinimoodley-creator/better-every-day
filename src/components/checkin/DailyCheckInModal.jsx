@@ -10,27 +10,37 @@ import {
   Send, 
   Lightbulb, 
   ArrowRight,
-  HelpCircle,
-  Brain,
-  Coffee,
+  ArrowLeft,
   Smile,
   Zap,
-  Moon,
-  Wind
+  Coffee,
+  Brain
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const MOODS = [
-  { id: 'great', label: 'Great', emoji: '😄', color: '#52b788' },
-  { id: 'good', label: 'Good', emoji: '🙂', color: '#40916c' },
-  { id: 'okay', label: 'Okay', emoji: '😐', color: '#e09f3e' },
-  { id: 'low', label: 'Low', emoji: '😔', color: '#7b61ff' },
-  { id: 'difficult', label: 'Difficult', emoji: '😣', color: '#d64062' }
+  { id: 'great', label: 'Great', emoji: '😄', color: '#52b788', desc: 'Feeling vibrant & upbeat' },
+  { id: 'good', label: 'Good', emoji: '🙂', color: '#40916c', desc: 'Pleasant & steady' },
+  { id: 'okay', label: 'Okay', emoji: '😐', color: '#e09f3e', desc: 'Neutral, taking it as it comes' },
+  { id: 'low', label: 'Low', emoji: '😔', color: '#7b61ff', desc: 'A bit drained or quiet' },
+  { id: 'difficult', label: 'Difficult', emoji: '😣', color: '#d64062', desc: 'Challenging or heavy' }
 ];
 
-const BODY_SIGNALS = [
-  'Hungry', 'Tired', 'Sore', 'Bloated', 'Energized',
-  'Restless', 'Calm', 'Stressed', 'Motivated', 'Craving something'
+const ENERGY_OPTIONS = [
+  { value: 1, label: 'Gentle / Restful', icon: '🛋️', desc: 'Low energy, need softness' },
+  { value: 3, label: 'Steady', icon: '🚶', desc: 'Balanced baseline pace' },
+  { value: 5, label: 'High Vitality', icon: '⚡', desc: 'Raring to go & active' }
+];
+
+const DAILY_NEEDS = [
+  { id: 'quiet', label: 'A quiet moment', icon: '🍃' },
+  { id: 'movement', label: 'Fresh air & gentle movement', icon: '🚶' },
+  { id: 'nourish', label: 'Warm, nourishing food', icon: '🥗' },
+  { id: 'hydrate', label: 'Hydration boost', icon: '💧' },
+  { id: 'rest', label: 'Rest & early wind-down', icon: '🌙' },
+  { id: 'breath', label: 'A deep breath & stretch', icon: '🧘' },
+  { id: 'encouragement', label: 'Gentle encouragement', icon: '💛' },
+  { id: 'easiness', label: 'Permission to take it easy', icon: '☁️' }
 ];
 
 const ASK_PROMPTS = [
@@ -59,12 +69,13 @@ export default function DailyCheckInModal({ isOpen, onClose }) {
     cycleData
   } = useWellness();
 
-  // Guided Check-In State
+  // Step state: 1 (Mood) | 2 (Energy) | 3 (Needs) | 4 (Completed / Ask BED)
+  const [currentStep, setCurrentStep] = useState(1);
+
+  // Check-In Form State
   const [mood, setMood] = useState(dailyCheckIn?.mood || 'good');
   const [energy, setEnergy] = useState(dailyCheckIn?.energy || 3);
-  const [stress, setStress] = useState(dailyCheckIn?.stress || 2);
-  const [sleep, setSleep] = useState(dailyCheckIn?.sleep || 4);
-  const [bodyTags, setBodyTags] = useState(dailyCheckIn?.bodyTags || ['Calm']);
+  const [selectedNeeds, setSelectedNeeds] = useState(dailyCheckIn?.needs || ['A quiet moment']);
 
   // Open Check-In (Ask Better Every Day) State
   const [openQuery, setOpenQuery] = useState('');
@@ -73,10 +84,20 @@ export default function DailyCheckInModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const toggleBodyTag = (tag) => {
-    setBodyTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+  const toggleNeed = (needLabel) => {
+    setSelectedNeeds(prev => 
+      prev.includes(needLabel) 
+        ? prev.filter(n => n !== needLabel) 
+        : [...prev, needLabel]
     );
+  };
+
+  const handleSelectMood = (moodId) => {
+    setMood(moodId);
+    // Smooth auto-advance to step 2 after brief delay
+    setTimeout(() => {
+      setCurrentStep(2);
+    }, 250);
   };
 
   const handleRunAiQuery = (questionText) => {
@@ -86,7 +107,7 @@ export default function DailyCheckInModal({ isOpen, onClose }) {
     setIsAsking(true);
     const contextData = {
       userProfile,
-      checkIn: { mood, energy: Number(energy), stress: Number(stress), sleep: Number(sleep), bodyTags },
+      checkIn: { mood, energy: Number(energy), needs: selectedNeeds },
       dailyCheckIn,
       hydrationMl,
       activeWorkoutMinutes,
@@ -107,31 +128,31 @@ export default function DailyCheckInModal({ isOpen, onClose }) {
 
     try {
       confetti({
-        particleCount: 25,
-        spread: 45,
+        particleCount: 20,
+        spread: 40,
         origin: { y: 0.7 }
       });
     } catch(e) {}
   };
 
-  const handleSaveCheckIn = () => {
+  const handleCompleteCheckIn = () => {
     recordCheckIn({
       mood,
       energy: Number(energy),
-      stress: Number(stress),
-      sleep: Number(sleep),
-      bodyTags
+      needs: selectedNeeds,
+      isCompleted: true,
+      date: new Date().toISOString().split('T')[0]
     });
 
     try {
       confetti({
-        particleCount: 40,
-        spread: 60,
+        particleCount: 35,
+        spread: 55,
         origin: { y: 0.6 }
       });
     } catch(e) {}
 
-    onClose();
+    setCurrentStep(4);
   };
 
   return (
@@ -142,7 +163,7 @@ export default function DailyCheckInModal({ isOpen, onClose }) {
         style={{
           maxHeight: '90vh',
           overflowY: 'auto',
-          maxWidth: '560px',
+          maxWidth: '540px',
           width: '94%',
           padding: '1.75rem',
           borderRadius: 'var(--radius-xl)'
@@ -155,12 +176,15 @@ export default function DailyCheckInModal({ isOpen, onClose }) {
               <Heart size={12} /> Daily Check-In
             </span>
             <h3 style={{ fontSize: '1.35rem', fontWeight: 800, margin: '0 0 0.25rem 0' }}>
-              Tell Better Every Day how you're doing
+              {currentStep === 4 ? "You're all checked in! 🌟" : "How are you today?"}
             </h3>
             <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0 }}>
-              Answer a simple question, or just share what's on your mind.
+              {currentStep === 4 
+                ? "Your gentle daily rhythm has been recorded."
+                : `Step ${currentStep} of 3 — One thoughtful question at a time.`}
             </p>
           </div>
+
           <button 
             onClick={onClose} 
             id="close-daily-checkin-btn"
@@ -168,12 +192,12 @@ export default function DailyCheckInModal({ isOpen, onClose }) {
             style={{ 
               background: 'var(--bg-tertiary)', 
               border: 'none', 
-              borderRadius: '50%',
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              borderRadius: '50%', 
+              width: '32px', 
+              height: '32px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
               cursor: 'pointer', 
               color: 'var(--text-secondary)' 
             }}
@@ -183,287 +207,373 @@ export default function DailyCheckInModal({ isOpen, onClose }) {
         </div>
 
         {/* ========================================================================= */}
-        {/* SECTION 1: GUIDED CHECK-IN (🌱) */}
+        {/* STEP 1: 😊 HOW ARE YOU FEELING TODAY?                                     */}
         {/* ========================================================================= */}
-        <div style={{ marginBottom: '1.5rem', background: 'var(--bg-card)', padding: '1.25rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-glass)' }}>
-          {/* Mood Selector */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <label style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem' }}>
-              😊 How are you feeling right now?
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.4rem' }}>
-              {MOODS.map(m => {
-                const active = mood === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    id={`checkin-mood-${m.id}`}
-                    type="button"
-                    onClick={() => setMood(m.id)}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      padding: '0.55rem 0.2rem',
-                      background: active ? 'var(--accent-primary-light)' : 'var(--bg-tertiary)',
-                      border: active ? `2px solid ${m.color}` : '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      cursor: 'pointer',
-                      transition: 'all var(--transition-fast)'
-                    }}
-                  >
-                    <span style={{ fontSize: '1.5rem' }}>{m.emoji}</span>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 600, color: active ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                      {m.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        {currentStep === 1 && (
+          <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
+            <div style={{ marginBottom: '1.25rem' }}>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.35rem 0' }}>
+                😊 How are you feeling today?
+              </h4>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 1rem 0' }}>
+                Select what best matches your general mood right now:
+              </p>
 
-          {/* Body Signals / What do you need today? */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <label style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.45rem' }}>
-              💭 What is your body experiencing today?
-            </label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-              {BODY_SIGNALS.map(tag => {
-                const active = bodyTags.includes(tag);
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    id={`checkin-tag-${tag.toLowerCase().replace(/\s+/g, '-')}`}
-                    onClick={() => toggleBodyTag(tag)}
-                    style={{
-                      padding: '0.35rem 0.75rem',
-                      borderRadius: 'var(--radius-pill)',
-                      fontSize: '0.78rem',
-                      fontWeight: 500,
-                      background: active ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                      color: active ? '#ffffff' : 'var(--text-secondary)',
-                      border: active ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                      cursor: 'pointer',
-                      transition: 'all var(--transition-fast)'
-                    }}
-                  >
-                    {tag} {active && '✓'}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 1-5 Metric Sliders (Energy, Stress, Sleep) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-subtle)' }}>
-            {/* Energy */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', fontSize: '0.82rem' }}>
-                <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>⚡ Energy Level</span>
-                <span style={{ fontWeight: 700, color: 'var(--accent-primary)' }}>{energy} / 5 {energy <= 2 ? '(Gentle)' : energy >= 4 ? '(High)' : '(Steady)'}</span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.45rem' }}>
+                {MOODS.map(m => {
+                  const active = mood === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      id={`checkin-mood-${m.id}`}
+                      type="button"
+                      onClick={() => handleSelectMood(m.id)}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        padding: '0.75rem 0.25rem',
+                        background: active ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                        border: active ? `2px solid ${m.color}` : '1px solid var(--border-subtle)',
+                        borderRadius: 'var(--radius-md)',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <span style={{ fontSize: '1.75rem' }}>{m.emoji}</span>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: active ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                        {m.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              <input
-                id="checkin-slider-energy"
-                type="range"
-                min="1"
-                max="5"
-                step="1"
-                value={energy}
-                onChange={e => setEnergy(e.target.value)}
-                style={{ width: '100%', accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
-              />
             </div>
 
-            {/* Stress */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', fontSize: '0.82rem' }}>
-                <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>🍃 Stress Level</span>
-                <span style={{ fontWeight: 700, color: stress >= 4 ? 'var(--accent-rose)' : 'var(--accent-primary)' }}>
-                  {stress} / 5 {stress <= 2 ? '(Calm)' : stress >= 4 ? '(Elevated)' : '(Manageable)'}
-                </span>
-              </div>
-              <input
-                id="checkin-slider-stress"
-                type="range"
-                min="1"
-                max="5"
-                step="1"
-                value={stress}
-                onChange={e => setStress(e.target.value)}
-                style={{ width: '100%', accentColor: stress >= 4 ? 'var(--accent-rose)' : 'var(--accent-primary)', cursor: 'pointer' }}
-              />
-            </div>
-
-            {/* Sleep */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', fontSize: '0.82rem' }}>
-                <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>🌙 Sleep Quality</span>
-                <span style={{ fontWeight: 700, color: 'var(--accent-purple)' }}>
-                  {sleep} / 5 {sleep <= 2 ? '(Restless)' : sleep >= 4 ? '(Deep)' : '(Okay)'}
-                </span>
-              </div>
-              <input
-                id="checkin-slider-sleep"
-                type="range"
-                min="1"
-                max="5"
-                step="1"
-                value={sleep}
-                onChange={e => setSleep(e.target.value)}
-                style={{ width: '100%', accentColor: 'var(--accent-purple)', cursor: 'pointer' }}
-              />
-            </div>
-          </div>
-
-          <button 
-            id="save-daily-checkin-btn"
-            className="btn btn-primary" 
-            onClick={handleSaveCheckIn}
-            style={{ width: '100%', padding: '0.75rem', fontSize: '0.92rem', marginTop: '1.25rem', gap: '0.4rem' }}
-          >
-            <Check size={16} /> Save Daily Check-In
-          </button>
-        </div>
-
-        {/* ========================================================================= */}
-        {/* SECTION 2: OPEN CHECK-IN — 💬 SOMETHING ELSE ON YOUR MIND? */}
-        {/* ========================================================================= */}
-        <div 
-          id="ask-better-every-day-section"
-          style={{
-            background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--accent-primary-light) 100%)',
-            border: '1px solid var(--border-glass)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '1.25rem'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
-            <span style={{ fontSize: '1.1rem' }}>💬</span>
-            <h4 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-              Something else on your mind?
-            </h4>
-          </div>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0 0 0.85rem 0' }}>
-            <strong>Ask Better Every Day</strong> — tap any thought below or type whatever is happening today:
-          </p>
-
-          {/* Quick preset prompt chips */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1rem' }}>
-            {ASK_PROMPTS.map((promptText, idx) => (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
               <button
-                key={idx}
-                id={`ask-bed-chip-${idx}`}
                 type="button"
-                onClick={() => handleRunAiQuery(promptText)}
-                style={{
-                  padding: '0.4rem 0.75rem',
-                  borderRadius: 'var(--radius-pill)',
-                  border: '1px solid var(--border-subtle)',
-                  background: 'var(--bg-secondary)',
-                  color: 'var(--text-primary)',
-                  fontSize: '0.76rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all var(--transition-fast)'
-                }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
+                onClick={() => setCurrentStep(4)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.78rem', cursor: 'pointer' }}
               >
-                “{promptText}”
+                💬 Ask Better Every Day directly
               </button>
-            ))}
+
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="btn btn-primary btn-sm"
+                style={{ gap: '0.35rem', padding: '0.5rem 1rem' }}
+              >
+                Next <ArrowRight size={14} />
+              </button>
+            </div>
           </div>
+        )}
 
-          {/* Input Box */}
-          <form 
-            onSubmit={(e) => { e.preventDefault(); handleRunAiQuery(); }}
-            style={{ display: 'flex', gap: '0.5rem', marginBottom: aiResponse ? '1rem' : '0' }}
-          >
-            <input
-              id="ask-bed-custom-input"
-              type="text"
-              placeholder="Tell Better Every Day what's happening..."
-              value={openQuery}
-              onChange={e => setOpenQuery(e.target.value)}
-              className="input-field"
-              style={{ flex: 1, fontSize: '0.84rem', padding: '0.6rem 0.85rem' }}
-            />
-            <button 
-              type="submit" 
-              id="ask-bed-submit-btn"
-              className="btn btn-primary" 
-              disabled={isAsking}
-              style={{ gap: '0.35rem', padding: '0.6rem 1rem', fontSize: '0.84rem' }}
-            >
-              <Sparkles size={14} /> Ask
-            </button>
-          </form>
+        {/* ========================================================================= */}
+        {/* STEP 2: ⚡ ENERGY LEVEL (Optional & Adaptive)                             */}
+        {/* ========================================================================= */}
+        {currentStep === 2 && (
+          <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                  ⚡ How is your energy today?
+                </h4>
+                <span className="pill-badge gray" style={{ fontSize: '0.65rem' }}>
+                  Optional
+                </span>
+              </div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 1rem 0' }}>
+                Helps tailor movement pacing and daily suggestions without pressure.
+              </p>
 
-          {/* AI Response Card */}
-          {aiResponse && (
+              {/* Quick Energy Presets */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                {ENERGY_OPTIONS.map(opt => {
+                  const active = Number(energy) === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setEnergy(opt.value)}
+                      style={{
+                        padding: '0.75rem 0.5rem',
+                        borderRadius: 'var(--radius-md)',
+                        border: active ? '2px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                        background: active ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <div style={{ fontSize: '1.4rem', marginBottom: '0.2rem' }}>{opt.icon}</div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700 }}>{opt.label}</div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>{opt.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Fine-tune Slider */}
+              <div style={{ background: 'var(--bg-secondary)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem', fontSize: '0.8rem' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Fine-tune rating:</span>
+                  <strong style={{ color: 'var(--accent-primary)' }}>{energy} / 5</strong>
+                </div>
+                <input
+                  id="checkin-slider-energy"
+                  type="range"
+                  min="1"
+                  max="5"
+                  step="1"
+                  value={energy}
+                  onChange={e => setEnergy(e.target.value)}
+                  style={{ width: '100%', accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className="btn btn-secondary btn-sm"
+                style={{ gap: '0.35rem' }}
+              >
+                <ArrowLeft size={14} /> Back
+              </button>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className="btn btn-secondary btn-sm"
+                >
+                  Skip
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className="btn btn-primary btn-sm"
+                  style={{ gap: '0.35rem', padding: '0.5rem 1rem' }}
+                >
+                  Next <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 3: 💭 WHAT DO YOU NEED TODAY?                                        */}
+        {/* ========================================================================= */}
+        {currentStep === 3 && (
+          <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
+            <div style={{ marginBottom: '1.25rem' }}>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.35rem 0' }}>
+                💭 What do you need today?
+              </h4>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 1rem 0' }}>
+                Select anything that would support you most today (choose one or more):
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem' }}>
+                {DAILY_NEEDS.map(need => {
+                  const active = selectedNeeds.includes(need.label);
+                  return (
+                    <button
+                      key={need.id}
+                      type="button"
+                      onClick={() => toggleNeed(need.label)}
+                      style={{
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: 'var(--radius-md)',
+                        fontSize: '0.82rem',
+                        fontWeight: active ? 700 : 500,
+                        background: active ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                        color: active ? 'var(--accent-primary)' : 'var(--text-primary)',
+                        border: active ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        textAlign: 'left',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                        <span>{need.icon}</span>
+                        <span>{need.label}</span>
+                      </span>
+                      {active && <Check size={14} color="var(--accent-primary)" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="btn btn-secondary btn-sm"
+                style={{ gap: '0.35rem' }}
+              >
+                <ArrowLeft size={14} /> Back
+              </button>
+
+              <button
+                id="save-daily-checkin-btn"
+                type="button"
+                onClick={handleCompleteCheckIn}
+                className="btn btn-primary"
+                style={{ padding: '0.55rem 1.25rem', gap: '0.35rem', fontWeight: 800 }}
+              >
+                <Check size={15} /> Save Check-In
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 4: COMPLETED SUMMARY + 💬 ASK BETTER EVERY DAY                       */}
+        {/* ========================================================================= */}
+        {currentStep === 4 && (
+          <div style={{ animation: 'fadeIn 0.2s ease-out', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Compassionate Summary Card */}
             <div 
-              id="ask-bed-response-card"
-              style={{ 
-                background: 'var(--bg-card)', 
-                padding: '1.15rem', 
-                borderRadius: 'var(--radius-md)',
+              style={{
+                background: 'var(--bg-secondary)',
+                padding: '1.15rem 1.25rem',
+                borderRadius: 'var(--radius-lg)',
                 borderLeft: '4px solid var(--accent-primary)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                marginTop: '1rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '0.65rem'
+                gap: '0.5rem'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span className="pill-badge primary" style={{ fontSize: '0.72rem', fontWeight: 700 }}>
-                  <Sparkles size={11} /> Better Every Day Response
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <strong style={{ fontSize: '0.96rem', color: 'var(--text-primary)' }}>
+                  Today's Check-In Summary 🌱
+                </strong>
+                <span className="pill-badge primary" style={{ fontSize: '0.68rem' }}>
+                  Logged ✓
                 </span>
-                <button 
-                  onClick={() => setAiResponse(null)}
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.75rem' }}
+              </div>
+              <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                Mood: <strong>{MOODS.find(m => m.id === mood)?.label || 'Good'}</strong> • Energy: <strong>{energy}/5</strong>
+                {selectedNeeds.length > 0 && (
+                  <div style={{ marginTop: '0.3rem' }}>
+                    Needs: <em>{selectedNeeds.join(', ')}</em>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Something else on your mind? 💬 Ask Better Every Day */}
+            <div 
+              id="ask-better-every-day-section"
+              style={{
+                background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--accent-primary-light) 100%)',
+                border: '1.5px solid var(--accent-primary)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '1.25rem'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
+                <span style={{ fontSize: '1.2rem' }}>💬</span>
+                <h4 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Something else on your mind?
+                </h4>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem 0' }}>
+                <strong>Ask Better Every Day</strong> — tap a thought or type what's on your mind:
+              </p>
+
+              {/* Quick Thought Prompts */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.85rem' }}>
+                {ASK_PROMPTS.map((prompt, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleRunAiQuery(prompt)}
+                    style={{
+                      padding: '0.3rem 0.65rem',
+                      borderRadius: 'var(--radius-pill)',
+                      fontSize: '0.74rem',
+                      fontWeight: 600,
+                      background: 'var(--bg-secondary)',
+                      color: 'var(--accent-primary)',
+                      border: '1px solid var(--border-subtle)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    "{prompt}"
+                  </button>
+                ))}
+              </div>
+
+              {/* Query Input */}
+              <div style={{ display: 'flex', gap: '0.45rem', marginBottom: '0.75rem' }}>
+                <input
+                  type="text"
+                  value={openQuery}
+                  onChange={e => setOpenQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleRunAiQuery(openQuery)}
+                  placeholder="Ask or share anything (e.g. why do I feel sluggish?)"
+                  className="input-field"
+                  style={{ fontSize: '0.82rem', flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRunAiQuery(openQuery)}
+                  disabled={!openQuery.trim() || isAsking}
+                  className="btn btn-primary"
+                  style={{ padding: '0.45rem 0.9rem', fontSize: '0.8rem', gap: '0.3rem' }}
                 >
-                  Dismiss
+                  <Send size={13} /> Ask
                 </button>
               </div>
 
-              {aiResponse.query && (
-                <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                  “{aiResponse.query}”
-                </div>
-              )}
-
-              <p style={{ fontSize: '0.86rem', color: 'var(--text-primary)', lineHeight: 1.55, margin: 0 }}>
-                {aiResponse.answer || aiResponse.response}
-              </p>
-
-              {aiResponse.suggestions && (
-                <div style={{ background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <Lightbulb size={12} /> Gentle Consideration
-                  </span>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0', lineHeight: 1.45 }}>
-                    {aiResponse.suggestions}
+              {/* AI Response Card */}
+              {aiResponse && (
+                <div 
+                  style={{ 
+                    background: 'var(--bg-card)', 
+                    padding: '1rem', 
+                    borderRadius: 'var(--radius-md)', 
+                    border: '1px solid var(--border-glass)',
+                    animation: 'fadeIn 0.2s ease-out'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.3rem' }}>
+                    <Sparkles size={14} color="var(--accent-primary)" />
+                    <strong style={{ fontSize: '0.84rem', color: 'var(--text-primary)' }}>Better Every Day Observation:</strong>
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0 0 0.5rem 0', lineHeight: 1.5 }}>
+                    {aiResponse.suggestion || aiResponse.response || aiResponse}
                   </p>
                 </div>
               )}
-
-              {aiResponse.oneSmallNextStep && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-primary-light)', padding: '0.6rem 0.85rem', borderRadius: 'var(--radius-pill)', border: '1px solid var(--accent-primary)' }}>
-                  <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
-                    One Small Step:
-                  </span>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-primary)', fontWeight: 600 }}>
-                    {aiResponse.oneSmallNextStep}
-                  </span>
-                </div>
-              )}
             </div>
-          )}
-        </div>
+
+            {/* Done Button */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '0.75rem', fontSize: '0.92rem', fontWeight: 800 }}
+            >
+              Done & Continue
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );

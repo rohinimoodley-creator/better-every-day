@@ -10,6 +10,7 @@ import ExerciseBreakdownModal from './ExerciseBreakdownModal';
 import BeginnerPlanFlowModal from './BeginnerPlanFlowModal';
 import ExercisePlansSection from './ExercisePlansSection';
 import ActivityTracker from './ActivityTracker';
+import SocialActivityModal from './SocialActivityModal';
 import ContextualPip from '../mascot/ContextualPip';
 import { 
   Zap, 
@@ -20,17 +21,20 @@ import {
   Compass, 
   Activity,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Plus,
+  Trash2
 } from 'lucide-react';
 
 export default function MoveHub() {
-  const { completedWorkouts, setCompletedWorkouts } = useWellness();
+  const { completedWorkouts, setCompletedWorkouts, socialActivities, deleteSocialActivity } = useWellness();
 
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isBreakItDownOpen, setIsBreakItDownOpen] = useState(false);
   const [isPetPlayModalOpen, setIsPetPlayModalOpen] = useState(false);
+  const [isSocialModalOpen, setIsSocialModalOpen] = useState(false);
   const [isBeginnerPlanModalOpen, setIsBeginnerPlanModalOpen] = useState(false);
   const [isMicroMovementOpen, setIsMicroMovementOpen] = useState(false);
   const [isStrategyOpen, setIsStrategyOpen] = useState(false);
@@ -165,6 +169,33 @@ export default function MoveHub() {
           </div>
           <ArrowRight size={15} color="var(--accent-primary)" />
         </button>
+
+        {/* Button 4: Social Activity (Recreational Movement) */}
+        <button
+          type="button"
+          onClick={() => setIsSocialModalOpen(true)}
+          className="btn"
+          style={{
+            background: 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-subtle)',
+            padding: '0.85rem 1rem',
+            borderRadius: 'var(--radius-lg)',
+            fontSize: '0.92rem',
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span style={{ fontSize: '1.25rem' }}>⛷️</span>
+            <span>Social Activity</span>
+          </div>
+          <ArrowRight size={15} color="var(--accent-primary)" />
+        </button>
       </div>
 
       {/* Revealed Micro-Movement Experience */}
@@ -252,7 +283,15 @@ export default function MoveHub() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', gap: '0.3rem' }}
+                onClick={(e) => { e.stopPropagation(); setIsSocialModalOpen(true); }}
+              >
+                <span>+ Add Social Activity</span>
+              </button>
               <button
                 type="button"
                 className={`btn ${isTrackerOpen ? 'btn-primary' : 'btn-secondary'} btn-sm`}
@@ -266,8 +305,80 @@ export default function MoveHub() {
           </div>
 
           {isTrackerOpen && (
-            <div style={{ marginTop: '1.15rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.15rem', animation: 'fadeIn 0.2s ease-out' }}>
+            <div style={{ marginTop: '1.15rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.15rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', animation: 'fadeIn 0.2s ease-out' }}>
               <ActivityTracker />
+
+              {/* Logged Social & Recreational Movement Sessions */}
+              {socialActivities && socialActivities.length > 0 && (
+                <div style={{ background: 'var(--bg-secondary)', padding: '1rem 1.15rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ fontSize: '1.1rem' }}>🎉</span>
+                      <h5 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                        Joyful & Social Movement Logs
+                      </h5>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSocialModalOpen(true)}
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem' }}
+                    >
+                      + Log Another
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {socialActivities.map(act => (
+                      <div
+                        key={act.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.65rem 0.85rem',
+                          background: 'var(--bg-tertiary)',
+                          borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--border-subtle)',
+                          gap: '0.6rem'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                          <span style={{ fontSize: '1.3rem' }}>{act.icon || '🏃'}</span>
+                          <div>
+                            <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                              {act.name || act.activityName}
+                            </div>
+                            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                              <span>⏱️ {act.durationMinutes} mins</span>
+                              {act.location && <span>📍 {act.location}</span>}
+                              {act.notes && <span>💬 {act.notes}</span>}
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => deleteSocialActivity && deleteSocialActivity(act.id)}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                            padding: '0.3rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            borderRadius: '4px'
+                          }}
+                          title="Delete log"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -367,6 +478,14 @@ export default function MoveHub() {
           isOpen={isCustomModalOpen}
           onClose={() => setIsCustomModalOpen(false)}
           onSave={handleSaveCustom}
+        />
+      )}
+
+      {/* Social Activity Modal */}
+      {isSocialModalOpen && (
+        <SocialActivityModal
+          isOpen={isSocialModalOpen}
+          onClose={() => setIsSocialModalOpen(false)}
         />
       )}
 

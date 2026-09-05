@@ -55,6 +55,7 @@ export default function DanceBreakModal({ isOpen, onClose }) {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [timeLeft, setTimeLeft] = useState(configuredDuration);
+  const [completedActualDuration, setCompletedActualDuration] = useState(configuredDuration);
   const [promptIdx, setPromptIdx] = useState(0);
   const [completionQuote, setCompletionQuote] = useState(COMPLETION_MESSAGES[0]);
   const [activeMediaDetails, setActiveMediaDetails] = useState(null);
@@ -159,6 +160,8 @@ export default function DanceBreakModal({ isOpen, onClose }) {
   };
 
   const handleDanceFinish = (duration) => {
+    const actualDuration = Math.max(1, Math.min(configuredDuration, Number(duration) || configuredDuration));
+    setCompletedActualDuration(actualDuration);
     cleanupPlayback();
     setIsTransitioning(true);
 
@@ -167,7 +170,7 @@ export default function DanceBreakModal({ isOpen, onClose }) {
 
     const soundLabel = dancePrefs.soundType === 'builtin' ? 'Better Every Day' : (activeMediaDetails?.name || 'Custom Sound');
     if (logDanceParty) {
-      logDanceParty(duration, soundLabel, activeMediaDetails?.name);
+      logDanceParty(actualDuration, soundLabel, activeMediaDetails?.name);
     }
 
     // Gentle 320ms transition before revealing completion state
@@ -425,14 +428,14 @@ export default function DanceBreakModal({ isOpen, onClose }) {
                 {completionQuote}
               </h3>
               <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0 }}>
-                You completed a joyful {configuredDuration}s dance break! ✨
+                You completed a joyful {completedActualDuration}s dance break! ✨
               </p>
             </div>
 
             <div style={{ background: 'var(--bg-tertiary)', padding: '0.85rem 1.25rem', borderRadius: 'var(--radius-md)', width: '100%', maxWidth: 320 }}>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Mindful Movement Logged</div>
               <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--accent-primary)', marginTop: '0.15rem' }}>
-                +{configuredDuration}s of Joyful Movement 🌱
+                +{completedActualDuration}s of Joyful Movement 🌱
               </div>
             </div>
 

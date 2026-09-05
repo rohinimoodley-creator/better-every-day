@@ -38,13 +38,28 @@ const MOTIVATIONAL_MESSAGES = [
 
 export default function QuickSupportModal({ isOpen, onClose }) {
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const [pipMood, setPipMood] = useState('happy');
 
   if (!isOpen) return null;
+
+  const PIP_POSITIVE_MOODS = ['happy', 'warm', 'celebrate', 'playful', 'curious', 'listening'];
+
+  const handlePipClick = () => {
+    setPipMood(prev => {
+      const nextIdx = (PIP_POSITIVE_MOODS.indexOf(prev) + 1) % PIP_POSITIVE_MOODS.length;
+      return PIP_POSITIVE_MOODS[nextIdx];
+    });
+    try {
+      confetti({ particleCount: 15, spread: 30, origin: { y: 0.55 } });
+    } catch(e) {}
+  };
 
   const currentQuote = MOTIVATIONAL_MESSAGES[quoteIndex % MOTIVATIONAL_MESSAGES.length];
 
   const handleNextQuote = () => {
     setQuoteIndex(prev => prev + 1);
+    setPipMood('celebrate');
+    setTimeout(() => setPipMood('happy'), 1800);
     try {
       confetti({ particleCount: 20, spread: 35, origin: { y: 0.6 } });
     } catch(e) {}
@@ -93,14 +108,21 @@ export default function QuickSupportModal({ isOpen, onClose }) {
 
         {/* Mascot & Encouragement Card */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div 
+            onClick={handlePipClick}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            title="Tap Pip's face for a gentle spark! ✨"
+          >
             <ContextualPip 
               context="mind" 
               size={64} 
-              mood="happy"
+              mood={pipMood}
               message="Take a gentle breath. You're doing great."
               showSpeechBubble={false}
             />
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.2rem', fontWeight: 600 }}>
+              (Tap Pip for a warm reaction 🌱)
+            </span>
           </div>
 
           <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem 1.15rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', width: '100%' }}>

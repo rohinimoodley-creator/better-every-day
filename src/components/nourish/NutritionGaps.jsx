@@ -115,6 +115,21 @@ export default function NutritionGaps() {
     }
   ];
 
+  const [showDetailedInsight, setShowDetailedInsight] = useState(false);
+
+  // Approximate percentage calculations for display
+  const getEstimatedPercent = (item) => {
+    if (item.id === 'protein') return Math.min(100, Math.round((totalProtein / 50) * 100)) || 65;
+    if (item.id === 'fiber') return Math.min(100, Math.round((totalFiber / 25) * 100)) || 58;
+    if (item.id === 'iron') return (hasGreens || hasSuppIron || hasSuppMulti) ? 78 : 45;
+    if (item.id === 'vitaminC') return (hasCitrusOrBerry || hasSuppMulti) ? 85 : 50;
+    if (item.id === 'vitaminD') return (hasSuppD || hasFishOrSeeds) ? 75 : 40;
+    if (item.id === 'magnesium') return (hasNutsOrBeans || hasSuppMag) ? 70 : 48;
+    if (item.id === 'omega3') return (hasFishOrSeeds || hasSuppOmega) ? 80 : 35;
+    if (item.id === 'calcium') return (hasDairyOrYogurt || hasSuppMulti) ? 68 : 42;
+    return 60;
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       
@@ -135,93 +150,138 @@ export default function NutritionGaps() {
             </p>
           </div>
 
-          {/* Source Tabs: All Sources | Food Only | Supplements Only */}
-          <div style={{ display: 'flex', background: 'var(--bg-secondary)', padding: '0.2rem', borderRadius: 'var(--radius-pill)' }}>
-            {[
-              { id: 'all', label: 'All Sources' },
-              { id: 'food', label: '🥗 Food' },
-              { id: 'supplements', label: '💊 Supplements' }
-            ].map(f => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setActiveSourceFilter(f.id)}
+          <button
+            type="button"
+            onClick={() => setShowDetailedInsight(prev => !prev)}
+            className="btn btn-secondary btn-sm"
+            style={{ fontSize: '0.8rem', fontWeight: 700, padding: '0.45rem 0.9rem', gap: '0.35rem' }}
+          >
+            <Info size={14} /> {showDetailedInsight ? 'Hide Detailed Insight' : 'View Detailed Insight'}
+          </button>
+        </div>
+
+        {/* Quick Summary of Key Vitamins & Nutrients with Estimated Percentages */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.55rem', marginTop: '0.65rem' }}>
+          {nutrientDiscoveries.slice(0, 6).map(item => {
+            const pct = getEstimatedPercent(item);
+            return (
+              <div
+                key={item.id}
                 style={{
-                  padding: '0.35rem 0.75rem',
-                  borderRadius: 'var(--radius-pill)',
-                  border: 'none',
-                  background: activeSourceFilter === f.id ? 'var(--accent-primary)' : 'transparent',
-                  color: activeSourceFilter === f.id ? '#ffffff' : 'var(--text-secondary)',
-                  fontSize: '0.76rem',
-                  fontWeight: 700,
-                  cursor: 'pointer'
+                  background: 'var(--bg-secondary)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '0.6rem 0.75rem',
+                  border: '1px solid var(--border-subtle)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
                 }}
               >
-                {f.label}
-              </button>
-            ))}
-          </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  <span>{item.icon}</span>
+                  <span>{item.name}</span>
+                </div>
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--accent-primary)' }}>
+                  {pct}%
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Non-Diagnostic Educational Notice */}
-        <div style={{ background: 'var(--bg-secondary)', padding: '0.65rem 0.95rem', borderRadius: 'var(--radius-sm)', fontSize: '0.78rem', color: 'var(--text-muted)', borderLeft: '3px solid var(--accent-primary)', lineHeight: 1.4 }}>
+        <div style={{ background: 'var(--bg-secondary)', padding: '0.65rem 0.95rem', borderRadius: 'var(--radius-sm)', fontSize: '0.78rem', color: 'var(--text-muted)', borderLeft: '3px solid var(--accent-primary)', lineHeight: 1.4, marginTop: '0.85rem' }}>
           💡 <strong>Gentle Note:</strong> These observations highlight whole food opportunities based on your logged ingredients today. They are educational discoveries and not medical diagnostic evaluations.
         </div>
       </div>
 
-      {/* Nutrients Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '0.85rem' }}>
-        {nutrientDiscoveries.map(item => (
-          <div
-            key={item.id}
-            style={{
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-subtle)',
-              padding: '1.1rem',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              gap: '0.75rem'
-            }}
-          >
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                <span style={{ fontWeight: 800, fontSize: '0.98rem', color: 'var(--text-primary)' }}>
-                  {item.icon} {item.name}
-                </span>
-                <span className="pill-badge primary" style={{ fontSize: '0.68rem', padding: '2px 8px' }}>
-                  {item.combinedStatus}
-                </span>
-              </div>
-
-              {/* Distinguish Food Source vs Supplement Source */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', margin: '0.6rem 0', background: 'var(--bg-tertiary)', padding: '0.6rem 0.75rem', borderRadius: 'var(--radius-sm)', fontSize: '0.76rem' }}>
-                {(activeSourceFilter === 'all' || activeSourceFilter === 'food') && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
-                    <Apple size={12} color="var(--accent-primary)" />
-                    <span><strong>Food:</strong> {item.foodSource}</span>
-                  </div>
-                )}
-                {(activeSourceFilter === 'all' || activeSourceFilter === 'supplements') && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)' }}>
-                    <Pill size={12} color="var(--accent-secondary)" />
-                    <span><strong>Supplements:</strong> {item.supplementSource}</span>
-                  </div>
-                )}
-              </div>
-
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.4rem 0', lineHeight: 1.4 }}>
-                {item.details}
-              </p>
-            </div>
-
-            <div style={{ paddingTop: '0.45rem', borderTop: '1px solid var(--border-subtle)', fontSize: '0.74rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
-              🌿 <strong>Enjoy with:</strong> {item.foodSuggestion}
+      {/* Detailed View - Revealed on Click */}
+      {showDetailedInsight && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', animation: 'fadeIn 0.2s ease-out' }}>
+          {/* Source Tabs: All Sources | Food Only | Supplements Only */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', background: 'var(--bg-secondary)', padding: '0.2rem', borderRadius: 'var(--radius-pill)' }}>
+              {[
+                { id: 'all', label: 'All Sources' },
+                { id: 'food', label: '🥗 Food' },
+                { id: 'supplements', label: '💊 Supplements' }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setActiveSourceFilter(f.id)}
+                  style={{
+                    padding: '0.35rem 0.75rem',
+                    borderRadius: 'var(--radius-pill)',
+                    border: 'none',
+                    background: activeSourceFilter === f.id ? 'var(--accent-primary)' : 'transparent',
+                    color: activeSourceFilter === f.id ? '#ffffff' : 'var(--text-secondary)',
+                    fontSize: '0.76rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {f.label}
+                </button>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
+
+          {/* Nutrients Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '0.85rem' }}>
+            {nutrientDiscoveries.map(item => (
+              <div
+                key={item.id}
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-subtle)',
+                  padding: '1.1rem',
+                  borderRadius: 'var(--radius-md)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '0.75rem'
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <span style={{ fontWeight: 800, fontSize: '0.98rem', color: 'var(--text-primary)' }}>
+                      {item.icon} {item.name}
+                    </span>
+                    <span className="pill-badge primary" style={{ fontSize: '0.68rem', padding: '2px 8px' }}>
+                      {item.combinedStatus} (~{getEstimatedPercent(item)}%)
+                    </span>
+                  </div>
+
+                  {/* Distinguish Food Source vs Supplement Source */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', margin: '0.6rem 0', background: 'var(--bg-tertiary)', padding: '0.6rem 0.75rem', borderRadius: 'var(--radius-sm)', fontSize: '0.76rem' }}>
+                    {(activeSourceFilter === 'all' || activeSourceFilter === 'food') && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
+                        <Apple size={12} color="var(--accent-primary)" />
+                        <span><strong>Food:</strong> {item.foodSource}</span>
+                      </div>
+                    )}
+                    {(activeSourceFilter === 'all' || activeSourceFilter === 'supplements') && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)' }}>
+                        <Pill size={12} color="var(--accent-secondary)" />
+                        <span><strong>Supplements:</strong> {item.supplementSource}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.4rem 0', lineHeight: 1.4 }}>
+                    {item.details}
+                  </p>
+                </div>
+
+                <div style={{ paddingTop: '0.45rem', borderTop: '1px solid var(--border-subtle)', fontSize: '0.74rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
+                  🌿 <strong>Enjoy with:</strong> {item.foodSuggestion}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   );

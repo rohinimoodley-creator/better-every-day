@@ -13,6 +13,7 @@ import TogetherHub from './components/together/TogetherHub';
 import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import WhatCanITrackDrawer from './components/navigation/WhatCanITrackDrawer';
 import BodySignalsModal from './components/body/BodySignalsModal';
+import DuplicateDataAlertModal from './components/trust/DuplicateDataAlertModal';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('HOME');
@@ -135,6 +136,9 @@ function AppContent() {
         isOpen={isBodySignalsOpen}
         onClose={() => setIsBodySignalsOpen(false)}
       />
+
+      {/* Duplicate Data Pop-Up Notification */}
+      <DuplicateDataAlertModal onNavigateTab={handleNavigate} />
 
       <FloatingVoiceButton />
       <Navbar activeTab={activeTab} onSelectTab={handleNavigate} />

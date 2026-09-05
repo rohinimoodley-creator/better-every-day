@@ -36,6 +36,7 @@ export default function HomeScreen({ onNavigateTab }) {
     loggedMeals,
     socialEvents,
     overviewFrequency,
+    updateOverviewFrequency,
     overviewPillars,
     updateOverviewPillars,
     microMovementSettings,
@@ -368,9 +369,9 @@ export default function HomeScreen({ onNavigateTab }) {
         </div>
       </div>
 
-      {/* 3. WEEKLY WELLNESS OVERVIEW (Clutter-free, Cleaned header) */}
+      {/* 3. WELLNESS OVERVIEW (Customizable hubs + Timeframe selector) */}
       <div className="card-glass" style={{ padding: '1.25rem 1.4rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.65rem' }}>
           <div>
             <h3 style={{ fontSize: '1.08rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Activity size={17} color="var(--accent-primary)" />
@@ -381,7 +382,57 @@ export default function HomeScreen({ onNavigateTab }) {
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {/* Subtle Timeframe Segmented Control */}
+            <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '2px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-subtle)' }}>
+              {[
+                { id: 'daily', label: 'Daily' },
+                { id: 'weekly', label: 'Weekly' },
+                { id: 'monthly', label: 'Monthly' }
+              ].map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => updateOverviewFrequency(t.id)}
+                  style={{
+                    padding: '0.22rem 0.6rem',
+                    borderRadius: 'var(--radius-pill)',
+                    border: 'none',
+                    background: overviewFrequency === t.id ? 'var(--accent-primary)' : 'transparent',
+                    color: overviewFrequency === t.id ? '#ffffff' : 'var(--text-secondary)',
+                    fontSize: '0.72rem',
+                    fontWeight: overviewFrequency === t.id ? 800 : 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Customize Overview Trigger */}
+            <button
+              onClick={() => setIsCustomizeOverviewOpen(true)}
+              style={{
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 'var(--radius-pill)',
+                padding: '0.25rem 0.65rem',
+                color: 'var(--text-primary)',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem'
+              }}
+              title="Customize which wellness hubs appear in overview"
+            >
+              <Sliders size={12} color="var(--accent-primary)" />
+              <span>Customize</span>
+            </button>
+
             <button
               onClick={() => onNavigateTab && onNavigateTab('WELLNESS')}
               style={{

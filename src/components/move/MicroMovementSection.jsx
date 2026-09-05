@@ -164,7 +164,7 @@ export default function MicroMovementSection() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
               <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                Micro-Movement & Posture Support
+                Micro-Movement
               </h3>
               {microMovementSettings.enabled ? (
                 <span className="pill-badge primary" style={{ fontSize: '0.66rem', padding: '2px 8px', fontWeight: 700 }}>
@@ -177,7 +177,7 @@ export default function MicroMovementSection() {
               )}
             </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0 0' }}>
-              {isSectionOpen ? 'Tap header to hide micro-movement options' : '30-30 movement breaks, posture resets & position changes'}
+              {isSectionOpen ? 'Tap header to hide micro-movement options' : '30-30 movement reminders, posture resets & position changes'}
             </p>
           </div>
         </div>

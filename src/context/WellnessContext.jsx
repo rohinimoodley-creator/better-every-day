@@ -348,6 +348,10 @@ export function WellnessProvider({ children }) {
     return saved ? JSON.parse(saved) : INITIAL_DUPLICATE_SUGGESTIONS;
   });
 
+  const [duplicateAlertDismissed, setDuplicateAlertDismissed] = useState(() => {
+    return localStorage.getItem('bed_duplicate_alert_dismissed') === 'true';
+  });
+
   const [auditLogs, setAuditLogs] = useState(() => {
     const saved = localStorage.getItem('bed_audit_logs');
     return saved ? JSON.parse(saved) : INITIAL_AUDIT_LOGS;
@@ -1255,6 +1259,33 @@ export function WellnessProvider({ children }) {
   };
 
   // Connected Devices, Sync & Data Trust Mutators (Prompt 7)
+  const addConnectedDevice = (deviceData) => {
+    const newDev = {
+      id: 'dev_' + Date.now(),
+      name: deviceData.name || 'Connected Device',
+      category: deviceData.category || 'Smart Device',
+      icon: deviceData.icon || '⌚',
+      connected: true,
+      lastSynced: 'Just now',
+      status: 'synced',
+      batteryPercent: 100,
+      permissions: deviceData.permissions || [
+        { key: 'activity', name: 'Activity & Movement Sync', granted: true, reason: 'Sync daily activity seamlessly' }
+      ]
+    };
+    setConnectedDevices(prev => [newDev, ...prev]);
+    return newDev;
+  };
+
+  const removeConnectedDevice = (deviceId) => {
+    setConnectedDevices(prev => prev.filter(d => d.id !== deviceId));
+  };
+
+  const dismissDuplicateAlert = () => {
+    setDuplicateAlertDismissed(true);
+    localStorage.setItem('bed_duplicate_alert_dismissed', 'true');
+  };
+
   const toggleDeviceConnection = (deviceId) => {
     setConnectedDevices(prev => prev.map(d => {
       if (d.id === deviceId) {
@@ -1308,18 +1339,29 @@ export function WellnessProvider({ children }) {
       return dup;
     }));
 
+    let modifiedText = 'Resolved duplicate activity';
     if (action === 'combine') {
-      const newAudit = {
-        id: 'aud_' + Date.now(),
-        timestamp: 'Just now',
-        category: 'Movement',
-        original: 'Smartwatch Walk + Manual Walk (Separate)',
-        modified: 'Combined into single verified 30-min walk session (3,500 steps, ~125 kcal)',
-        author: 'Rohini (User)',
-        source: 'Duplicate Resolution'
-      };
-      setAuditLogs(prev => [newAudit, ...prev]);
+      modifiedText = 'Combined into single verified session';
+    } else if (action === 'use_a') {
+      modifiedText = 'Selected primary device source (Device A)';
+    } else if (action === 'use_b') {
+      modifiedText = 'Selected secondary/manual source (Source B)';
+    } else if (action === 'keep_both') {
+      modifiedText = 'Retained both sources side-by-side';
+    } else if (action === 'manual') {
+      modifiedText = 'Reviewed and edited manually';
     }
+
+    const newAudit = {
+      id: 'aud_' + Date.now(),
+      timestamp: 'Just now',
+      category: 'Data Integrity',
+      original: 'Duplicate records detected',
+      modified: modifiedText,
+      author: `${userProfile.name} (User)`,
+      source: 'Duplicate Resolution'
+    };
+    setAuditLogs(prev => [newAudit, ...prev]);
   };
 
   const resolveAnomaly = (anomalyId, action) => {
@@ -2558,6 +2600,8 @@ export function WellnessProvider({ children }) {
       blockRelationship,
       reportUser,
       connectedDevices,
+      addConnectedDevice,
+      removeConnectedDevice,
       toggleDeviceConnection,
       syncDeviceNow,
       syncStatus,
@@ -2567,6 +2611,8 @@ export function WellnessProvider({ children }) {
       resolveAnomaly,
       duplicateSuggestions,
       resolveDuplicateActivity,
+      duplicateAlertDismissed,
+      dismissDuplicateAlert,
       auditLogs,
       voiceAudioRetention,
       updateVoiceAudioRetention,

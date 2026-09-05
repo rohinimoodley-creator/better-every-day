@@ -152,7 +152,7 @@ export default function MicroMovementPromptModal({
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                       <strong style={{ fontSize: '0.94rem', color: 'var(--text-primary)' }}>
-                        Take 30 Steps
+                        ✓ Done — 30 Steps
                       </strong>
                       {preference === 'steps' && (
                         <span className="pill-badge primary" style={{ fontSize: '0.62rem' }}>Preferred</span>
@@ -183,11 +183,11 @@ export default function MicroMovementPromptModal({
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <span style={{ fontSize: '1.5rem' }}>🧘</span>
+                  <span style={{ fontSize: '1.5rem' }}>🌿</span>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                       <strong style={{ fontSize: '0.94rem', color: 'var(--text-primary)' }}>
-                        Stretch & Reposition
+                        🌿 Suggest a Stretch & Reposition
                       </strong>
                       {preference === 'stretch' && (
                         <span className="pill-badge primary" style={{ fontSize: '0.62rem' }}>Preferred</span>

@@ -1153,13 +1153,22 @@ export const INITIAL_DATA_ANOMALIES = [
 
 export const INITIAL_DUPLICATE_SUGGESTIONS = [
   {
+    id: 'dup_sleep_1',
+    category: 'Sleep & Night Recovery',
+    timestamp: 'Last Night, 23:00 - 07:00',
+    itemA: { id: 'sleep_a', title: 'Sleep Log (8 hrs)', source: 'Smartwatch Auto-Detect', detail: '8.0 hrs • Rested (1h 45m Deep)' },
+    itemB: { id: 'sleep_b', title: 'Sleep Log (7.5 hrs)', source: 'Manual Entry', detail: '7.5 hrs • Rested' },
+    neutralPrompt: 'We found two sources for this information. Your sleep information was found from two sources: Smartwatch & Manual Entry.',
+    status: 'pending' // 'pending' | 'use_a' | 'use_b' | 'keep_both' | 'combine' | 'manual'
+  },
+  {
     id: 'dup_1',
     category: 'Movement & Walking',
     timestamp: 'Today, 18:30 - 19:00',
     itemA: { id: 'log_a', title: 'Sunset Park Walk (30 mins)', source: 'Smartwatch Auto-Detect', steps: 3420, calories: 120 },
     itemB: { id: 'log_b', title: 'Sunset Loop with Maya (30 mins)', source: 'Manual User Log', steps: 3500, calories: 125 },
     neutralPrompt: 'This looks similar to an activity already recorded on your Apple Watch. Would you like to combine them into one complete log?',
-    status: 'pending' // 'pending' | 'combined' | 'kept_both' | 'ignored'
+    status: 'pending' // 'pending' | 'use_a' | 'use_b' | 'keep_both' | 'combine' | 'manual'
   }
 ];
 

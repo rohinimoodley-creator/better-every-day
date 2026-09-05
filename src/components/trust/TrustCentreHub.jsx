@@ -26,14 +26,72 @@ import {
   Sparkles,
   Layers,
   History,
+  Plus,
   X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export default function TrustCentreHub() {
+const AVAILABLE_DEVICE_PRESETS = [
+  {
+    name: 'Apple Watch Ultra / Series',
+    category: 'Smartwatch',
+    icon: '⌚',
+    permissions: [
+      { key: 'steps', name: 'Step Cadence & Daily Walking', granted: true, reason: 'Sync daily steps and cadence' },
+      { key: 'workouts', name: 'Heart Rate & Active Minutes', granted: true, reason: 'Record exercise sessions' },
+      { key: 'sleep', name: 'Sleep Stages & Rest Duration', granted: true, reason: 'Provide gentle morning recovery insights' }
+    ]
+  },
+  {
+    name: 'Garmin Venu / Forerunner',
+    category: 'Sport Watch',
+    icon: '⌚',
+    permissions: [
+      { key: 'gps_tracks', name: 'Outdoor Trail GPS & Pace', granted: true, reason: 'Calculate accurate walking and running distances' },
+      { key: 'body_battery', name: 'Rest & Body Battery Metrics', granted: true, reason: 'Support low energy day adaptations' }
+    ]
+  },
+  {
+    name: 'Oura Ring Gen 3',
+    category: 'Smart Ring',
+    icon: '💍',
+    permissions: [
+      { key: 'sleep_readiness', name: 'Sleep Readiness & HRV', granted: true, reason: 'Gentle recovery pacing recommendations' },
+      { key: 'skin_temp', name: 'Skin Temperature Trend', granted: true, reason: 'Support private menstrual cycle rhythms' }
+    ]
+  },
+  {
+    name: 'Whoop 4.0',
+    category: 'Recovery Band',
+    icon: '📿',
+    permissions: [
+      { key: 'strain_recovery', name: 'Daily Strain & Recovery Score', granted: true, reason: 'Prevent overexertion and honor rest days' }
+    ]
+  },
+  {
+    name: 'Withings Smart Body Scale',
+    category: 'Smart Scale',
+    icon: '⚖️',
+    permissions: [
+      { key: 'weight_baseline', name: 'Weight & Body Baseline Sync', granted: true, reason: 'Store baseline metric without judgment' }
+    ]
+  },
+  {
+    name: 'Continuous Glucose Monitor (CGM)',
+    category: 'Metabolic Sensor',
+    icon: '📊',
+    permissions: [
+      { key: 'glucose_stability', name: 'Glycemic Trend & Stability', granted: true, reason: 'Observe steady energy patterns' }
+    ]
+  }
+];
+
+export default function TrustCentreHub({ initialTab = 'devices' }) {
   const {
     userProfile,
     connectedDevices,
+    addConnectedDevice,
+    removeConnectedDevice,
     toggleDeviceConnection,
     syncDeviceNow,
     syncStatus,
@@ -49,11 +107,18 @@ export default function TrustCentreHub() {
     eraseAllUserData
   } = useWellness();
 
-  const [activeTrustTab, setActiveTrustTab] = useState('devices'); // 'devices' | 'tracked' | 'integrity' | 'privacy' | 'export'
+  const [activeTrustTab, setActiveTrustTab] = useState(initialTab); // 'devices' | 'tracked' | 'integrity' | 'privacy' | 'export'
   const [selectedPermissionDevice, setSelectedPermissionDevice] = useState(null);
+  const [deviceToRemove, setDeviceToRemove] = useState(null);
+  const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+  // Custom new device state
+  const [customDevName, setCustomDevName] = useState('');
+  const [customDevCategory, setCustomDevCategory] = useState('Smartwatch');
+  const [customDevIcon, setCustomDevIcon] = useState('⌚');
 
   const handleManualSyncAll = () => {
     triggerManualSync();
@@ -64,6 +129,39 @@ export default function TrustCentreHub() {
         origin: { y: 0.6 }
       });
     } catch(e) {}
+  };
+
+  const handleAddPresetDevice = (preset) => {
+    addConnectedDevice(preset);
+    setIsAddDeviceModalOpen(false);
+    try {
+      confetti({ particleCount: 30, spread: 45, origin: { y: 0.6 } });
+    } catch(e) {}
+  };
+
+  const handleAddCustomDevice = (e) => {
+    e.preventDefault();
+    if (!customDevName.trim()) return;
+    addConnectedDevice({
+      name: customDevName.trim(),
+      category: customDevCategory,
+      icon: customDevIcon,
+      permissions: [
+        { key: 'activity', name: 'Activity & Movement Sync', granted: true, reason: 'Sync activity data seamlessly' }
+      ]
+    });
+    setCustomDevName('');
+    setIsAddDeviceModalOpen(false);
+    try {
+      confetti({ particleCount: 30, spread: 45, origin: { y: 0.6 } });
+    } catch(e) {}
+  };
+
+  const handleConfirmRemoveDevice = () => {
+    if (deviceToRemove) {
+      removeConnectedDevice(deviceToRemove.id);
+      setDeviceToRemove(null);
+    }
   };
 
   const handleExportFullArchive = () => {
@@ -170,12 +268,22 @@ export default function TrustCentreHub() {
       </div>
 
       {/* =========================================================================
-          TAB 1: CONNECTED DEVICES & WEARABLES
+          TAB 1: CONNECTED DEVICES & WEARABLES (Add/Remove supported)
           ========================================================================= */}
       {activeTrustTab === 'devices' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-            ⌚ <strong>Multi-Device Architecture:</strong> Connect your smartwatch or health platform. The app requests only the permissions needed and never shares device data without your explicit consent.
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
+            <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', fontSize: '0.82rem', color: 'var(--text-secondary)', flex: 1 }}>
+              ⌚ <strong>Multi-Device Architecture:</strong> Connect your smartwatch, smart ring, or health platform. The app requests only the permissions needed and never shares device data without your explicit consent.
+            </div>
+
+            <button
+              onClick={() => setIsAddDeviceModalOpen(true)}
+              className="btn btn-primary btn-sm"
+              style={{ gap: '0.35rem', whiteSpace: 'nowrap' }}
+            >
+              <Plus size={14} /> Add Device
+            </button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem' }}>
@@ -184,16 +292,18 @@ export default function TrustCentreHub() {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                      <span style={{ fontSize: '1.8rem' }}>{dev.icon}</span>
+                      <span style={{ fontSize: '1.8rem' }}>{dev.icon || '⌚'}</span>
                       <div>
                         <h4 style={{ fontSize: '1.05rem', margin: 0 }}>{dev.name}</h4>
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{dev.category}</span>
                       </div>
                     </div>
 
-                    <span className={`pill-badge ${dev.connected ? 'primary' : 'gray'}`} style={{ fontSize: '0.68rem' }}>
-                      {dev.connected ? 'Connected' : 'Disconnected'}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span className={`pill-badge ${dev.connected ? 'primary' : 'gray'}`} style={{ fontSize: '0.68rem' }}>
+                        {dev.connected ? 'Connected' : 'Disconnected'}
+                      </span>
+                    </div>
                   </div>
 
                   {dev.connected && (
@@ -207,7 +317,7 @@ export default function TrustCentreHub() {
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
                     <strong>Active Permissions:</strong>
                     <ul style={{ margin: '0.25rem 0 0 1rem', padding: 0 }}>
-                      {dev.permissions.map((p, idx) => (
+                      {dev.permissions?.map((p, idx) => (
                         <li key={idx} style={{ color: p.granted ? 'var(--text-primary)' : 'var(--text-muted)' }}>
                           {p.name} {p.granted ? '✓' : '(Not Granted)'}
                         </li>
@@ -216,31 +326,41 @@ export default function TrustCentreHub() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.4rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem' }}>
-                  <button
-                    onClick={() => toggleDeviceConnection(dev.id)}
-                    className={`btn btn-sm ${dev.connected ? 'btn-secondary' : 'btn-primary'}`}
-                    style={{ flex: 1, fontSize: '0.75rem' }}
-                  >
-                    {dev.connected ? 'Disconnect' : 'Connect Device'}
-                  </button>
-                  {dev.connected && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem' }}>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
                     <button
-                      onClick={() => syncDeviceNow(dev.id)}
+                      onClick={() => toggleDeviceConnection(dev.id)}
+                      className={`btn btn-sm ${dev.connected ? 'btn-secondary' : 'btn-primary'}`}
+                      style={{ flex: 1, fontSize: '0.75rem' }}
+                    >
+                      {dev.connected ? 'Disconnect' : 'Connect Device'}
+                    </button>
+                    {dev.connected && (
+                      <button
+                        onClick={() => syncDeviceNow(dev.id)}
+                        className="btn btn-secondary btn-sm"
+                        style={{ fontSize: '0.75rem', padding: '0.35rem 0.6rem' }}
+                        title="Sync this device"
+                      >
+                        <RefreshCw size={13} className={dev.status === 'syncing' ? 'animate-spin' : ''} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setSelectedPermissionDevice(dev)}
                       className="btn btn-secondary btn-sm"
                       style={{ fontSize: '0.75rem', padding: '0.35rem 0.6rem' }}
-                      title="Sync this device"
+                      title="View why permissions are needed"
                     >
-                      <RefreshCw size={13} className={dev.status === 'syncing' ? 'animate-spin' : ''} />
+                      Details
                     </button>
-                  )}
+                  </div>
+
                   <button
-                    onClick={() => setSelectedPermissionDevice(dev)}
+                    onClick={() => setDeviceToRemove(dev)}
                     className="btn btn-secondary btn-sm"
-                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.6rem' }}
-                    title="View why permissions are needed"
+                    style={{ fontSize: '0.72rem', color: 'var(--text-muted)', border: 'none', background: 'transparent', alignSelf: 'center', padding: '0.2rem 0.5rem' }}
                   >
-                    Details
+                    <Trash2 size={12} style={{ marginRight: '0.2rem', verticalAlign: 'middle' }} /> Remove Device
                   </button>
                 </div>
               </div>
@@ -250,12 +370,12 @@ export default function TrustCentreHub() {
       )}
 
       {/* =========================================================================
-          TAB 2: WHAT I TRACK
+          TAB 2: WHAT I TRACK (Secondary Breakdown View)
           ========================================================================= */}
       {activeTrustTab === 'tracked' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-            📊 <strong>Transparent Tracking Attribution:</strong> Every data point tracks its origin so you always know if information came from your own manual entry, your watch, or voice AI.
+            📊 <strong>Transparent Tracking Attribution:</strong> Every data point tracks its origin so you always know if information came from your own manual entry, your smartwatch, or voice AI.
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.85rem' }}>
@@ -294,10 +414,10 @@ export default function TrustCentreHub() {
           {/* Duplicate Resolution Section */}
           <div>
             <h4 style={{ fontSize: '1.05rem', margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Layers size={16} color="var(--accent-primary)" /> Duplicate Activity Detection
+              <Layers size={16} color="var(--accent-primary)" /> Duplicate Activity & Multi-Source Detection
             </h4>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 0.75rem 0' }}>
-              When a smartwatch and a manual entry cover the same time window, the system suggests combining them rather than doubling your stats.
+              When a smartwatch and a manual entry cover the same time window, the system presents gentle resolution choices without forcing or nagging.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -315,29 +435,35 @@ export default function TrustCentreHub() {
                   <div style={{ background: 'var(--bg-secondary)', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '0.85rem', fontSize: '0.78rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                     <div>
                       <strong>Source A ({dup.itemA.source}):</strong>
-                      <div>{dup.itemA.title} • {dup.itemA.steps} steps (~{dup.itemA.calories} kcal)</div>
+                      <div>{dup.itemA.title} {dup.itemA.steps ? `• ${dup.itemA.steps} steps (~${dup.itemA.calories} kcal)` : dup.itemA.detail ? `• ${dup.itemA.detail}` : ''}</div>
                     </div>
                     <div>
                       <strong>Source B ({dup.itemB.source}):</strong>
-                      <div>{dup.itemB.title} • {dup.itemB.steps} steps (~{dup.itemB.calories} kcal)</div>
+                      <div>{dup.itemB.title} {dup.itemB.steps ? `• ${dup.itemB.steps} steps (~${dup.itemB.calories} kcal)` : dup.itemB.detail ? `• ${dup.itemB.detail}` : ''}</div>
                     </div>
                   </div>
 
                   {dup.status === 'pending' ? (
-                    <div style={{ display: 'flex', gap: '0.4rem' }}>
-                      <button onClick={() => resolveDuplicateActivity(dup.id, 'combine')} className="btn btn-primary btn-sm">
-                        Combine into Single Log
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                      <button onClick={() => resolveDuplicateActivity(dup.id, 'use_a')} className="btn btn-primary btn-sm" style={{ fontSize: '0.75rem' }}>
+                        Use Device A
                       </button>
-                      <button onClick={() => resolveDuplicateActivity(dup.id, 'keep_both')} className="btn btn-secondary btn-sm">
+                      <button onClick={() => resolveDuplicateActivity(dup.id, 'use_b')} className="btn btn-secondary btn-sm" style={{ fontSize: '0.75rem' }}>
+                        Use Source B
+                      </button>
+                      <button onClick={() => resolveDuplicateActivity(dup.id, 'keep_both')} className="btn btn-secondary btn-sm" style={{ fontSize: '0.75rem' }}>
                         Keep Both
                       </button>
-                      <button onClick={() => resolveDuplicateActivity(dup.id, 'ignore')} className="btn btn-secondary btn-sm">
-                        Ignore
+                      <button onClick={() => resolveDuplicateActivity(dup.id, 'combine')} className="btn btn-secondary btn-sm" style={{ fontSize: '0.75rem' }}>
+                        Combine
+                      </button>
+                      <button onClick={() => resolveDuplicateActivity(dup.id, 'manual')} className="btn btn-secondary btn-sm" style={{ fontSize: '0.75rem' }}>
+                        Review Manually
                       </button>
                     </div>
                   ) : (
                     <span className="pill-badge primary" style={{ fontSize: '0.72rem' }}>
-                      Resolved: {dup.status.toUpperCase()} ✓
+                      Resolved: {dup.status.replace('_', ' ').toUpperCase()} ✓
                     </span>
                   )}
                 </div>
@@ -460,7 +586,7 @@ export default function TrustCentreHub() {
           ========================================================================= */}
       {activeTrustTab === 'export' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {/* PDF Export Section (Privacy-first granular selection) */}
+          {/* PDF Export Section */}
           <div className="card-glass" style={{ padding: '1.35rem', background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, var(--accent-primary-light) 100%)', border: '1.5px solid var(--accent-primary)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem' }}>
               <div>
@@ -520,6 +646,123 @@ export default function TrustCentreHub() {
         </div>
       )}
 
+      {/* ADD DEVICE MODAL */}
+      {isAddDeviceModalOpen && (
+        <div className="modal-backdrop" onClick={() => setIsAddDeviceModalOpen(false)}>
+          <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxWidth: 540 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.25rem', margin: 0 }}>Connect a Device or Sensor ⌚</h3>
+              <button onClick={() => setIsAddDeviceModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+              Select a popular wearable or health device to automatically sync activity, rest, and wellness data:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.25rem', maxHeight: '280px', overflowY: 'auto' }}>
+              {AVAILABLE_DEVICE_PRESETS.map((preset, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => handleAddPresetDevice(preset)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.75rem 1rem',
+                    background: 'var(--bg-secondary)',
+                    borderRadius: 'var(--radius-md)',
+                    cursor: 'pointer',
+                    border: '1px solid var(--border-subtle)',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <span style={{ fontSize: '1.4rem' }}>{preset.icon}</span>
+                    <div>
+                      <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)', display: 'block' }}>{preset.name}</strong>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{preset.category}</span>
+                    </div>
+                  </div>
+                  <button className="btn btn-primary btn-sm" style={{ fontSize: '0.72rem', padding: '0.3rem 0.65rem' }}>
+                    + Connect
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Custom Device Form */}
+            <form onSubmit={handleAddCustomDevice} style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+              <strong style={{ fontSize: '0.84rem', color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem' }}>
+                Or Add Other Health Device:
+              </strong>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <input
+                  type="text"
+                  placeholder="Device Name (e.g. Polar H10)"
+                  value={customDevName}
+                  onChange={e => setCustomDevName(e.target.value)}
+                  className="input-field"
+                  style={{ fontSize: '0.82rem' }}
+                />
+                <select
+                  value={customDevCategory}
+                  onChange={e => setCustomDevCategory(e.target.value)}
+                  className="select-field"
+                  style={{ fontSize: '0.82rem' }}
+                >
+                  <option value="Smartwatch">Smartwatch</option>
+                  <option value="Smart Scale">Smart Scale</option>
+                  <option value="Smart Ring">Smart Ring</option>
+                  <option value="Heart Monitor">Heart Monitor</option>
+                  <option value="Sensor">Sensor</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button type="submit" disabled={!customDevName.trim()} className="btn btn-primary btn-sm" style={{ flex: 1 }}>
+                  Add Custom Device
+                </button>
+                <button type="button" onClick={() => setIsAddDeviceModalOpen(false)} className="btn btn-secondary btn-sm">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* REMOVE DEVICE CONFIRMATION MODAL */}
+      {deviceToRemove && (
+        <div className="modal-backdrop" onClick={() => setDeviceToRemove(null)}>
+          <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ maxWidth: 460 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem', color: 'var(--accent-primary)' }}>
+              <span style={{ fontSize: '1.5rem' }}>{deviceToRemove.icon || '⌚'}</span>
+              <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Remove {deviceToRemove.name}?</h3>
+            </div>
+
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '0.85rem', lineHeight: 1.5 }}>
+              Removing this device disconnects future automatic syncing. <strong>All your historical steps, sleep, and workouts recorded by this device remain safely in your wellness history.</strong>
+            </p>
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={handleConfirmRemoveDevice}
+                className="btn btn-primary"
+                style={{ flex: 1, background: 'var(--accent-rose)' }}
+              >
+                Remove Device
+              </button>
+              <button onClick={() => setDeviceToRemove(null)} className="btn btn-secondary">
+                Keep Device
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* PERMISSION REASONS DETAIL MODAL */}
       {selectedPermissionDevice && (
         <div className="modal-backdrop" onClick={() => setSelectedPermissionDevice(null)}>
@@ -536,7 +779,7 @@ export default function TrustCentreHub() {
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.25rem' }}>
-              {selectedPermissionDevice.permissions.map((p, idx) => (
+              {selectedPermissionDevice.permissions?.map((p, idx) => (
                 <div key={idx} style={{ background: 'var(--bg-secondary)', padding: '0.75rem 0.95rem', borderRadius: 'var(--radius-md)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <strong style={{ fontSize: '0.86rem', color: 'var(--text-primary)' }}>{p.name}</strong>

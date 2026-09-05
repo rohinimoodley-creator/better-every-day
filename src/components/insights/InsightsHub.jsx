@@ -49,14 +49,12 @@ import {
 import confetti from 'canvas-confetti';
 
 export const INSIGHTS_TABS = [
-  { id: 'overview', label: 'Overview', icon: Target },
   { id: 'summary', label: 'Summary', icon: FileText },
-  { id: 'patterns', label: 'Patterns', icon: Sparkles },
   { id: 'recommendations', label: 'Recommendations', icon: Lightbulb },
   { id: 'kudos', label: 'Kudos', icon: Award }
 ];
 
-export default function InsightsHub({ onNavigateTab, initialTab = 'overview' }) {
+export default function InsightsHub({ onNavigateTab, initialTab = 'summary' }) {
   const {
     userProfile,
     dailyCheckIn,
@@ -74,10 +72,12 @@ export default function InsightsHub({ onNavigateTab, initialTab = 'overview' }) 
     dismissInsight
   } = useWellness();
 
-  const [activeTab, setActiveTab] = useState(initialTab || 'overview');
+  const [activeTab, setActiveTab] = useState(initialTab === 'overview' || initialTab === 'patterns' ? 'summary' : (initialTab || 'summary'));
   const [dateRange, setDateRange] = useState('this_week');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
+  const [isGeneratingRecs, setIsGeneratingRecs] = useState(false);
+  const [recommendationsGenerated, setRecommendationsGenerated] = useState(true);
 
   // Modals
   const [selectedDetailItem, setSelectedDetailItem] = useState(null);
@@ -255,107 +255,10 @@ export default function InsightsHub({ onNavigateTab, initialTab = 'overview' }) 
 
       {/* 4. Tab Views */}
       
-      {/* 4.1 OVERVIEW */}
-      {activeTab === 'overview' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          
-          {/* Key Score & Balance */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-            <div className="card-glass" style={{ padding: '1.25rem' }}>
-              <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
-                Overall Wellness Score
-              </div>
-              <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-primary)', margin: '0.2rem 0' }}>
-                {report.wellnessScore || 84}/100
-              </div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
-                Strong baseline consistency across hydration and mindful breaks.
-              </p>
-            </div>
-
-            <div className="card-glass" style={{ padding: '1.25rem' }}>
-              <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
-                Primary Pattern Highlight
-              </div>
-              <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.3rem 0' }}>
-                {report.patterns?.[0]?.title || 'Sleep + Mood Synchrony'}
-              </div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
-                {report.patterns?.[0]?.description || 'On days with 7+ hours sleep, afternoon mood and energy stay higher.'}
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Pillar Health Meter */}
-          <div className="card-glass" style={{ padding: '1.25rem' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: '0 0 0.85rem 0' }}>
-              Pillar Balance Snapshot
-            </h3>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem' }}>
-              {[
-                { name: 'Hydration', val: '92%', icon: Droplets, color: '#3a86c8' },
-                { name: 'Movement', val: '78%', icon: Footprints, color: 'var(--accent-primary)' },
-                { name: 'Nourish', val: '85%', icon: Utensils, color: 'var(--accent-secondary)' },
-                { name: 'Rest', val: '88%', icon: Moon, color: '#7b61ff' },
-                { name: 'Mind', val: '90%', icon: Sparkles, color: '#8b5cf6' }
-              ].map(p => {
-                const Icon = p.icon;
-                return (
-                  <div key={p.name} style={{ background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: 'var(--radius-md)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                      <Icon size={12} color={p.color} /> {p.name}
-                    </div>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.2rem' }}>
-                      {p.val}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Top Recommendation CTA */}
-          {activeRecommendations.length > 0 && (
-            <div 
-              className="card-glass"
-              style={{
-                padding: '1.25rem',
-                borderLeft: '4px solid var(--accent-primary)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '1rem',
-                flexWrap: 'wrap'
-              }}
-            >
-              <div>
-                <span className="pill-badge primary" style={{ fontSize: '0.68rem', marginBottom: '0.2rem' }}>
-                  💡 Suggested Focus
-                </span>
-                <h4 style={{ fontSize: '1rem', fontWeight: 800, margin: '0 0 0.2rem 0' }}>
-                  {activeRecommendations[0].title}
-                </h4>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
-                  {activeRecommendations[0].action}
-                </p>
-              </div>
-
-              <button 
-                onClick={() => setActiveTab('recommendations')}
-                className="btn btn-secondary btn-sm"
-              >
-                View All Recommendations →
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 4.2 SUMMARY */}
+      {/* 4.1 SUMMARY */}
       {activeTab === 'summary' && (
         <div className="card-glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
             {report.summary?.headline || 'Weekly Wellness Narrative'}
           </h3>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
@@ -375,45 +278,39 @@ export default function InsightsHub({ onNavigateTab, initialTab = 'overview' }) 
         </div>
       )}
 
-      {/* 4.3 PATTERNS */}
-      {activeTab === 'patterns' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {(report.patterns || []).map(pat => (
-            <div
-              key={pat.id}
-              className="card-glass"
-              style={{
-                padding: '1.25rem',
-                borderLeft: '4px solid #7b61ff',
-                cursor: 'pointer'
-              }}
-              onClick={() => setSelectedDetailItem({ type: 'pattern', data: pat })}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                  {pat.title}
-                </h4>
-                <span className="pill-badge primary" style={{ fontSize: '0.68rem' }}>
-                  {pat.confidence || 'Strong Correlation'}
-                </span>
-              </div>
-              <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0 0 0.5rem 0' }}>
-                {pat.description}
-              </p>
-              <div style={{ fontSize: '0.74rem', color: 'var(--accent-primary)', fontWeight: 700 }}>
-                Tap to explore correlation details →
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 4.4 RECOMMENDATIONS & OBSERVATIONS */}
+      {/* 4.2 RECOMMENDATIONS & OBSERVATIONS */}
       {activeTab === 'recommendations' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* Gentle Proactive Observations (Previously Alerts) */}
+          {/* Header & Trigger Button */}
+          <div className="card-glass" style={{ padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <h4 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                Tailored Recommendations ✨
+              </h4>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
+                Personalized suggestions adapted to your {dateRange === 'today' ? 'day' : dateRange === 'this_month' ? 'month' : 'week'} and daily rhythm.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setIsGeneratingRecs(true);
+                setTimeout(() => {
+                  setIsGeneratingRecs(false);
+                  setRecommendationsGenerated(true);
+                  try { confetti({ particleCount: 22, spread: 40, origin: { y: 0.6 } }); } catch(e) {}
+                }, 500);
+              }}
+              disabled={isGeneratingRecs}
+              className="btn btn-primary btn-sm"
+              style={{ fontSize: '0.8rem', gap: '0.4rem', padding: '0.45rem 0.9rem' }}
+            >
+              <Sparkles size={14} /> {isGeneratingRecs ? 'Generating Suggestions...' : 'Generate Recommendations'}
+            </button>
+          </div>
+
+          {/* Gentle Proactive Observations */}
           {activeAlerts.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 Noticed Observations
               </div>
@@ -451,7 +348,7 @@ export default function InsightsHub({ onNavigateTab, initialTab = 'overview' }) 
 
           {/* Actionable Recommendations */}
           <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-            Actionable Next Steps
+            Actionable Next Steps ({dateRange.replace('_', ' ')})
           </div>
 
           {activeRecommendations.map(rec => (
@@ -513,19 +410,20 @@ export default function InsightsHub({ onNavigateTab, initialTab = 'overview' }) 
         </div>
       )}
 
-      {/* 4.6 KUDOS */}
+      {/* 4.3 KUDOS */}
       {activeTab === 'kudos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {(report.kudos || [
-            { id: 1, title: 'Hydration Hero 💧', desc: 'Met hydration goal 4 days in a row.' },
-            { id: 2, title: 'Gentle Pacing Star ⭐', desc: 'Listened to your body with timely rest pauses.' }
+          {(report.kudos && report.kudos.length > 0 ? report.kudos : [
+            { id: 1, title: 'Hydration Consistency 💧', desc: `Maintained gentle, steady hydration throughout ${dateRange === 'this_month' ? 'this month' : 'this week'}.` },
+            { id: 2, title: 'Sustainable Pacing ⭐', desc: 'Respected your body with intentional movement breaks and rest.' },
+            { id: 3, title: 'Mindful Presence 🌿', desc: 'Saved daily moments of gratitude and reflection.' }
           ]).map(k => (
             <div
               key={k.id}
               className="card-glass"
               style={{
                 padding: '1.25rem',
-                borderLeft: '4px solid var(--accent-gold)',
+                borderLeft: '4px solid var(--accent-gold, #f59e0b)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '1rem'

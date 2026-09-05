@@ -36,8 +36,8 @@ export default function ExercisePlansSection({
     deleteCustomExercise
   } = useWellness();
 
-  // Active Sub-Tab: 'beginner' | 'my_exercises' | 'plans' | 'favourites'
-  const [activeTab, setActiveTab] = useState('beginner');
+  // Active Sub-Tab: 'my_exercises' | 'plans' | 'favourites'
+  const [activeTab, setActiveTab] = useState('my_exercises');
   const [tagFilter, setTagFilter] = useState('all');
   const [toastMessage, setToastMessage] = useState('');
 
@@ -98,10 +98,9 @@ export default function ExercisePlansSection({
       {/* Sub-Tab Navigation (NO COUNTS IN HEADINGS) */}
       <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '0.35rem', scrollbarWidth: 'none' }}>
         {[
-          { id: 'beginner', label: '🌱 Beginner Plan' },
-          { id: 'my_exercises', label: 'My Exercises' },
-          { id: 'plans', label: 'Exercise Plans' },
-          { id: 'favourites', label: 'Favourite Plans' }
+          { id: 'my_exercises', label: 'My Exercise Plan' },
+          { id: 'plans', label: 'Browse Exercise Plans' },
+          { id: 'favourites', label: 'Favourite Exercise Plans' }
         ].map(tab => (
           <button
             key={tab.id}

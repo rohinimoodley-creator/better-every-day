@@ -32,7 +32,8 @@ export default function MoveHub() {
   const [isBreakItDownOpen, setIsBreakItDownOpen] = useState(false);
   const [isPetPlayModalOpen, setIsPetPlayModalOpen] = useState(false);
   const [isBeginnerPlanModalOpen, setIsBeginnerPlanModalOpen] = useState(false);
-  const [isExploreMoreOpen, setIsExploreMoreOpen] = useState(false);
+  const [isMicroMovementOpen, setIsMicroMovementOpen] = useState(false);
+  const [isStrategyOpen, setIsStrategyOpen] = useState(false);
   const [isTrackerOpen, setIsTrackerOpen] = useState(false);
 
   const handleWorkoutComplete = (workoutId) => {
@@ -74,226 +75,253 @@ export default function MoveHub() {
       </div>
 
       {/* ========================================================================= */}
-      {/* PRIMARY MOVE HUB OPTIONS (Calm, 3 Immediately Accessible Choices)         */}
-      {/* 1. 🧍 Micro-Movement                                                      */}
-      {/* 2. 🧩 Break It Down                                                       */}
-      {/* 3. 🐾 Pet Play                                                            */}
+      {/* 2. PRIMARY BUTTONS (Clean, Lightweight, 3 Simple Action Buttons)          */}
+      {/* 1. Micro-Movement | 2. Break It Down | 3. Pet Play                        */}
       {/* ========================================================================= */}
+      <div 
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '0.75rem'
+        }}
+      >
+        {/* Button 1: Micro-Movement */}
+        <button
+          type="button"
+          onClick={() => setIsMicroMovementOpen(!isMicroMovementOpen)}
+          className="btn"
+          style={{
+            background: isMicroMovementOpen ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
+            border: isMicroMovementOpen ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+            padding: '0.85rem 1rem',
+            borderRadius: 'var(--radius-lg)',
+            fontSize: '0.92rem',
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span style={{ fontSize: '1.25rem' }}>🧍</span>
+            <span>Micro-Movement</span>
+          </div>
+          {isMicroMovementOpen ? <ChevronUp size={16} color="var(--accent-primary)" /> : <ChevronDown size={16} color="var(--text-muted)" />}
+        </button>
 
-      {/* 1. Micro-Movement 🧍 */}
-      <MicroMovementSection />
-
-      {/* Primary 2-Column Cards for Break It Down & Pet Play */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-        
-        {/* 2. Break It Down 🧩 */}
-        <div 
-          className="card-glass card-interactive"
+        {/* Button 2: Break It Down */}
+        <button
+          type="button"
           onClick={() => setIsBreakItDownOpen(true)}
+          className="btn"
           style={{
-            padding: '1.35rem',
-            border: '1.5px solid var(--accent-primary)',
-            background: 'radial-gradient(circle at top left, var(--accent-primary-light) 0%, var(--bg-glass-card) 100%)',
+            background: 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-subtle)',
+            padding: '0.85rem 1rem',
+            borderRadius: 'var(--radius-lg)',
+            fontSize: '0.92rem',
+            fontWeight: 800,
             display: 'flex',
-            flexDirection: 'column',
+            alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '1rem',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
           }}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsBreakItDownOpen(true); } }}
         >
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-md)', background: 'var(--accent-primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
-                🧩
-              </div>
-              <span className="pill-badge primary" style={{ fontSize: '0.68rem', fontWeight: 800 }}>
-                WATCH & UNDERSTAND
-              </span>
-            </div>
-
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0.2rem 0 0.35rem 0', color: 'var(--text-primary)' }}>
-              Break It Down
-            </h3>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>
-              Learn movements visually with animated demonstrations, slow mode, and simple tips.
-            </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span style={{ fontSize: '1.25rem' }}>🧩</span>
+            <span>Break It Down</span>
           </div>
+          <ArrowRight size={15} color="var(--accent-primary)" />
+        </button>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.45rem', borderTop: '1px solid var(--border-subtle)' }}>
-            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-              Squats, Push-Ups, Lunges & Stretches
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--accent-primary)', fontWeight: 800, fontSize: '0.82rem' }}>
-              <span>Try Movement</span>
-              <ArrowRight size={14} />
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Pet Play 🐾 */}
-        <div 
-          className="card-glass card-interactive"
+        {/* Button 3: Pet Play */}
+        <button
+          type="button"
           onClick={() => setIsPetPlayModalOpen(true)}
+          className="btn"
           style={{
-            padding: '1.35rem',
-            border: '1.5px solid var(--accent-primary)',
-            background: 'radial-gradient(circle at top left, var(--accent-primary-light) 0%, var(--bg-glass-card) 100%)',
+            background: 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-subtle)',
+            padding: '0.85rem 1rem',
+            borderRadius: 'var(--radius-lg)',
+            fontSize: '0.92rem',
+            fontWeight: 800,
             display: 'flex',
-            flexDirection: 'column',
+            alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '1rem',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
           }}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsPetPlayModalOpen(true); } }}
         >
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-md)', background: 'var(--accent-primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
-                🐾
-              </div>
-              <span className="pill-badge primary" style={{ fontSize: '0.68rem', fontWeight: 800 }}>
-                PLAY TOGETHER
-              </span>
-            </div>
-
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0.2rem 0 0.35rem 0', color: 'var(--text-primary)' }}>
-              Pet Play
-            </h3>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>
-              Active play, walks, runs, and meaningful movement time spent with your pet companion.
-            </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span style={{ fontSize: '1.25rem' }}>🐾</span>
+            <span>Pet Play</span>
           </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.45rem', borderTop: '1px solid var(--border-subtle)' }}>
-            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-              All pets welcome • No tracking pressure
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--accent-primary)', fontWeight: 800, fontSize: '0.82rem' }}>
-              <span>Open Pet Play</span>
-              <ArrowRight size={14} />
-            </div>
-          </div>
-        </div>
-
+          <ArrowRight size={15} color="var(--accent-primary)" />
+        </button>
       </div>
 
+      {/* Revealed Micro-Movement Experience */}
+      {isMicroMovementOpen && (
+        <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
+          <MicroMovementSection />
+        </div>
+      )}
+
       {/* ========================================================================= */}
-      {/* PROGRESSIVE DISCLOSURE: EXPLORE MORE MOVEMENT                              */}
-      {/* Reveals: 🌱 Beginner Plan | My Exercises | Exercise Plans | Favourite Plans */}
+      {/* 3. INTERACTIVE MOVEMENT HIERARCHY                                         */}
+      {/* 1. Quick Start 🌱 | 2. Outdoor & Indoor Activity 🌳 | 3. Exercise Strategy 🧩 */}
       {/* ========================================================================= */}
-      <div className="card-glass" style={{ padding: '1.25rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <Compass size={16} color="var(--accent-primary)" />
+          <h3 style={{ fontSize: '1.08rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+            Interactive Movement
+          </h3>
+        </div>
+
+        {/* 1. Quick Start (Beginner Plan) */}
         <div 
-          onClick={() => setIsExploreMoreOpen(!isExploreMoreOpen)}
+          className="card-glass card-interactive"
+          onClick={() => setIsBeginnerPlanModalOpen(true)}
           style={{
+            padding: '1.15rem 1.35rem',
+            border: '1.5px solid var(--accent-primary)',
+            background: 'linear-gradient(135deg, var(--accent-primary-light) 0%, var(--bg-glass-card) 100%)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             cursor: 'pointer',
-            userSelect: 'none',
-            gap: '0.75rem',
-            flexWrap: 'wrap'
+            borderRadius: 'var(--radius-lg)'
           }}
-          role="button"
-          aria-expanded={isExploreMoreOpen}
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsExploreMoreOpen(!isExploreMoreOpen); } }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <div 
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 'var(--radius-md)',
-                background: isExploreMoreOpen ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                color: isExploreMoreOpen ? '#ffffff' : 'var(--accent-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.1rem'
-              }}
-            >
-              <Compass size={18} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{ width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'var(--accent-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
+              🌱
             </div>
-
             <div>
-              <h3 style={{ fontSize: '1.02rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                Explore More Movement
-              </h3>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
-                {isExploreMoreOpen 
-                  ? 'Showing Beginner Plan, My Exercises, Exercise Plans, and Favourites' 
-                  : 'Beginner Plan 🌱, My Exercises, Community Plans & Favourites'}
+              <span className="pill-badge primary" style={{ fontSize: '0.65rem', marginBottom: '0.15rem' }}>ACCESSIBLE ENTRY POINT</span>
+              <h4 style={{ fontSize: '1.02rem', fontWeight: 800, margin: '0.1rem 0', color: 'var(--text-primary)' }}>
+                1. Quick Start — Beginner Plan
+              </h4>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0 }}>
+                Low-pressure, bite-sized starting movements for new, reluctant, or returning movers.
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <button
-              type="button"
-              className={`btn ${isExploreMoreOpen ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-              style={{ fontSize: '0.8rem', gap: '0.35rem', padding: '0.35rem 0.8rem' }}
-              onClick={(e) => { e.stopPropagation(); setIsExploreMoreOpen(!isExploreMoreOpen); }}
-            >
-              <span>{isExploreMoreOpen ? 'Hide' : 'Explore More'}</span>
-              {isExploreMoreOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            style={{ fontSize: '0.8rem', padding: '0.4rem 0.9rem', gap: '0.3rem' }}
+          >
+            <span>Start Plan</span>
+            <ArrowRight size={13} />
+          </button>
         </div>
 
-        {/* Revealed Content */}
-        {isExploreMoreOpen && (
-          <div style={{ marginTop: '1.25rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem', animation: 'fadeIn 0.2s ease-out' }}>
-            <ExercisePlansSection
-              onStartBeginnerPlan={() => setIsBeginnerPlanModalOpen(true)}
-              onStartWorkout={(workout) => setSelectedWorkout(workout)}
-              onOpenCustomModal={() => setIsCustomModalOpen(true)}
-              onOpenPhotoModal={() => setIsPhotoModalOpen(true)}
-            />
-          </div>
-        )}
-      </div>
+        {/* 2. Outdoor & Indoor Activity */}
+        <div className="card-glass" style={{ padding: '1.15rem 1.35rem', borderRadius: 'var(--radius-lg)' }}>
+          <div 
+            onClick={() => setIsTrackerOpen(!isTrackerOpen)}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              cursor: 'pointer',
+              userSelect: 'none'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+              <div style={{ width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
+                🌳
+              </div>
+              <div>
+                <h4 style={{ fontSize: '1.02rem', fontWeight: 800, margin: '0 0 0.1rem 0', color: 'var(--text-primary)' }}>
+                  2. Outdoor & Indoor Activity
+                </h4>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+                  Walking, running, hiking, indoor stretches & pet-linked adventures.
+                </p>
+              </div>
+            </div>
 
-      {/* Optional Live Activity & Step Tracker (Progressive Disclosure) */}
-      <div className="card-glass" style={{ padding: '1.1rem' }}>
-        <div 
-          onClick={() => setIsTrackerOpen(!isTrackerOpen)}
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            cursor: 'pointer',
-            userSelect: 'none'
-          }}
-          role="button"
-          aria-expanded={isTrackerOpen}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Activity size={17} color="var(--accent-primary)" />
-            <div>
-              <h4 style={{ fontSize: '0.96rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                Activity & Step Tracker
-              </h4>
-              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                {isTrackerOpen ? 'Hide timer and session trackers' : 'Open live timer, step logger, and session pacer'}
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <button
+                type="button"
+                className={`btn ${isTrackerOpen ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', gap: '0.3rem' }}
+                onClick={(e) => { e.stopPropagation(); setIsTrackerOpen(!isTrackerOpen); }}
+              >
+                <span>{isTrackerOpen ? 'Hide Activities' : 'Open Activities'}</span>
+                {isTrackerOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
             </div>
           </div>
 
-          <div style={{ color: 'var(--text-muted)' }}>
-            {isTrackerOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </div>
+          {isTrackerOpen && (
+            <div style={{ marginTop: '1.15rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.15rem', animation: 'fadeIn 0.2s ease-out' }}>
+              <ActivityTracker />
+            </div>
+          )}
         </div>
 
-        {isTrackerOpen && (
-          <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem', animation: 'fadeIn 0.2s ease-out' }}>
-            <ActivityTracker />
+        {/* 3. Exercise Strategy (Reveals: My Exercise Plan, Browse Plans, Favourites) */}
+        <div className="card-glass" style={{ padding: '1.15rem 1.35rem', borderRadius: 'var(--radius-lg)' }}>
+          <div 
+            onClick={() => setIsStrategyOpen(!isStrategyOpen)}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              cursor: 'pointer',
+              userSelect: 'none'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+              <div style={{ width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
+                🧩
+              </div>
+              <div>
+                <h4 style={{ fontSize: '1.02rem', fontWeight: 800, margin: '0 0 0.1rem 0', color: 'var(--text-primary)' }}>
+                  3. Exercise Strategy
+                </h4>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+                  My Exercise Plan, Browse Exercise Plans & Favourite Exercise Plans.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <button
+                type="button"
+                className={`btn ${isStrategyOpen ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+                style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', gap: '0.3rem' }}
+                onClick={(e) => { e.stopPropagation(); setIsStrategyOpen(!isStrategyOpen); }}
+              >
+                <span>{isStrategyOpen ? 'Hide Strategy' : 'Open Strategy'}</span>
+                {isStrategyOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+            </div>
           </div>
-        )}
+
+          {isStrategyOpen && (
+            <div style={{ marginTop: '1.15rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.15rem', animation: 'fadeIn 0.2s ease-out' }}>
+              <ExercisePlansSection
+                onStartBeginnerPlan={() => setIsBeginnerPlanModalOpen(true)}
+                onStartWorkout={(workout) => setSelectedWorkout(workout)}
+                onOpenCustomModal={() => setIsCustomModalOpen(true)}
+                onOpenPhotoModal={() => setIsPhotoModalOpen(true)}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ========================================================================= */}

@@ -69,6 +69,8 @@ export default function SupplementTracker() {
     setIsAddModalOpen(false);
   };
 
+  const [showConsistency, setShowConsistency] = useState(false);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       
@@ -94,14 +96,26 @@ export default function SupplementTracker() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="btn btn-primary btn-sm"
-            style={{ gap: '0.35rem', fontSize: '0.8rem', padding: '0.45rem 0.9rem' }}
-          >
-            <Plus size={14} /> Add Supplement
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {supplements.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowConsistency(prev => !prev)}
+                className="btn btn-secondary btn-sm"
+                style={{ gap: '0.35rem', fontSize: '0.78rem', padding: '0.45rem 0.75rem' }}
+              >
+                <Calendar size={13} /> {showConsistency ? 'Hide Consistency' : 'View Routine Consistency'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsAddModalOpen(true)}
+              className="btn btn-primary btn-sm"
+              style={{ gap: '0.35rem', fontSize: '0.8rem', padding: '0.45rem 0.9rem' }}
+            >
+              <Plus size={14} /> Add Supplement
+            </button>
+          </div>
         </div>
 
         {/* List of User's Configured Supplements */}
@@ -173,48 +187,48 @@ export default function SupplementTracker() {
         )}
       </div>
 
-      {/* Supplement Intake History (Daily, Weekly, Monthly — Zero Pressure) */}
-      <div className="card-glass" style={{ padding: '1.35rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
-          <div>
-            <h4 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-              Supplement Routine Consistency
-            </h4>
-            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-              Gentle view of your consistency over time.
-            </span>
+      {/* Supplement Intake History (Daily, Weekly, Monthly — Revealed on Click) */}
+      {showConsistency && supplements.length > 0 && (
+        <div className="card-glass" style={{ padding: '1.35rem', animation: 'fadeIn 0.2s ease-out' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+            <div>
+              <h4 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                Supplement Routine Consistency
+              </h4>
+              <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                Gentle view of your consistency over time.
+              </span>
+            </div>
+
+            {/* Period Selector Tabs: Daily | Weekly | Monthly */}
+            <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '0.2rem', borderRadius: 'var(--radius-pill)' }}>
+              {[
+                { id: 'today', label: 'Daily' },
+                { id: 'week', label: 'Weekly' },
+                { id: 'month', label: 'Monthly' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setPeriod(tab.id)}
+                  style={{
+                    padding: '0.35rem 0.8rem',
+                    borderRadius: 'var(--radius-pill)',
+                    border: 'none',
+                    background: period === tab.id ? 'var(--accent-primary)' : 'transparent',
+                    color: period === tab.id ? '#ffffff' : 'var(--text-secondary)',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Period Selector Tabs: Daily | Weekly | Monthly */}
-          <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '0.2rem', borderRadius: 'var(--radius-pill)' }}>
-            {[
-              { id: 'today', label: 'Daily' },
-              { id: 'week', label: 'Weekly' },
-              { id: 'month', label: 'Monthly' }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setPeriod(tab.id)}
-                style={{
-                  padding: '0.35rem 0.8rem',
-                  borderRadius: 'var(--radius-pill)',
-                  border: 'none',
-                  background: period === tab.id ? 'var(--accent-primary)' : 'transparent',
-                  color: period === tab.id ? '#ffffff' : 'var(--text-secondary)',
-                  fontSize: '0.78rem',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Consistency Overview Cards */}
-        {supplements.length > 0 ? (
+          {/* Consistency Overview Cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
             {supplements.map(supp => {
               const suppStat = stats.suppMap?.[supp.id] || {};
@@ -250,12 +264,8 @@ export default function SupplementTracker() {
               );
             })}
           </div>
-        ) : (
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.85rem' }}>
-            Add a supplement above to track routine history.
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ADD SUPPLEMENT MODAL */}
       {isAddModalOpen && (

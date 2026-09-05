@@ -129,8 +129,11 @@ export default function DailyRhythmCard() {
     showToast(`Created shift "${newShiftName}"!`);
   };
 
+  const [showQuickShifts, setShowQuickShifts] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
+
   return (
-    <div className="card-glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+    <div className="card-glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       
       {/* Title & Introduction */}
       <div>
@@ -148,11 +151,11 @@ export default function DailyRhythmCard() {
           My Daily Rhythm 🌅🌙
         </h3>
         <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>
-          Better Every Day adapts to your biological clock. Whether you work day shifts, night shifts, rotating shifts, or irregular hours, your wellness tracking stays continuous without an arbitrary midnight reset.
+          Better Every Day adapts to your biological clock. Set your daily waking and sleeping rhythm for continuous tracking without artificial midnight cutoffs.
         </p>
       </div>
 
-      {/* 1. Day Start & Sleep Schedule (Manual selection, no imposed recommendations) */}
+      {/* 1. Day Start & Sleep Schedule */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
         
         {/* Day Start Card */}
@@ -162,7 +165,7 @@ export default function DailyRhythmCard() {
               <Sunrise size={16} />
             </div>
             <label style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-              When does your day usually start?
+              Day Starts
             </label>
           </div>
           <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', margin: '0 0 0.85rem 0' }}>
@@ -190,11 +193,11 @@ export default function DailyRhythmCard() {
               <Moon size={16} />
             </div>
             <label style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-              When do you usually go to sleep?
+              Day Ends (Sleep)
             </label>
           </div>
           <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', margin: '0 0 0.85rem 0' }}>
-            When you complete your wellness cycle and rest.
+            When you complete your daily wellness cycle and rest.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -216,13 +219,13 @@ export default function DailyRhythmCard() {
       {/* 2. Does your schedule change? */}
       <div style={{ background: 'var(--bg-secondary)', padding: '1.15rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
         <h4 style={{ fontSize: '0.94rem', fontWeight: 700, margin: '0 0 0.4rem 0', color: 'var(--text-primary)' }}>
-          Does your schedule change?
+          Schedule Consistency
         </h4>
         <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.85rem 0' }}>
-          Supports regular schedules, irregular schedules, shift work, night work, and rotating patterns:
+          Supports regular schedules, irregular hours, shift work, and rotating shifts:
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.65rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.65rem' }}>
           <label
             onClick={() => handleVariabilityChange('same')}
             style={{
@@ -245,7 +248,7 @@ export default function DailyRhythmCard() {
             />
             <div>
               <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                My schedule is usually the same
+                Stays the same
               </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                 Consistent daily wake & sleep rhythm
@@ -275,17 +278,42 @@ export default function DailyRhythmCard() {
             />
             <div>
               <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                My schedule changes
+                Changes (Shifts / Irregular)
               </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                Rotating shifts, night work, or changing patterns
+                Rotating shifts, night work, or variable hours
               </div>
             </div>
           </label>
         </div>
+      </div>
 
-        {/* ⚡ Quick Shift Adjustment for Today (Fully Customizable) */}
-        <div style={{ background: 'var(--bg-tertiary)', padding: '1.15rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+      {/* Secondary Expandable Action Buttons */}
+      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => setShowQuickShifts(prev => !prev)}
+          className="btn btn-secondary btn-sm"
+          style={{ fontSize: '0.8rem', gap: '0.35rem', padding: '0.45rem 0.85rem' }}
+        >
+          <Zap size={14} color="var(--accent-primary)" />
+          <span>{showQuickShifts ? 'Hide Quick Shift Adjustments' : 'Quick Shift Adjustments ⚡'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowHowItWorks(prev => !prev)}
+          className="btn btn-secondary btn-sm"
+          style={{ fontSize: '0.8rem', gap: '0.35rem', padding: '0.45rem 0.85rem' }}
+        >
+          <Info size={14} color="var(--accent-primary)" />
+          <span>{showHowItWorks ? 'Hide Explanation' : 'How Your Wellness Day Works'}</span>
+        </button>
+      </div>
+
+      {/* ⚡ Quick Shift Adjustment for Today (Revealed on Click) */}
+      {showQuickShifts && (
+        <div style={{ background: 'var(--bg-tertiary)', padding: '1.15rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', animation: 'fadeIn 0.2s ease-out' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div>
               <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>
@@ -478,63 +506,66 @@ export default function DailyRhythmCard() {
             </form>
           )}
         </div>
-      </div>
+      )}
 
-      {/* 3. Visual Wellness Day Logic Explanation */}
-      <div 
-        style={{
-          background: 'linear-gradient(135deg, var(--bg-tertiary) 0%, var(--accent-primary-light) 100%)',
-          padding: '1.25rem',
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--border-subtle)'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-          <Info size={16} color="var(--accent-primary)" />
-          <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-            How Your Wellness Day Works
-          </h4>
-        </div>
+      {/* 3. Visual Wellness Day Logic Explanation (Revealed on Click) */}
+      {showHowItWorks && (
+        <div 
+          style={{
+            background: 'linear-gradient(135deg, var(--bg-tertiary) 0%, var(--accent-primary-light) 100%)',
+            padding: '1.25rem',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-subtle)',
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+            <Info size={16} color="var(--accent-primary)" />
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              How Your Wellness Day Works
+            </h4>
+          </div>
 
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem 0', lineHeight: 1.45 }}>
-          Your rhythm creates a seamless <strong>Wellness Day</strong> window (<strong>{info.dayStartTime} to {info.sleepTime}</strong>). 
-          {info.isOvernight ? (
-            <span> Activities logged across midnight (e.g. at 18:00, 01:00, 05:00, or 07:00) all count toward the <strong>same wellness period</strong>.</span>
-          ) : (
-            <span> Activities logged between {info.dayStartTime} and {info.sleepTime} all count toward your daily wellness score and habit meters.</span>
-          )}
-        </p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem 0', lineHeight: 1.45 }}>
+            Your rhythm creates a seamless <strong>Wellness Day</strong> window (<strong>{info.dayStartTime} to {info.sleepTime}</strong>). 
+            {info.isOvernight ? (
+              <span> Activities logged across midnight (e.g. at 18:00, 01:00, 05:00, or 07:00) all count toward the <strong>same wellness period</strong>.</span>
+            ) : (
+              <span> Activities logged between {info.dayStartTime} and {info.sleepTime} all count toward your daily wellness score and habit meters.</span>
+            )}
+          </p>
 
-        {/* Timeline representation */}
-        <div style={{ background: 'var(--bg-secondary)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span style={{ fontSize: '1rem' }}>🌅</span>
-            <div>
-              <strong>Start: {info.dayStartTime}</strong>
-              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Meters begin</div>
+          {/* Timeline representation */}
+          <div style={{ background: 'var(--bg-secondary)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span style={{ fontSize: '1rem' }}>🌅</span>
+              <div>
+                <strong>Start: {info.dayStartTime}</strong>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Meters begin</div>
+              </div>
+            </div>
+
+            <div style={{ flex: 1, margin: '0 0.75rem', height: 4, background: 'linear-gradient(90deg, var(--accent-secondary) 0%, var(--accent-primary) 50%, var(--accent-purple) 100%)', borderRadius: 2, position: 'relative' }}>
+              <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', fontSize: '0.64rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                {info.isOvernight ? 'Continuous Overnight Cycle (No Midnight Reset)' : 'Active Daytime Cycle'}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span style={{ fontSize: '1rem' }}>🌙</span>
+              <div>
+                <strong>Sleep: {info.sleepTime}</strong>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Reflection & Rest</div>
+              </div>
             </div>
           </div>
 
-          <div style={{ flex: 1, margin: '0 0.75rem', height: 4, background: 'linear-gradient(90deg, var(--accent-secondary) 0%, var(--accent-primary) 50%, var(--accent-purple) 100%)', borderRadius: 2, position: 'relative' }}>
-            <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', fontSize: '0.64rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-              {info.isOvernight ? 'Continuous Overnight Cycle (No Midnight Reset)' : 'Active Daytime Cycle'}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span style={{ fontSize: '1rem' }}>🌙</span>
-            <div>
-              <strong>Sleep: {info.sleepTime}</strong>
-              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Reflection & Rest</div>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.6rem', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+            <Calendar size={12} />
+            <span><strong>Calendar Dates:</strong> Standard calendar dates remain exact real-world dates for all calendar events.</span>
           </div>
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.6rem', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-          <Calendar size={12} />
-          <span><strong>Calendar Dates:</strong> Standard calendar dates remain exact real-world dates for all calendar events.</span>
-        </div>
-      </div>
+      )}
 
       {/* Toast */}
       {toastMessage && (

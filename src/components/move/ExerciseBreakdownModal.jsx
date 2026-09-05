@@ -313,134 +313,97 @@ export default function ExerciseBreakdownModal({ isOpen, onClose, initialExercis
           )}
         </div>
 
-        {/* 3. REPETITION LOGGING: "HOW MANY TIMES DID YOU DO IT?" */}
+        {/* 3. REPETITION LOGGING: COMPACT "HOW MANY TIMES?" */}
         <div 
           style={{ 
-            background: 'radial-gradient(circle at top, var(--accent-primary-light) 0%, var(--bg-secondary) 100%)', 
-            padding: '1.15rem', 
-            borderRadius: 'var(--radius-lg)', 
-            border: '1.5px solid var(--accent-primary)',
+            background: 'var(--bg-secondary)', 
+            padding: '0.85rem 1rem', 
+            borderRadius: 'var(--radius-md)', 
+            border: '1px solid var(--border-subtle)',
             marginBottom: '1rem',
-            textAlign: 'center'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.65rem'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', marginBottom: '0.6rem' }}>
-            <ContextualPip 
-              context="move" 
-              size={48} 
-              mood={pipMood}
-              message="Give it a try! Zero pressure."
-              showSpeechBubble={false}
-            />
-            <div style={{ textAlign: 'left' }}>
-              <h4 style={{ fontSize: '1.02rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                How many times did you do it?
-              </h4>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Practice at your own pace. Logging is completely optional.
+          <div>
+            <div style={{ fontSize: '0.84rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+              How many times?
+            </div>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              Record repetitions (optional)
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {/* Stepper Controls: − 0 + */}
+            <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-pill)', padding: '2px', border: '1px solid var(--border-subtle)' }}>
+              <button
+                type="button"
+                onClick={handleDecrement}
+                aria-label="Decrease count"
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                <Minus size={14} />
+              </button>
+
+              <span style={{ minWidth: 28, textAlign: 'center', fontSize: '0.98rem', fontWeight: 800, color: 'var(--accent-primary)' }}>
+                {repCount}
               </span>
+
+              <button
+                type="button"
+                onClick={handleIncrement}
+                aria-label="Increase count"
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: 'var(--accent-primary)',
+                  border: 'none',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                <Plus size={14} />
+              </button>
             </div>
-          </div>
-
-          {/* Stepper Controls: − 0 + */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', margin: '0.85rem 0' }}>
-            <button
-              type="button"
-              onClick={handleDecrement}
-              aria-label="Decrease count"
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: '50%',
-                background: 'var(--bg-secondary)',
-                border: '1.5px solid var(--border-subtle)',
-                color: 'var(--text-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                fontSize: '1.1rem',
-                boxShadow: 'var(--shadow-sm)'
-              }}
-            >
-              <Minus size={18} />
-            </button>
-
-            <div 
-              style={{
-                minWidth: 70,
-                padding: '0.4rem 0.8rem',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--bg-glass-card)',
-                border: '1.5px solid var(--accent-primary)',
-                fontSize: '1.6rem',
-                fontWeight: 900,
-                color: 'var(--accent-primary)'
-              }}
-            >
-              {repCount}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleIncrement}
-              aria-label="Increase count"
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: '50%',
-                background: 'var(--accent-primary)',
-                border: 'none',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                fontSize: '1.1rem',
-                boxShadow: '0 4px 12px rgba(46, 125, 90, 0.3)'
-              }}
-            >
-              <Plus size={18} />
-            </button>
-          </div>
-
-          {/* Save Action */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-            <button
-              type="button"
-              onClick={handleSaveReps}
-              className="btn btn-primary btn-sm"
-              style={{
-                padding: '0.45rem 1.4rem',
-                fontSize: '0.84rem',
-                fontWeight: 800,
-                borderRadius: 'var(--radius-pill)',
-                gap: '0.35rem'
-              }}
-            >
-              <Check size={14} /> Save
-            </button>
 
             {repCount > 0 && (
               <button
                 type="button"
-                onClick={() => { setRepCount(0); setSavedFeedback(''); }}
-                className="btn btn-secondary btn-sm"
-                style={{ padding: '0.45rem 0.75rem', borderRadius: 'var(--radius-pill)' }}
-                title="Reset counter"
+                onClick={handleSaveReps}
+                className="btn btn-primary btn-sm"
+                style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', gap: '0.25rem' }}
               >
-                <RotateCcw size={14} />
+                <Check size={12} /> Save
               </button>
             )}
           </div>
-
-          {/* Gentle Save Confirmation */}
-          {savedFeedback && (
-            <div style={{ marginTop: '0.65rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-primary)', animation: 'fadeIn 0.2s ease-out' }}>
-              ✓ {savedFeedback}
-            </div>
-          )}
         </div>
+
+        {/* Gentle Save Confirmation */}
+        {savedFeedback && (
+          <div style={{ marginTop: '0.65rem', marginBottom: '0.65rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-primary)', animation: 'fadeIn 0.2s ease-out' }}>
+            ✓ {savedFeedback}
+          </div>
+        )}
 
         {/* Done / Close Button */}
         <button 

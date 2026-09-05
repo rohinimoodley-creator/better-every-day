@@ -58,6 +58,9 @@ export default function HydrateHub() {
   const [celebrationMessage, setCelebrationMessage] = useState('');
   const [goalEditing, setGoalEditing] = useState(false);
   const [newGoal, setNewGoal] = useState(userProfile.hydrationGoalMl || 2250);
+  const [cupSizeEditing, setCupSizeEditing] = useState(false);
+  const [cupSizeMl, setCupSizeMl] = useState(userProfile.cupSizeMl || 250);
+  const [newCupSize, setNewCupSize] = useState(userProfile.cupSizeMl || 250);
 
   // Custom beverage form state
   const [showAddBeverage, setShowAddBeverage] = useState(false);
@@ -70,15 +73,24 @@ export default function HydrateHub() {
   const goalMl = userProfile.hydrationGoalMl || 2250;
   const percentage = Math.min(100, Math.round((hydrationMl / goalMl) * 100));
   const remainingMl = Math.max(0, goalMl - hydrationMl);
-  const cupsDrunk = (hydrationMl / 250).toFixed(1);
-  const cupsTarget = (goalMl / 250).toFixed(0);
+  const cupsDrunk = (hydrationMl / cupSizeMl).toFixed(1);
+  const cupsTarget = (goalMl / cupSizeMl).toFixed(0);
 
   // Dynamic Personal Water Recommendation
   const waterRec = getWaterRecommendation ? getWaterRecommendation() : {
     cupsTarget: Number(cupsTarget),
-    currentCups: Math.floor(hydrationMl / 250),
-    remainingCups: Math.max(0, Number(cupsTarget) - Math.floor(hydrationMl / 250)),
+    currentCups: Math.floor(hydrationMl / cupSizeMl),
+    remainingCups: Math.max(0, Number(cupsTarget) - Math.floor(hydrationMl / cupSizeMl)),
     pacingText: 'Try approximately 1 cup every 2 hours before sleep.'
+  };
+
+  const handleSaveCupSize = () => {
+    const val = parseInt(newCupSize, 10);
+    if (val && val >= 100 && val <= 1000) {
+      setCupSizeMl(val);
+      setUserProfile(prev => ({ ...prev, cupSizeMl: val }));
+      setCupSizeEditing(false);
+    }
   };
 
   const handleQuickAdd = (amount) => {
@@ -204,12 +216,13 @@ export default function HydrateHub() {
             </div>
 
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.2rem' }}>
+              {/* Goal & Cup Size Adjusters */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Today's Water Intake
                 </span>
                 <button
-                  onClick={() => setGoalEditing(prev => !prev)}
+                  onClick={() => { setGoalEditing(prev => !prev); setCupSizeEditing(false); }}
                   style={{
                     background: 'var(--bg-tertiary)',
                     border: '1px solid var(--border-subtle)',
@@ -227,9 +240,25 @@ export default function HydrateHub() {
                 >
                   <Edit2 size={11} /> {goalEditing ? 'Cancel' : 'Adjust Goal'}
                 </button>
+                <button
+                  onClick={() => { setCupSizeEditing(prev => !prev); setGoalEditing(false); }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    padding: '0.2rem 0.4rem',
+                    color: '#3a86c8',
+                    cursor: 'pointer',
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    textDecoration: 'underline'
+                  }}
+                  title="Set your default cup size"
+                >
+                  Adjust cup size ({cupSizeMl} ml)
+                </button>
               </div>
 
-              {goalEditing ? (
+              {goalEditing && (
                 <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem', marginBottom: '0.4rem' }}>
                   <input
                     type="number"
@@ -252,7 +281,35 @@ export default function HydrateHub() {
                     Save Goal
                   </button>
                 </div>
-              ) : (
+              )}
+
+              {cupSizeEditing && (
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginTop: '0.4rem', marginBottom: '0.4rem' }}>
+                  <input
+                    type="number"
+                    value={newCupSize}
+                    onChange={e => setNewCupSize(e.target.value)}
+                    style={{
+                      width: 110,
+                      padding: '0.35rem 0.6rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-glass)',
+                      fontSize: '0.84rem'
+                    }}
+                    placeholder="250 ml"
+                  />
+                  <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>ml per cup</span>
+                  <button
+                    onClick={handleSaveCupSize}
+                    className="btn btn-primary btn-sm"
+                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
+                  >
+                    Save Cup Size
+                  </button>
+                </div>
+              )}
+
+              {!goalEditing && !cupSizeEditing && (
                 <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
                   {hydrationMl.toLocaleString()} <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>/ {goalMl.toLocaleString()} ml</span>
                 </div>
@@ -261,7 +318,7 @@ export default function HydrateHub() {
               <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                 {remainingMl === 0 
                   ? '🎉 Daily target reached! Sip gently as you feel thirsty.'
-                  : `${remainingMl} ml remaining (~${(remainingMl / 250).toFixed(1)} glasses).`}
+                  : `${remainingMl} ml remaining (~${(remainingMl / cupSizeMl).toFixed(1)} cups).`}
               </p>
 
               {celebrationMessage && (
@@ -272,9 +329,9 @@ export default function HydrateHub() {
             </div>
           </div>
 
-          {/* Quick 1-Cup (+250ml) Hero Button */}
+          {/* Quick 1-Cup Hero Button */}
           <button
-            onClick={() => handleQuickAdd(250)}
+            onClick={() => handleQuickAdd(cupSizeMl)}
             className="btn btn-primary"
             style={{
               padding: '0.75rem 1.4rem',
@@ -287,7 +344,7 @@ export default function HydrateHub() {
             }}
           >
             <span>🥛</span>
-            <span>+ 1 Cup (250 ml)</span>
+            <span>+ 1 Cup ({cupSizeMl} ml)</span>
           </button>
         </div>
 
@@ -315,7 +372,7 @@ export default function HydrateHub() {
           <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Personal Target</div>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)' }}>{waterRec.cupsTarget} cups</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>({waterRec.cupsTarget * 250} ml)</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>({waterRec.cupsTarget * cupSizeMl} ml)</div>
           </div>
 
           <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
@@ -341,11 +398,8 @@ export default function HydrateHub() {
       <div className="card-glass" style={{ padding: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <div>
-            <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginBottom: '0.1rem' }}>
-              1. Select Beverage Type
-            </span>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              Choose what you're sipping or add your own custom drink:
+            <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+              Beverage & Logging
             </span>
           </div>
 
@@ -412,7 +466,7 @@ export default function HydrateHub() {
         )}
 
         {/* Beverage Pills (Built-in + Custom) */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
           {allBeverages.map(bev => {
             const isSelected = selectedBeverage === bev.id;
             return (
@@ -440,15 +494,6 @@ export default function HydrateHub() {
               </button>
             );
           })}
-        </div>
-
-        <div style={{ marginBottom: '0.85rem' }}>
-          <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginBottom: '0.2rem' }}>
-            2. Tap Amount to Log Instantly
-          </span>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-            One-touch quick addition:
-          </span>
         </div>
 
         {/* Presets Grid */}

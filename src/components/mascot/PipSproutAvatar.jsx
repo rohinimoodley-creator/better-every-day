@@ -24,7 +24,21 @@ export default function PipSproutAvatar({
   const activeBeanieColor = beanieColorId !== undefined ? beanieColorId : (userProfile?.mascotBeanieColor || 'pink');
 
   const isReducedMotion = howIThrive?.animationLevel === 'reduced' || howIThrive?.animationLevel === 'minimal';
-  const selectedColor = MASCOT_WARDROBE.colors.find(c => c.id === activeColorId) || MASCOT_WARDROBE.colors[0];
+  const customColors = userProfile?.customMascotColors || [];
+  const allColors = [...MASCOT_WARDROBE.colors, ...customColors];
+  let selectedColor = allColors.find(c => c.id === activeColorId);
+  if (!selectedColor && typeof activeColorId === 'string' && activeColorId.startsWith('#')) {
+    selectedColor = {
+      id: activeColorId,
+      name: 'Custom',
+      hex: activeColorId,
+      bodyColor: activeColorId,
+      blush: '#ff9ebb'
+    };
+  } else if (!selectedColor && typeof activeColorId === 'object' && activeColorId?.hex) {
+    selectedColor = activeColorId;
+  }
+  if (!selectedColor) selectedColor = MASCOT_WARDROBE.colors[0];
 
   // Resolve animation class
   let animClass = '';

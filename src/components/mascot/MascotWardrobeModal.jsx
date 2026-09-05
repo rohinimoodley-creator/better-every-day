@@ -11,7 +11,42 @@ export default function MascotWardrobeModal({ onClose }) {
   const currentColor = userProfile.mascotColor || 'sprout';
   const currentBeanieColor = userProfile.mascotBeanieColor || 'pink';
 
-  const [activeCategory, setActiveCategory] = useState('all'); // 'all' | 'flowers' | 'hats' | 'eyewear'
+  const [customHex, setCustomHex] = useState('#8b5cf6');
+  const [customName, setCustomName] = useState('My Purple 💜');
+  const [showColorWheel, setShowColorWheel] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('all');
+
+  const customColorsList = userProfile.customMascotColors || [];
+
+  const handleSaveCustomColor = (e) => {
+    e.preventDefault();
+    if (!customHex) return;
+    const newColorId = `custom_${Date.now()}`;
+    const newColorObj = {
+      id: newColorId,
+      name: customName.trim() || 'Custom Color 🎨',
+      hex: customHex,
+      bodyColor: customHex,
+      blush: '#ff9ebb'
+    };
+    setUserProfile(prev => ({
+      ...prev,
+      customMascotColors: [...(prev.customMascotColors || []), newColorObj],
+      mascotColor: newColorId
+    }));
+  };
+
+  const handleDeleteCustomColor = (id, e) => {
+    e.stopPropagation();
+    setUserProfile(prev => ({
+      ...prev,
+      customMascotColors: (prev.customMascotColors || []).filter(c => c.id !== id),
+      mascotColor: prev.mascotColor === id ? 'sprout' : prev.mascotColor
+    }));
+  };
+
+  const allAvailableColors = [...MASCOT_WARDROBE.colors, ...customColorsList];
+  const activeColorObj = allAvailableColors.find(c => c.id === currentColor) || { name: 'Custom', hex: currentColor, bodyColor: currentColor };
 
   const selectHat = (hatId) => {
     setUserProfile(prev => ({ ...prev, mascotHat: hatId }));
@@ -122,44 +157,167 @@ export default function MascotWardrobeModal({ onClose }) {
 
         {/* 1. Pip's Aura & Body Color */}
         <div style={{ marginBottom: '1.25rem' }}>
-          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}>
-            <Palette size={14} color="var(--accent-primary)" /> Pip's Body & Aura Color
-          </label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.45rem' }}>
-            {MASCOT_WARDROBE.colors.map(c => {
-              const active = currentColor === c.id;
-              return (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem', margin: 0 }}>
+              <Palette size={14} color="var(--accent-primary)" /> Pip's Body & Aura Color
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowColorWheel(!showColorWheel)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--accent-primary)',
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.2rem'
+              }}
+            >
+              <span>{showColorWheel ? 'Hide Color Wheel' : '🎨 Custom Color Wheel'}</span>
+            </button>
+          </div>
+
+          {/* Color Wheel Creator Panel */}
+          {showColorWheel && (
+            <form 
+              onSubmit={handleSaveCustomColor}
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1.5px solid var(--accent-primary)',
+                borderRadius: 'var(--radius-md)',
+                padding: '0.85rem',
+                marginBottom: '0.85rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.65rem',
+                animation: 'fadeIn 0.2s ease-out'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ position: 'relative', width: 44, height: 44 }}>
+                  <input
+                    type="color"
+                    value={customHex}
+                    onChange={(e) => {
+                      setCustomHex(e.target.value);
+                      setUserProfile(prev => ({ ...prev, mascotColor: e.target.value }));
+                    }}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      border: '2px solid #ffffff',
+                      cursor: 'pointer',
+                      padding: 0,
+                      background: 'none'
+                    }}
+                    title="Choose custom shade from color wheel"
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.15rem' }}>
+                    Custom Color Name
+                  </label>
+                  <input
+                    type="text"
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="e.g. 🌸 Soft Pink, 🌿 Sage, 💜 My Purple"
+                    style={{
+                      width: '100%',
+                      padding: '0.35rem 0.6rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-glass)',
+                      fontSize: '0.82rem',
+                      background: 'var(--bg-tertiary)',
+                      color: 'var(--text-primary)'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  Selected: <strong style={{ color: customHex }}>{customHex}</strong>
+                </span>
                 <button
+                  type="submit"
+                  className="btn btn-primary btn-sm"
+                  style={{ fontSize: '0.75rem', padding: '0.35rem 0.85rem' }}
+                >
+                  Save Color Palette ✨
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Color Palettes Grid (Presets + Saved Custom Colors) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))', gap: '0.45rem' }}>
+            {allAvailableColors.map(c => {
+              const active = currentColor === c.id || currentColor === c.hex;
+              const isCustom = c.id.startsWith('custom_');
+              return (
+                <div
                   key={c.id}
-                  type="button"
                   onClick={() => selectColor(c.id)}
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '0.3rem',
-                    padding: '0.5rem 0.25rem',
+                    gap: '0.25rem',
+                    padding: '0.45rem 0.25rem',
                     background: active ? 'var(--accent-primary-light)' : 'var(--bg-tertiary)',
                     border: active ? `2px solid ${c.hex}` : '1px solid var(--border-subtle)',
                     borderRadius: 'var(--radius-md)',
                     cursor: 'pointer',
+                    position: 'relative',
                     transition: 'all 0.15s ease'
                   }}
+                  title={c.name}
                 >
+                  {isCustom && (
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteCustomColor(c.id, e)}
+                      style={{
+                        position: 'absolute',
+                        top: 2,
+                        right: 2,
+                        background: 'rgba(0,0,0,0.15)',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: 14,
+                        height: 14,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.55rem',
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)',
+                        padding: 0
+                      }}
+                      title="Delete saved color"
+                    >
+                      ✕
+                    </button>
+                  )}
                   <div
                     style={{
                       width: 22,
                       height: 22,
                       borderRadius: '50%',
-                      background: c.bodyColor,
+                      background: c.bodyColor || c.hex,
                       border: '2px solid #ffffff',
                       boxShadow: '0 2px 5px rgba(0,0,0,0.15)'
                     }}
                   />
-                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: active ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
-                    {c.name.split(' ')[0]}
+                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: active ? 'var(--accent-primary)' : 'var(--text-secondary)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', padding: '0 2px' }}>
+                    {c.name}
                   </span>
-                </button>
+                </div>
               );
             })}
           </div>

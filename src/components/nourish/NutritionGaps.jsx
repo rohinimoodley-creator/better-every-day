@@ -1,161 +1,229 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useWellness } from '../../context/WellnessContext';
-import { Sparkles, AlertCircle, Info, Plus } from 'lucide-react';
+import { Sparkles, Info, ShieldCheck, Leaf, Pill, Apple } from 'lucide-react';
 
-export default function NutritionGaps({ onAddFoodSuggestion }) {
-  const { loggedMeals } = useWellness();
+export default function NutritionGaps() {
+  const { loggedMeals = [], supplements = [], supplementLogs = [] } = useWellness();
 
-  // Aggregate totals
+  const [activeSourceFilter, setActiveSourceFilter] = useState('all'); // 'all' | 'food' | 'supplements'
+
+  // Combine food descriptions & ingredients
+  const mealText = loggedMeals.map(m => `${m.title || ''} ${(m.ingredients || []).join(' ')}`).join(' ').toLowerCase();
+
   const totalProtein = loggedMeals.reduce((acc, m) => acc + (m.protein || 0), 0);
   const totalFiber = loggedMeals.reduce((acc, m) => acc + (m.fiber || 0), 0);
   
-  // Micronutrient estimated statuses based on logged foods
-  const hasGreens = loggedMeals.some(m => m.title?.toLowerCase().includes('spinach') || m.title?.toLowerCase().includes('veggie') || m.title?.toLowerCase().includes('rainbow'));
-  const hasSalmonOrEgg = loggedMeals.some(m => m.title?.toLowerCase().includes('salmon') || m.title?.toLowerCase().includes('egg'));
-  const hasYogurtOrSeeds = loggedMeals.some(m => m.title?.toLowerCase().includes('chia') || m.title?.toLowerCase().includes('yogurt') || m.title?.toLowerCase().includes('oats'));
+  // Nutrient detection from food
+  const hasGreens = mealText.includes('spinach') || mealText.includes('kale') || mealText.includes('greens') || mealText.includes('broccoli') || mealText.includes('salad');
+  const hasCitrusOrBerry = mealText.includes('berry') || mealText.includes('orange') || mealText.includes('lemon') || mealText.includes('bell pepper') || mealText.includes('kiwi');
+  const hasFishOrSeeds = mealText.includes('salmon') || mealText.includes('tuna') || mealText.includes('fish') || mealText.includes('chia') || mealText.includes('flax') || mealText.includes('walnut');
+  const hasDairyOrYogurt = mealText.includes('yogurt') || mealText.includes('milk') || mealText.includes('tahini') || mealText.includes('sesame') || mealText.includes('cheese');
+  const hasNutsOrBeans = mealText.includes('oat') || mealText.includes('quinoa') || mealText.includes('lentil') || mealText.includes('chickpea') || mealText.includes('almond') || mealText.includes('bean');
 
-  const nutrientStatus = [
+  // Check supplement logs for today
+  const todayStr = new Date().toISOString().split('T')[0];
+  const loggedSuppNames = supplementLogs
+    .filter(l => l.date === todayStr)
+    .map(l => (l.name || '').toLowerCase());
+
+  const hasSuppD = loggedSuppNames.some(n => n.includes('vitamin d') || n.includes('d3'));
+  const hasSuppMag = loggedSuppNames.some(n => n.includes('magnesium'));
+  const hasSuppOmega = loggedSuppNames.some(n => n.includes('omega') || n.includes('fish oil'));
+  const hasSuppIron = loggedSuppNames.some(n => n.includes('iron'));
+  const hasSuppMulti = loggedSuppNames.some(n => n.includes('multi'));
+
+  const nutrientDiscoveries = [
     {
+      id: 'protein',
       name: 'Protein',
-      logged: `${totalProtein}g`,
-      target: '60g - 90g',
-      status: totalProtein >= 40 ? 'Good Pace' : 'Moderate',
-      suggestion: 'Edamame, Greek yogurt, lentils, eggs, tofu or wild salmon.',
-      foodEmoji: '🥚'
+      icon: '🥚',
+      foodSource: `${totalProtein}g estimated from meals`,
+      supplementSource: 'None logged',
+      combinedStatus: totalProtein >= 40 ? 'Well Supported' : 'Moderate',
+      foodSuggestion: 'Greek yogurt, eggs, lentils, edamame, tofu, poultry, or salmon.',
+      details: 'Supports muscle repair, cellular repair, and steady satiety throughout your day.'
     },
     {
+      id: 'fiber',
       name: 'Dietary Fibre',
-      logged: `${totalFiber}g`,
-      target: '25g - 35g',
-      status: totalFiber >= 20 ? 'Optimal' : 'Appears Low',
-      suggestion: 'Chia seeds, raspberries, avocado, oats, and roasted chickpeas.',
-      foodEmoji: '🥑'
+      icon: '🥑',
+      foodSource: `${totalFiber}g estimated from meals`,
+      supplementSource: 'Whole foods primary',
+      combinedStatus: totalFiber >= 20 ? 'Optimal Intake' : 'Comfortable Pace',
+      foodSuggestion: 'Chia seeds, berries, avocado, oats, lentils, and roasted chickpeas.',
+      details: 'Nourishes healthy gut microbiome and supports smooth blood glucose stability.'
     },
     {
+      id: 'iron',
       name: 'Iron',
-      logged: hasGreens ? '~5.5mg' : '~1.8mg',
-      target: '8mg - 18mg',
-      status: hasGreens ? 'Balanced' : 'Appears Low',
-      suggestion: 'Dark leafy greens (spinach, kale), lentils, pumpkin seeds with a squeeze of lemon.',
-      foodEmoji: '🥬'
+      icon: '🥬',
+      foodSource: hasGreens ? 'Identified in leafy greens & legumes' : 'Appears lighter today',
+      supplementSource: (hasSuppIron || hasSuppMulti) ? 'Provided via daily supplement' : 'None logged',
+      combinedStatus: (hasGreens || hasSuppIron || hasSuppMulti) ? 'Supported' : 'Light intake',
+      foodSuggestion: 'Dark leafy greens (spinach, kale), lentils, pumpkin seeds with a squeeze of lemon.',
+      details: 'Essential for oxygen transport in red blood cells and sustained daytime vitality.'
     },
     {
-      name: 'Calcium',
-      logged: hasYogurtOrSeeds ? '~420mg' : '~150mg',
-      target: '1000mg',
-      status: hasYogurtOrSeeds ? 'Good Support' : 'Appears Low',
-      suggestion: 'Fortified plant milks, sesame tahini, organic yogurt, or sardines.',
-      foodEmoji: '🥛'
-    },
-    {
+      id: 'vitaminC',
       name: 'Vitamin C',
-      logged: hasGreens ? '~75mg' : '~20mg',
-      target: '75mg - 90mg',
-      status: hasGreens ? 'Optimal' : 'Appears Low',
-      suggestion: 'Bell peppers, oranges, kiwi, strawberries, or broccoli.',
-      foodEmoji: '🍊'
+      icon: '🍊',
+      foodSource: hasCitrusOrBerry ? 'Present in citrus, berries & peppers' : 'Light in today’s meals',
+      supplementSource: hasSuppMulti ? 'Supported via multivitamin' : 'None logged',
+      combinedStatus: (hasCitrusOrBerry || hasSuppMulti) ? 'Optimal' : 'Discoverable',
+      foodSuggestion: 'Bell peppers, oranges, kiwi, strawberries, tomatoes, or broccoli.',
+      details: 'Potent cellular antioxidant that enhances iron absorption and collagen synthesis.'
     },
     {
+      id: 'vitaminD',
       name: 'Vitamin D',
-      logged: hasSalmonOrEgg ? '~14mcg' : '<2mcg',
-      target: '15mcg - 20mcg',
-      status: hasSalmonOrEgg ? 'Supported' : 'Appears Low',
-      suggestion: 'Sunlight exposure, fortified oat milk, mushrooms exposed to UV, egg yolks.',
-      foodEmoji: '☀️'
+      icon: '☀️',
+      foodSource: hasFishOrSeeds ? 'Present in wild fish & fortified foods' : 'Limited in whole foods',
+      supplementSource: (hasSuppD || hasSuppMulti) ? 'Supplied via Vitamin D supplement' : 'None logged',
+      combinedStatus: (hasSuppD || hasFishOrSeeds) ? 'Supported' : 'Gentle note',
+      foodSuggestion: 'Morning sunlight exposure, wild salmon, UV mushrooms, and fortified milks.',
+      details: 'Supports bone mineral density, immunity, and healthy hormone synthesis.'
     },
     {
-      name: 'Folate (B9)',
-      logged: hasGreens ? '~220mcg' : '~80mcg',
-      target: '400mcg',
-      status: hasGreens ? 'Good' : 'Appears Low',
-      suggestion: 'Lentils, asparagus, avocado, Brussels sprouts, and romaine lettuce.',
-      foodEmoji: '🥦'
+      id: 'magnesium',
+      name: 'Magnesium',
+      icon: '🌰',
+      foodSource: hasNutsOrBeans ? 'Present in oats, nuts & seeds' : 'Moderate in logged meals',
+      supplementSource: (hasSuppMag || hasSuppMulti) ? 'Supplied via Magnesium supplement' : 'None logged',
+      combinedStatus: (hasNutsOrBeans || hasSuppMag) ? 'Supported' : 'Discoverable',
+      foodSuggestion: 'Pumpkin seeds, almonds, dark chocolate, spinach, and quinoa.',
+      details: 'Co-factor in over 300 enzymatic reactions supporting nerve calm and muscle relaxation.'
     },
     {
-      name: 'B-Complex Vitamins',
-      logged: hasSalmonOrEgg || hasYogurtOrSeeds ? 'Moderate' : 'Appears Low',
-      target: 'Daily intake',
-      status: hasSalmonOrEgg || hasYogurtOrSeeds ? 'Balanced' : 'Appears Low',
-      suggestion: 'Nutritional yeast, whole grains, nuts, and legumes.',
-      foodEmoji: '🌾'
+      id: 'omega3',
+      name: 'Omega-3 Fatty Acids',
+      icon: '🐟',
+      foodSource: hasFishOrSeeds ? 'Identified in salmon, chia & seeds' : 'Light in meals today',
+      supplementSource: hasSuppOmega ? 'Supplied via Omega-3 softgel' : 'None logged',
+      combinedStatus: (hasFishOrSeeds || hasSuppOmega) ? 'Supported' : 'Gentle note',
+      foodSuggestion: 'Wild salmon, walnuts, chia seeds, hemp hearts, and flaxseed.',
+      details: 'Supports brain membrane fluidity, cardiovascular health, and balanced inflammatory response.'
+    },
+    {
+      id: 'calcium',
+      name: 'Calcium',
+      icon: '🥛',
+      foodSource: hasDairyOrYogurt ? 'Identified in yogurt & fortified foods' : 'Light in meals today',
+      supplementSource: hasSuppMulti ? 'Partially in multivitamin' : 'None logged',
+      combinedStatus: hasDairyOrYogurt ? 'Supported' : 'Discoverable',
+      foodSuggestion: 'Fortified plant milks, sesame tahini, organic yogurt, or sardines.',
+      details: 'Essential for bone matrix strength, muscular contractions, and nerve signaling.'
     }
   ];
 
   return (
-    <div className="card-glass" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-        <div>
-          <span className="pill-badge primary" style={{ marginBottom: '0.35rem' }}>
-            <Sparkles size={12} /> Today So Far
-          </span>
-          <h3 style={{ fontSize: '1.3rem' }}>Nutritional Gap Insights</h3>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      
+      {/* Header & Source Filter */}
+      <div className="card-glass" style={{ padding: '1.4rem', background: 'radial-gradient(circle at top left, var(--accent-primary-light) 0%, var(--bg-glass-card) 100%)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.85rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+              <span className="pill-badge primary" style={{ fontSize: '0.72rem' }}>
+                <Sparkles size={12} /> Supportive Food Analysis
+              </span>
+            </div>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Nutritional Insight ✨
+            </h3>
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0', lineHeight: 1.45 }}>
+              Discovers the key vitamins, minerals, and micronutrients naturally present across your logged meals and supplements today.
+            </p>
+          </div>
+
+          {/* Source Tabs: All Sources | Food Only | Supplements Only */}
+          <div style={{ display: 'flex', background: 'var(--bg-secondary)', padding: '0.2rem', borderRadius: 'var(--radius-pill)' }}>
+            {[
+              { id: 'all', label: 'All Sources' },
+              { id: 'food', label: '🥗 Food' },
+              { id: 'supplements', label: '💊 Supplements' }
+            ].map(f => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setActiveSourceFilter(f.id)}
+                style={{
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: 'var(--radius-pill)',
+                  border: 'none',
+                  background: activeSourceFilter === f.id ? 'var(--accent-primary)' : 'transparent',
+                  color: activeSourceFilter === f.id ? '#ffffff' : 'var(--text-secondary)',
+                  fontSize: '0.76rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Non-Diagnostic Educational Notice */}
+        <div style={{ background: 'var(--bg-secondary)', padding: '0.65rem 0.95rem', borderRadius: 'var(--radius-sm)', fontSize: '0.78rem', color: 'var(--text-muted)', borderLeft: '3px solid var(--accent-primary)', lineHeight: 1.4 }}>
+          💡 <strong>Gentle Note:</strong> These observations highlight whole food opportunities based on your logged ingredients today. They are educational discoveries and not medical diagnostic evaluations.
         </div>
       </div>
 
-      {/* Non-Diagnostic Disclaimer Note */}
-      <div 
-        style={{
-          background: 'var(--accent-primary-light)',
-          borderLeft: '4px solid var(--accent-primary)',
-          padding: '0.75rem 1rem',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '0.82rem',
-          color: 'var(--text-secondary)',
-          marginBottom: '1.25rem',
-          lineHeight: 1.45
-        }}
-      >
-        <strong>Gentle Notice:</strong> These observations highlight whole food opportunities based on your logged meals today. They are not medical diagnostic evaluations. Please consult a qualified healthcare professional for medical nutrition guidance.
-      </div>
-
       {/* Nutrients Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '0.85rem' }}>
-        {nutrientStatus.map((item, idx) => {
-          const isLow = item.status === 'Appears Low';
-          return (
-            <div 
-              key={idx}
-              style={{
-                background: 'var(--bg-tertiary)',
-                border: `1px solid ${isLow ? 'rgba(217, 119, 54, 0.3)' : 'var(--border-subtle)'}`,
-                padding: '0.9rem',
-                borderRadius: 'var(--radius-md)',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between'
-              }}
-            >
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                  <span style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)' }}>
-                    {item.foodEmoji} {item.name}
-                  </span>
-                  <span 
-                    className={`pill-badge ${isLow ? 'orange' : 'primary'}`}
-                    style={{ fontSize: '0.68rem', padding: '0.15rem 0.5rem' }}
-                  >
-                    {item.status}
-                  </span>
-                </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '0.85rem' }}>
+        {nutrientDiscoveries.map(item => (
+          <div
+            key={item.id}
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
+              padding: '1.1rem',
+              borderRadius: 'var(--radius-md)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '0.75rem'
+            }}
+          >
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                <span style={{ fontWeight: 800, fontSize: '0.98rem', color: 'var(--text-primary)' }}>
+                  {item.icon} {item.name}
+                </span>
+                <span className="pill-badge primary" style={{ fontSize: '0.68rem', padding: '2px 8px' }}>
+                  {item.combinedStatus}
+                </span>
+              </div>
 
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-                  Logged: <strong style={{ color: 'var(--text-primary)' }}>{item.logged}</strong> / Target: {item.target}
-                </div>
-
-                {isLow ? (
-                  <p style={{ fontSize: '0.8rem', color: 'var(--accent-secondary)', margin: 0, lineHeight: 1.35 }}>
-                    Your logged meals appear low in {item.name.toLowerCase()}. Consider adding: {item.suggestion}
-                  </p>
-                ) : (
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.35 }}>
-                    Well supported today! Maintain with: {item.suggestion}
-                  </p>
+              {/* Distinguish Food Source vs Supplement Source */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', margin: '0.6rem 0', background: 'var(--bg-tertiary)', padding: '0.6rem 0.75rem', borderRadius: 'var(--radius-sm)', fontSize: '0.76rem' }}>
+                {(activeSourceFilter === 'all' || activeSourceFilter === 'food') && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
+                    <Apple size={12} color="var(--accent-primary)" />
+                    <span><strong>Food:</strong> {item.foodSource}</span>
+                  </div>
+                )}
+                {(activeSourceFilter === 'all' || activeSourceFilter === 'supplements') && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)' }}>
+                    <Pill size={12} color="var(--accent-secondary)" />
+                    <span><strong>Supplements:</strong> {item.supplementSource}</span>
+                  </div>
                 )}
               </div>
+
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.4rem 0', lineHeight: 1.4 }}>
+                {item.details}
+              </p>
             </div>
-          );
-        })}
+
+            <div style={{ paddingTop: '0.45rem', borderTop: '1px solid var(--border-subtle)', fontSize: '0.74rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
+              🌿 <strong>Enjoy with:</strong> {item.foodSuggestion}
+            </div>
+          </div>
+        ))}
       </div>
+
     </div>
   );
 }
+

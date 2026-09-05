@@ -20,14 +20,15 @@ import {
   Coffee,
   Heart,
   Sliders,
-  X
+  X,
+  Edit2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import ContextualPip from '../mascot/ContextualPip';
 
 const HYDRATION_PRESETS = [
-  { amount: 250, label: 'Glass', icon: '🥛', desc: 'Standard cup (250 ml)' },
-  { amount: 330, label: 'Can / Mug', icon: '☕', desc: 'Warm tea or mug (330 ml)' },
+  { amount: 250, label: '1 Cup / Glass', icon: '🥛', desc: 'Standard cup (250 ml)' },
+  { amount: 330, label: 'Mug / Can', icon: '☕', desc: 'Warm tea or mug (330 ml)' },
   { amount: 500, label: 'Bottle', icon: '🍶', desc: 'Active water bottle (500 ml)' },
   { amount: 750, label: 'Large Flask', icon: '🚰', desc: 'Hydro flask (750 ml)' },
   { amount: 1000, label: '1 Liter', icon: '🧊', desc: 'Full liter bottle (1000 ml)' }
@@ -41,7 +42,7 @@ const BUILTIN_BEVERAGE_TYPES = [
   { id: 'coconut_water', label: 'Coconut Water', icon: '🥥', boost: 'Potassium Rich' }
 ];
 
-export default function HydrateHub({ onNavigateTab }) {
+export default function HydrateHub() {
   const {
     userProfile,
     setUserProfile,
@@ -145,9 +146,6 @@ export default function HydrateHub({ onNavigateTab }) {
             <span className="pill-badge blue">
               <Droplet size={12} /> Hydration & Cellular Flow
             </span>
-            <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-              Under Nourishment Pillar
-            </span>
           </div>
           <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             Hydrate & Refresh 💧
@@ -156,16 +154,6 @@ export default function HydrateHub({ onNavigateTab }) {
             Steady, gentle cellular hydration to fuel mental clarity and physical vitality.
           </p>
         </div>
-
-        {onNavigateTab && (
-          <button
-            onClick={() => onNavigateTab('NOURISH')}
-            className="btn btn-secondary btn-sm"
-            style={{ gap: '0.35rem', fontSize: '0.8rem' }}
-          >
-            <span>Back to Nourish Hub 🥗</span>
-          </button>
-        )}
       </div>
 
       {/* 1. MAIN HYDRATION STATUS & PROGRESS GAUGE */}
@@ -174,131 +162,137 @@ export default function HydrateHub({ onNavigateTab }) {
         style={{
           background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(58, 134, 200, 0.08) 100%)',
           padding: '1.75rem',
-          border: '1px solid var(--border-glass)',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '1.5rem',
-          alignItems: 'center'
+          border: '1px solid var(--border-glass)'
         }}
       >
-        {/* Visual Water Wave Card */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div 
-            style={{
-              width: 108,
-              height: 108,
-              borderRadius: '50%',
-              background: `conic-gradient(#3a86c8 0deg ${percentage * 3.6}deg, var(--bg-tertiary) ${percentage * 3.6}deg 360deg)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 8px 24px rgba(58, 134, 200, 0.25)',
-              flexShrink: 0
-            }}
-          >
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem' }}>
+          {/* Visual Water Wave Gauge */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <div 
               style={{
-                width: 86,
-                height: 86,
+                width: 104,
+                height: 104,
                 borderRadius: '50%',
-                background: 'var(--bg-secondary)',
+                background: `conic-gradient(#3a86c8 0deg ${percentage * 3.6}deg, var(--bg-tertiary) ${percentage * 3.6}deg 360deg)`,
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                boxShadow: '0 8px 24px rgba(58, 134, 200, 0.25)',
+                flexShrink: 0
               }}
             >
-              <Droplet size={24} color="#3a86c8" style={{ marginBottom: 2 }} />
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>
-                {percentage}%
-              </span>
-              <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                of daily goal
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.2rem' }}>
-              Today's Water Intake
-            </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
-              {hydrationMl.toLocaleString()} <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>/ {goalMl.toLocaleString()} ml</span>
-            </div>
-            <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-              {remainingMl === 0 
-                ? '🎉 Daily target reached! Sip gently as you feel thirsty.'
-                : `${remainingMl} ml remaining (~${(remainingMl / 250).toFixed(1)} glasses).`}
-            </p>
-
-            {celebrationMessage && (
-              <div style={{ fontSize: '0.78rem', color: 'var(--accent-primary)', fontWeight: 800, marginTop: '0.4rem', animation: 'fadeIn 0.2s ease-out' }}>
-                {celebrationMessage}
+              <div 
+                style={{
+                  width: 82,
+                  height: 82,
+                  borderRadius: '50%',
+                  background: 'var(--bg-secondary)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Droplet size={22} color="#3a86c8" style={{ marginBottom: 2 }} />
+                <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>
+                  {percentage}%
+                </span>
+                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  of goal
+                </span>
               </div>
-            )}
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.2rem' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Today's Water Intake
+                </span>
+                <button
+                  onClick={() => setGoalEditing(prev => !prev)}
+                  style={{
+                    background: 'var(--bg-tertiary)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-pill)',
+                    padding: '0.2rem 0.55rem',
+                    color: '#3a86c8',
+                    cursor: 'pointer',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}
+                  title="Adjust your daily hydration goal"
+                >
+                  <Edit2 size={11} /> {goalEditing ? 'Cancel' : 'Adjust Goal'}
+                </button>
+              </div>
+
+              {goalEditing ? (
+                <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem', marginBottom: '0.4rem' }}>
+                  <input
+                    type="number"
+                    value={newGoal}
+                    onChange={e => setNewGoal(e.target.value)}
+                    style={{
+                      width: 130,
+                      padding: '0.35rem 0.6rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-glass)',
+                      fontSize: '0.84rem'
+                    }}
+                    placeholder="2250 ml"
+                  />
+                  <button
+                    onClick={handleSaveGoal}
+                    className="btn btn-primary btn-sm"
+                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
+                  >
+                    Save Goal
+                  </button>
+                </div>
+              ) : (
+                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
+                  {hydrationMl.toLocaleString()} <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>/ {goalMl.toLocaleString()} ml</span>
+                </div>
+              )}
+
+              <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                {remainingMl === 0 
+                  ? '🎉 Daily target reached! Sip gently as you feel thirsty.'
+                  : `${remainingMl} ml remaining (~${(remainingMl / 250).toFixed(1)} glasses).`}
+              </p>
+
+              {celebrationMessage && (
+                <div style={{ fontSize: '0.78rem', color: 'var(--accent-primary)', fontWeight: 800, marginTop: '0.4rem', animation: 'fadeIn 0.2s ease-out' }}>
+                  {celebrationMessage}
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Quick 1-Cup (+250ml) Hero Button */}
+          <button
+            onClick={() => handleQuickAdd(250)}
+            className="btn btn-primary"
+            style={{
+              padding: '0.75rem 1.4rem',
+              fontSize: '0.92rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 16px rgba(58, 134, 200, 0.35)'
+            }}
+          >
+            <span>🥛</span>
+            <span>+ 1 Cup (250 ml)</span>
+          </button>
         </div>
 
         {/* Contextual Hydrate Pip */}
-        <ContextualPip context="hydrate" layout="subtle" size={32} style={{ marginTop: '1.25rem', marginBottom: '1.25rem' }} />
-
-        {/* Target Goal Modifier & Stats */}
-        <div style={{ background: 'var(--bg-secondary)', padding: '1.1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
-            <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
-              Comfortable Daily Goal
-            </span>
-            <button
-              onClick={() => setGoalEditing(prev => !prev)}
-              style={{ background: 'transparent', border: 'none', color: '#3a86c8', cursor: 'pointer', fontSize: '0.76rem', fontWeight: 700 }}
-            >
-              {goalEditing ? 'Cancel' : 'Adjust Goal ⚙️'}
-            </button>
-          </div>
-
-          {goalEditing ? (
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.6rem' }}>
-              <input
-                type="number"
-                value={newGoal}
-                onChange={e => setNewGoal(e.target.value)}
-                style={{
-                  flex: 1,
-                  padding: '0.4rem 0.6rem',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-glass)',
-                  fontSize: '0.85rem'
-                }}
-                placeholder="2250 ml"
-              />
-              <button
-                onClick={handleSaveGoal}
-                className="btn btn-primary btn-sm"
-                style={{ fontSize: '0.78rem', padding: '0.4rem 0.85rem' }}
-              >
-                Save
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.6rem' }}>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                  {goalMl} ml
-                </span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 4 }}>
-                  (~{cupsTarget} cups)
-                </span>
-              </div>
-              <span className="pill-badge primary" style={{ fontSize: '0.7rem' }}>
-                Tailored for Energy
-              </span>
-            </div>
-          )}
-
-          <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-            💡 <strong>Hydration Tip:</strong> Drinking a small glass right when you wake up primes your digestion and clears morning brain fog.
-          </div>
-        </div>
+        <ContextualPip context="hydrate" layout="subtle" size={32} style={{ marginTop: '1.25rem' }} />
       </div>
 
       {/* 2. PERSONAL WATER RECOMMENDATION & PACING CARD */}
@@ -517,4 +511,5 @@ export default function HydrateHub({ onNavigateTab }) {
     </div>
   );
 }
+
 

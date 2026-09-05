@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useWellness } from '../../context/WellnessContext';
-import { lookupCraving } from '../../engine/bodyTranslator';
-import { CRAVINGS_DATABASE } from '../../data/mockData';
-import { Search, Sparkles, Heart, CheckCircle, HelpCircle, ArrowRight, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { lookupCraving, EXPANDED_CRAVINGS } from '../../engine/bodyTranslator';
+import { Search, Sparkles, Heart, CheckCircle, HelpCircle, ArrowRight, Eye, EyeOff, Utensils } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import ContextualPip from '../mascot/ContextualPip';
 
@@ -10,37 +9,22 @@ export default function BodyTranslator() {
   const { cravingsLogs, logCraving } = useWellness();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCraving, setSelectedCraving] = useState(null); // Starts with manual input (no auto-suggestions / pre-selection)
+  const [selectedCraving, setSelectedCraving] = useState(null);
   const [satisfiedItem, setSatisfiedItem] = useState('');
   const [feelingAfter, setFeelingAfter] = useState('Satisfied & Content');
   const [showLogForm, setShowLogForm] = useState(false);
-  const [showRecentCravings, setShowRecentCravings] = useState(false); // Hidden by default
+  const [showRecentCravings, setShowRecentCravings] = useState(false);
 
   const handleSearch = (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (!searchQuery.trim()) return;
     const result = lookupCraving(searchQuery);
     if (result) {
       setSelectedCraving(result);
-    } else {
-      // Fallback custom craving representation
-      setSelectedCraving({
-        id: 'custom_' + Date.now(),
-        name: searchQuery,
-        icon: '💡',
-        bodySignals: [
-          { type: 'Physiological', desc: 'Could signal need for steady energy, hydration, or mineral balance.' },
-          { type: 'Mindset & Rhythm', desc: 'Check if you have had a long stretch without a pause or mindful break.' }
-        ],
-        healthyOptions: [
-          { name: 'Pair with water or tea', tip: 'Drink a glass of water first to check if dehydration is masking as hunger.' },
-          { name: 'Enjoy mindfully', tip: 'Savor a moderate portion without distraction or guilt.' }
-        ]
-      });
     }
   };
 
-  const selectChip = (item) => {
+  const selectQuickChip = (item) => {
     setSelectedCraving(item);
     setSearchQuery(item.name);
   };
@@ -70,27 +54,27 @@ export default function BodyTranslator() {
       {/* Intro Header */}
       <div className="card-glass" style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(217, 119, 54, 0.08) 100%)' }}>
         <span className="pill-badge orange" style={{ marginBottom: '0.4rem' }}>
-          <Sparkles size={12} /> Mindful Body Signals
+          <Sparkles size={12} /> Cravings & Food Explorer
         </span>
         <h3 style={{ fontSize: '1.35rem', marginBottom: '0.35rem' }}>The Body Translator 🧭</h3>
         <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0', lineHeight: 1.45 }}>
-          Cravings are not failures of willpower—they are gentle communication from your body about hunger, stress, fatigue, or dietary rhythm.
+          Cravings are not mistakes or failures of willpower—they are gentle sensory cues about texture, comfort, flavor satisfaction, or daily rhythm.
         </p>
 
-        {/* Contextual Nourish Pip (Non-judgmental) */}
+        {/* Contextual Nourish Pip */}
         <ContextualPip context="nourish" layout="subtle" size={32} style={{ marginBottom: '1rem' }} />
 
-        {/* Primary Direct Input Form */}
+        {/* Primary Direct Craving Input */}
         <div>
           <label style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)', display: 'block', marginBottom: '0.45rem' }}>
-            What is your body telling you? 🧭
+            What are you craving or feeling like eating? 🧭
           </label>
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem' }}>
+          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <div style={{ position: 'relative', flex: 1 }}>
               <Search size={16} style={{ position: 'absolute', left: 12, top: 13, color: 'var(--text-muted)' }} />
               <input
                 type="text"
-                placeholder='Type what you are experiencing in your own words (e.g. "I feel bloated", "I have a headache", "Unusually hungry", "Craving something sweet")...'
+                placeholder='Type a craving or texture (e.g. "Chocolate", "Something salty & crunchy", "Ice cream", "Warm bread")...'
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="input-field"
@@ -98,22 +82,50 @@ export default function BodyTranslator() {
               />
             </div>
             <button type="submit" className="btn btn-primary" style={{ padding: '0.65rem 1.25rem', fontWeight: 700 }}>
-              Decode Signal
+              Explore Craving
             </button>
           </form>
+
+          {/* Quick Flavor & Texture Explorer Chips */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+            {EXPANDED_CRAVINGS.slice(0, 6).map(item => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => selectQuickChip(item)}
+                style={{
+                  background: selectedCraving?.id === item.id ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                  color: selectedCraving?.id === item.id ? '#fff' : 'var(--text-secondary)',
+                  border: '1px solid var(--border-glass)',
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span>{item.icon}</span>
+                <span>{item.name.split('/')[0].trim()}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Selected Craving Deep Dive (Shown only when user enters or taps a craving) */}
+      {/* Selected Craving Deep Dive */}
       {selectedCraving ? (
         <div className="card-glass" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <span style={{ fontSize: '2rem' }}>{selectedCraving.icon}</span>
               <div>
-                <h3 style={{ fontSize: '1.25rem', margin: 0 }}>Decoding: {selectedCraving.name}</h3>
+                <h3 style={{ fontSize: '1.25rem', margin: 0 }}>Exploring: {selectedCraving.name}</h3>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-                  Possible Physiological, Emotional & Dietary Drivers
+                  Sensory & Flavor Context (Non-Diagnostic & Educational)
                 </p>
               </div>
             </div>
@@ -126,24 +138,29 @@ export default function BodyTranslator() {
             </button>
           </div>
 
-          {/* Body Signals List */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', marginBottom: '1.5rem' }}>
-            {selectedCraving.bodySignals?.map((sig, idx) => (
-              <div key={idx} style={{ background: 'var(--bg-tertiary)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                  {sig.type}
+          {/* What might I be looking for? */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            <h4 style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '0.6rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <HelpCircle size={15} color="var(--accent-primary)" /> What Might I Be Looking For?
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem' }}>
+              {selectedCraving.bodySignals?.map((sig, idx) => (
+                <div key={idx} style={{ background: 'var(--bg-tertiary)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                    {sig.type}
+                  </div>
+                  <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                    {sig.desc}
+                  </p>
                 </div>
-                <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
-                  {sig.desc}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
-          {/* Healthy & Realistic Food Swaps */}
+          {/* Sensory-Satisfying Alternatives */}
           <div style={{ marginBottom: '1.5rem' }}>
-            <h4 style={{ fontSize: '1rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Heart size={16} color="var(--accent-rose)" /> Nourishing Ways to Honor This Craving
+            <h4 style={{ fontSize: '0.98rem', fontWeight: 800, marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Heart size={16} color="var(--accent-rose)" /> Sensory-Satisfying Alternatives & Mindful Ideas
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               {selectedCraving.healthyOptions?.map((opt, idx) => (
@@ -170,22 +187,22 @@ export default function BodyTranslator() {
             </div>
           </div>
 
-          {/* Log Reflection Button / Form */}
+          {/* Log Reflection Form */}
           {!showLogForm ? (
             <button 
               onClick={() => setShowLogForm(true)}
               className="btn btn-secondary"
-              style={{ width: '100%', padding: '0.75rem' }}
+              style={{ width: '100%', padding: '0.75rem', fontWeight: 700 }}
             >
-              📝 Record How You Handled This Craving
+              📝 Record How You Mindfully Enjoyed This
             </button>
           ) : (
             <form onSubmit={handleSaveReflection} style={{ background: 'var(--bg-tertiary)', padding: '1.25rem', borderRadius: 'var(--radius-md)' }}>
-              <h4 style={{ fontSize: '0.95rem', marginBottom: '0.75rem' }}>Post-Craving Reflection</h4>
+              <h4 style={{ fontSize: '0.95rem', marginBottom: '0.75rem' }}>Mindful Reflection</h4>
               
               <div style={{ marginBottom: '0.85rem' }}>
                 <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>
-                  What did you enjoy?
+                  What did you choose to enjoy?
                 </label>
                 <input
                   type="text"
@@ -208,7 +225,7 @@ export default function BodyTranslator() {
                   <option value="Satisfied & Content">Satisfied & Content</option>
                   <option value="Energized & Grounded">Energized & Grounded</option>
                   <option value="Comforted & Relaxed">Comforted & Relaxed</option>
-                  <option value="Slightly Sluggish (Learning for next time)">Slightly Sluggish (Learning for next time)</option>
+                  <option value="Mindfully Noticed (Learning for next time)">Mindfully Noticed (Learning for next time)</option>
                 </select>
               </div>
 
@@ -224,22 +241,21 @@ export default function BodyTranslator() {
           )}
         </div>
       ) : (
-        /* Helpful empty state prompt */
         <div className="card-glass" style={{ padding: '1.25rem', textAlign: 'center', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
           <p style={{ margin: 0, fontSize: '0.88rem' }}>
-            🔍 Type what you are experiencing in the box above to decode your body's signals with zero judgment.
+            🔍 Type a food craving or tap a flavor profile above to explore satisfying textures and gentle mindful ideas.
           </p>
         </div>
       )}
 
-      {/* Craving History & Reflections: Progressive Disclosure */}
+      {/* Craving History & Reflections */}
       {cravingsLogs.length > 0 && (
         <div className="card-glass" style={{ padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h4 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0 }}>Craving Reflections</h4>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Your saved mindful reflections and decoded signals.
+                Your saved mindful reflections and sensory explorations.
               </span>
             </div>
 

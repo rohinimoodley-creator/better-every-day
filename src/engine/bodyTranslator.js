@@ -1,110 +1,151 @@
 // Body Translator Engine
-// Decodes cravings and sensations into physiological, emotional, habit, and gentle nutritional considerations.
-// Uses non-diagnostic, respectful phrasing at all times.
+// Decodes cravings and sensory desires into flavor profiles, texture preferences, and satisfying mindful food choices.
+// Purely educational and non-diagnostic.
 
 import { CRAVINGS_DATABASE } from '../data/mockData';
+
+export const EXPANDED_CRAVINGS = [
+  ...CRAVINGS_DATABASE,
+  {
+    id: 'ice_cream',
+    name: 'Ice Cream / Creamy Cold Treats',
+    icon: '🍦',
+    category: 'creamy_sweet',
+    bodySignals: [
+      { type: 'Sensory Profile', desc: 'Looking for a cooling temperature sensation paired with smooth, creamy mouthfeel and sweetness.' },
+      { type: 'Emotional Comfort', desc: 'Cold creamy textures activate soothing sensory feedback and nostalgic comfort associations.' },
+      { type: 'Energy & Pacing', desc: 'Can signal an afternoon dip or body seeking a soothing treat after a warm or demanding stretch.' }
+    ],
+    healthyOptions: [
+      { name: 'Frozen Banana & Cocoa "Nice Cream"', tip: 'Blended frozen bananas create an identical velvety soft-serve texture with natural potassium.' },
+      { name: 'Greek Yogurt with Swirled Honey & Frozen Berries', tip: 'Creamy cold richness with 15g+ gut-friendly protein.' },
+      { name: 'Chilled Coconut Milk Chia Pudding', tip: 'Satisfying silky mouthfeel with omega-3s and plant fiber.' }
+    ]
+  },
+  {
+    id: 'fried_crunchy',
+    name: 'Fried / Crispy Finger Foods',
+    icon: '🍟',
+    category: 'crispy_savory',
+    bodySignals: [
+      { type: 'Sensory Profile', desc: 'Desire for intense auditory and tactile crunch combined with savory richness.' },
+      { type: 'Stress & Chewing', desc: 'Rhythmic chewing of crunchy, audible textures helps release built-up jaw tension.' },
+      { type: 'Flavor Saturation', desc: 'Seeking rapid flavor satisfaction with salt and comforting warmth.' }
+    ],
+    healthyOptions: [
+      { name: 'Air-Fried Crispy Spiced Chickpeas or Edamame', tip: 'Delivers a loud, satisfying crunch packed with plant protein and fiber.' },
+      { name: 'Baked Sweet Potato Fries with Sea Salt & Paprika', tip: 'Golden crispy edges with slow-burning complex carbs.' },
+      { name: 'Crunchy Seed Crackers with Whipped Feta or Guacamole', tip: 'High-satisfaction crunch paired with rich healthy fats.' }
+    ]
+  },
+  {
+    id: 'spicy_sour',
+    name: 'Spicy / Tangy / Sour Foods',
+    icon: '🌶️',
+    category: 'zesty',
+    bodySignals: [
+      { type: 'Sensory Profile', desc: 'Seeking sensory stimulation, palate awakening, or a break from bland routine.' },
+      { type: 'Circulation & Alertness', desc: 'Capsaicin and citric acids trigger instant endorphin release and sensory wakefulness.' },
+      { type: 'Digestive Spark', desc: 'Tangy and fermented flavors naturally stimulate saliva and digestive interest.' }
+    ],
+    healthyOptions: [
+      { name: 'Cucumber Slices with Lime Juice, Tajín & Sea Salt', tip: 'Ultra-refreshing, zesty, and crunchy with zero heaviness.' },
+      { name: 'Kimchi or Sauerkraut with Brown Rice & Sesame', tip: 'Tangy fermented umami with trillions of living probiotics.' },
+      { name: 'Spiced Roasted Pumpkin Seeds with Chili & Lime', tip: 'Zesty heat and satisfying mineral crunch.' }
+    ]
+  },
+  {
+    id: 'refreshing_fruit',
+    name: 'Juicy Fruit / Cold Soda / Fresh Hydration',
+    icon: '🍉',
+    category: 'refreshing',
+    bodySignals: [
+      { type: 'Sensory Profile', desc: 'Body seeking high water content, crisp temperature, and natural brightness.' },
+      { type: 'Hydration Desire', desc: 'Often the clearest sensory cue that your fluid intake has been low today.' },
+      { type: 'Light Energy', desc: 'Seeking gentle, effortless fuel that leaves you feeling light and clear.' }
+    ],
+    healthyOptions: [
+      { name: 'Chilled Watermelon or Pineapple Chunks with Fresh Mint', tip: '90%+ water volume with natural enzymes and vitamin C.' },
+      { name: 'Sparkling Water with Crushed Berries & Lime Slice', tip: 'Crisp fizz and natural fruit essence without refined syrup.' },
+      { name: 'Frozen Grapes or Mango Chunks', tip: 'Nature’s bite-sized sorbet with natural fructose and antioxidants.' }
+    ]
+  }
+];
 
 export function lookupCraving(query) {
   if (!query) return null;
   const q = query.toLowerCase().trim();
   
-  // 1. Check exact/substring match in database
-  const match = CRAVINGS_DATABASE.find(item => 
+  // 1. Check exact/substring match in expanded cravings list
+  const match = EXPANDED_CRAVINGS.find(item => 
     item.name.toLowerCase().includes(q) || 
     q.includes(item.name.toLowerCase()) ||
     item.id.toLowerCase().includes(q) ||
-    item.category.toLowerCase().includes(q)
+    item.category?.toLowerCase().includes(q)
   );
 
   if (match) return match;
 
-  // 2. Intelligent semantic interpretations for common body signals
-  if (q.includes('bloat') || q.includes('stomach') || q.includes('digest') || q.includes('full') || q.includes('uncomfortable')) {
-    return {
-      id: 'signal_bloat',
-      name: 'Stomach Fullness or Bloating',
-      icon: '🌿',
-      category: 'digestion',
-      bodySignals: [
-        { type: 'Digestion Rhythm', desc: 'Could indicate eating quickly, carbonated drinks, or high sodium intake.' },
-        { type: 'Gentle Motility', desc: 'A short 5–10 minute slow stroll can stimulate digestive motility and relieve pressure.' },
-        { type: 'Mindset & Posture', desc: 'Sitting upright and taking slow diaphragm breaths gives your abdomen room to relax.' }
-      ],
-      healthyOptions: [
-        { name: 'Warm Peppermint or Ginger Tea', tip: 'Naturally relaxes digestive tract smooth muscles and eases trapped gas.' },
-        { name: '5-Minute Post-Meal Stroll', tip: 'Gentle walking helps accelerate gastric emptying and eases bloating.' }
-      ]
-    };
+  // 2. Sensory & texture heuristics for food cravings
+  if (q.includes('choc') || q.includes('cocoa') || q.includes('fudge') || q.includes('brownie')) {
+    return EXPANDED_CRAVINGS.find(c => c.id === 'chocolate') || EXPANDED_CRAVINGS[0];
   }
 
-  if (q.includes('headache') || q.includes('head') || q.includes('migraine')) {
-    return {
-      id: 'signal_headache',
-      name: 'Head Tension or Headache',
-      icon: '💆',
-      category: 'hydration_rest',
-      bodySignals: [
-        { type: 'Hydration Check', desc: 'Mild dehydration is the most common hidden driver of midday head tension.' },
-        { type: 'Screen & Posture Strain', desc: 'Prolonged focus without blinking causes suboccipital neck stiffness.' },
-        { type: 'Blood Sugar Pacing', desc: 'A long gap between meals can cause a dip in steady blood glucose.' }
-      ],
-      healthyOptions: [
-        { name: 'Large Glass of Water with a Pinch of Electrolytes / Lemon', tip: 'Rehydrates cellular fluids quickly.' },
-        { name: '20-Second Eye & Neck Reset', tip: 'Look into the distance, soften jaw muscles, and gently roll shoulders down.' }
-      ]
-    };
+  if (q.includes('salt') || q.includes('chip') || q.includes('crisp') || q.includes('pretzel')) {
+    return EXPANDED_CRAVINGS.find(c => c.id === 'salty') || EXPANDED_CRAVINGS[1];
   }
 
-  if (q.includes('hungry') || q.includes('hunger') || q.includes('starv') || q.includes('famished') || q.includes('appetite')) {
-    return {
-      id: 'signal_hunger',
-      name: 'Unusually Hungry / Quick Appetite',
-      icon: '🥑',
-      category: 'energy',
-      bodySignals: [
-        { type: 'Protein & Fibre Balance', desc: 'Your previous meal might have been light on stabilizing proteins or healthy fats.' },
-        { type: 'Active Recovery', desc: 'Increased daily movement or a busy day raises your metabolic fuel requirement.' },
-        { type: 'Cycle & Hormonal Rhythm', desc: 'During the luteal cycle phase, metabolic rate naturally increases by 100–300 kcal/day.' }
-      ],
-      healthyOptions: [
-        { name: 'Balanced Protein + Complex Carb Snack', tip: 'Apple slices with almond butter, or hummus with seeded crackers.' },
-        { name: 'Hearty Whole-Food Meal', tip: 'Honor real hunger with a nourishing plate containing protein, greens, and complex grains.' }
-      ]
-    };
+  if (q.includes('sweet') || q.includes('sugar') || q.includes('candy') || q.includes('cookie') || q.includes('cake') || q.includes('donut')) {
+    return EXPANDED_CRAVINGS.find(c => c.id === 'sugar') || EXPANDED_CRAVINGS[2];
   }
 
-  if (q.includes('tired') || q.includes('fatigue') || q.includes('sluggish') || q.includes('exhaust')) {
-    return {
-      id: 'signal_tired',
-      name: 'Midday Sluggishness & Low Energy',
-      icon: '🔋',
-      category: 'rest',
-      bodySignals: [
-        { type: 'Circadian Dip', desc: 'Natural early-afternoon body temperature drop triggers biological drowsiness.' },
-        { type: 'Hydration & Fresh Air', desc: 'Stale indoor air or low fluid levels amplify feelings of physical heaviness.' },
-        { type: 'Rest Need', desc: 'Your nervous system may be requesting a 5-minute quiet sensory pause rather than sugar.' }
-      ],
-      healthyOptions: [
-        { name: 'Cold Water + 3 Deep Diaphragmatic Breaths', tip: 'Instantly increases oxygen delivery and wakes up the autonomic nervous system.' },
-        { name: 'Step into Natural Daylight for 3 Minutes', tip: 'Suppresses daytime melatonin and restores natural alertness.' }
-      ]
-    };
+  if (q.includes('carb') || q.includes('bread') || q.includes('pasta') || q.includes('pizza') || q.includes('dough') || q.includes('noodle')) {
+    return EXPANDED_CRAVINGS.find(c => c.id === 'carbs') || EXPANDED_CRAVINGS[3];
   }
 
-  // 3. Generic fallback
+  if (q.includes('ice cream') || q.includes('gelato') || q.includes('smoothie') || q.includes('shake') || q.includes('creamy')) {
+    return EXPANDED_CRAVINGS.find(c => c.id === 'ice_cream');
+  }
+
+  if (q.includes('crunch') || q.includes('nut') || q.includes('chew')) {
+    return EXPANDED_CRAVINGS.find(c => c.id === 'crunchy');
+  }
+
+  if (q.includes('cheese') || q.includes('dairy') || q.includes('mac and cheese')) {
+    return EXPANDED_CRAVINGS.find(c => c.id === 'cheese');
+  }
+
+  if (q.includes('meat') || q.includes('burger') || q.includes('steak') || q.includes('protein') || q.includes('savory')) {
+    return EXPANDED_CRAVINGS.find(c => c.id === 'red_meat');
+  }
+
+  if (q.includes('spice') || q.includes('spicy') || q.includes('hot sauce') || q.includes('sour') || q.includes('tangy')) {
+    return EXPANDED_CRAVINGS.find(c => c.id === 'spicy_sour');
+  }
+
+  if (q.includes('fruit') || q.includes('cold') || q.includes('soda') || q.includes('refresh') || q.includes('juice')) {
+    return EXPANDED_CRAVINGS.find(c => c.id === 'refreshing_fruit');
+  }
+
+  if (q.includes('coffee') || q.includes('caffeine') || q.includes('energy drink') || q.includes('tea')) {
+    return EXPANDED_CRAVINGS.find(c => c.id === 'coffee');
+  }
+
+  // 3. Compassionate, non-diagnostic sensory craving fallback
   return {
-    id: 'custom_signal_' + Date.now(),
+    id: 'custom_craving_' + Date.now(),
     name: query,
-    icon: '🧭',
-    category: 'custom',
+    icon: '🍽️',
+    category: 'custom_craving',
     bodySignals: [
-      { type: 'Physiological Check', desc: 'Could signal a need for steady hydration, nutrient balance, or physical position reset.' },
-      { type: 'Mindset & Rhythm', desc: 'Notice if prolonged sitting, emotional stress, or fatigue is influencing this sensation.' },
-      { type: 'Gentle Care', desc: 'Honor what your body is experiencing with compassion and zero guilt.' }
+      { type: 'Sensory & Flavor Profile', desc: `Your palate is seeking specific satisfaction from "${query}" (richness, texture, or temperature).` },
+      { type: 'Mindful Context', desc: 'Notice whether you are looking for soothing comfort, a break from routine, physical fuel, or sensory enjoyment.' },
+      { type: 'No-Guilt Exploration', desc: 'Food cravings are a normal human experience. You can honor this craving mindfully with complete self-compassion.' }
     ],
     healthyOptions: [
-      { name: 'Sip Water & Pause Mindfully', tip: 'Drink a glass of water first and check in with your breath.' },
-      { name: 'Nourish with Whole Foods', tip: 'Choose a satisfying snack with natural ingredients that support sustained energy.' }
+      { name: `Enjoy "${query}" Mindfully`, tip: 'Plate a satisfying portion, sit down, and savor every bite with all 5 senses.' },
+      { name: 'Pair with a Glass of Water or Tea', tip: 'Combine with hydration or fresh greens to create a balanced, lasting satisfaction.' }
     ]
   };
 }
+

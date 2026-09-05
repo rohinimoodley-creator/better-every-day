@@ -1952,14 +1952,413 @@ export function WellnessProvider({ children }) {
     }
 
     return {
-      targetMl: baseTargetMl,
       cupsTarget,
       currentCups,
       remainingCups,
       pacingText,
-      isComplete: remainingCups === 0
+      targetMl: baseTargetMl,
+      currentMl: hydrationMl
     };
   };
+
+  // 27. Custom Saved Meals & Community Shared Meals
+  const [savedCustomMeals, setSavedCustomMeals] = useState(() => {
+    const saved = localStorage.getItem('bed_saved_custom_meals');
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 'scm_1',
+        name: 'Chicken & Rice Bowl',
+        mealType: 'Lunch',
+        ingredients: ['Grilled chicken breast (150g)', 'Brown rice (1 cup)', 'Steamed broccoli', 'Olive oil (1 tbsp)', 'Sea salt & paprika'],
+        calories: 480,
+        protein: 42,
+        carbs: 45,
+        fat: 12,
+        fiber: 6,
+        isEstimated: false,
+        isSharedToCommunity: false,
+        notes: 'Prepped in glass containers on Sunday.'
+      },
+      {
+        id: 'scm_2',
+        name: 'My Breakfast Bowl',
+        mealType: 'Breakfast',
+        ingredients: ['Rolled oats (1/2 cup)', 'Chia seeds (1 tbsp)', 'Greek yogurt (1/2 cup)', 'Blueberries', 'Raw honey'],
+        calories: 360,
+        protein: 18,
+        carbs: 52,
+        fat: 8,
+        fiber: 10,
+        isEstimated: false,
+        isSharedToCommunity: false,
+        notes: 'Soaked overnight with almond milk.'
+      },
+      {
+        id: 'scm_3',
+        name: 'Creamy Pasta with Spinach',
+        mealType: 'Dinner',
+        ingredients: ['Wholewheat penne (100g)', 'Baby spinach (2 cups)', 'Cashew cream sauce', 'Garlic & nutritional yeast'],
+        calories: 520,
+        protein: 20,
+        carbs: 68,
+        fat: 16,
+        fiber: 9,
+        isEstimated: false,
+        isSharedToCommunity: false,
+        notes: 'Comforting warm plant-based dinner.'
+      }
+    ];
+  });
+
+  const [sharedCommunityMeals, setSharedCommunityMeals] = useState(() => {
+    const saved = localStorage.getItem('bed_shared_community_meals');
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 'com_m1',
+        name: 'Mediterranean Lemon Herb Salmon',
+        mealType: 'Dinner',
+        author: 'Maria S.',
+        ingredients: ['Wild salmon fillet (180g)', 'Asparagus spears', 'Quinoa', 'Lemon juice & olive oil', 'Fresh dill & oregano'],
+        calories: 510,
+        protein: 38,
+        carbs: 28,
+        fat: 26,
+        fiber: 6,
+        tags: ['High Protein', 'Omega-3', 'Anti-Inflammatory'],
+        notes: 'Baked at 200°C for 14 minutes on parchment paper.'
+      },
+      {
+        id: 'com_m2',
+        name: 'Tuna & Crunchy Celery Sandwich',
+        mealType: 'Lunch',
+        author: 'James K.',
+        ingredients: ['Canned albacore tuna', 'Crunchy celery & red onion', 'Greek yogurt (in place of mayo)', 'Sourdough slices', 'Dijon mustard'],
+        calories: 420,
+        protein: 36,
+        carbs: 42,
+        fat: 10,
+        fiber: 5,
+        tags: ['Quick Prep', 'High Protein', 'At Home'],
+        notes: 'Fresh, crunchy, and packed with steady energy.'
+      },
+      {
+        id: 'com_m3',
+        name: 'Golden Turmeric Tofu Scramble',
+        mealType: 'Breakfast',
+        author: 'Chloe L.',
+        ingredients: ['Firm tofu crumbled (200g)', 'Baby spinach', 'Cherry tomatoes', 'Turmeric, cumin & nutritional yeast', 'Avocado slice'],
+        calories: 330,
+        protein: 22,
+        carbs: 14,
+        fat: 18,
+        fiber: 7,
+        tags: ['Plant-Based', 'Iron Rich', 'Warm & Cozy'],
+        notes: 'Quick skillet breakfast in 10 minutes.'
+      }
+    ];
+  });
+
+  const editMeal = (mealId, updatedData) => {
+    setLoggedMeals(prev => prev.map(m => m.id === mealId ? { ...m, ...updatedData } : m));
+  };
+
+  const deleteMeal = (mealId) => {
+    setLoggedMeals(prev => prev.filter(m => m.id !== mealId));
+  };
+
+  const saveMealAsCustom = (mealData) => {
+    const newMeal = {
+      id: 'scm_' + Date.now(),
+      name: mealData.name || mealData.title || 'My Meal',
+      mealType: mealData.mealType || 'Lunch',
+      ingredients: mealData.ingredients || [],
+      calories: Number(mealData.calories) || 400,
+      protein: Number(mealData.protein) || 20,
+      carbs: Number(mealData.carbs) || 45,
+      fat: Number(mealData.fat) || 12,
+      fiber: Number(mealData.fiber) || 6,
+      isEstimated: !!mealData.isEstimated,
+      isSharedToCommunity: false,
+      notes: mealData.notes || '',
+      createdAt: Date.now()
+    };
+    setSavedCustomMeals(prev => [newMeal, ...prev]);
+    return newMeal;
+  };
+
+  const deleteCustomMeal = (mealId) => {
+    setSavedCustomMeals(prev => prev.filter(m => m.id !== mealId));
+  };
+
+  const editCustomMeal = (mealId, data) => {
+    setSavedCustomMeals(prev => prev.map(m => m.id === mealId ? { ...m, ...data } : m));
+  };
+
+  const toggleShareMealToCommunity = (mealId) => {
+    setSavedCustomMeals(prev => prev.map(m => {
+      if (m.id === mealId) {
+        const nextShared = !m.isSharedToCommunity;
+        if (nextShared) {
+          // Add to community
+          setSharedCommunityMeals(com => [{
+            id: 'com_' + Date.now(),
+            name: m.name,
+            mealType: m.mealType,
+            author: `${userProfile.name} (You)`,
+            ingredients: m.ingredients,
+            calories: m.calories,
+            protein: m.protein,
+            carbs: m.carbs,
+            fat: m.fat,
+            fiber: m.fiber,
+            tags: ['Community Recipe', 'Home Cooked'],
+            notes: m.notes || 'Shared by user'
+          }, ...com]);
+        }
+        return { ...m, isSharedToCommunity: nextShared };
+      }
+      return m;
+    }));
+  };
+
+  // 28. Vitamins & Nutritional Supplement Tracking
+  const [supplements, setSupplements] = useState(() => {
+    const saved = localStorage.getItem('bed_supplements');
+    return saved ? JSON.parse(saved) : [
+      { id: 'supp_1', name: 'Vitamin D3', amountPerDose: 1000, unit: 'IU', pillsPerDose: 1, form: 'Tablet', nutrientKey: 'vitaminD', timing: 'Morning with food' },
+      { id: 'supp_2', name: 'Magnesium Glycinate', amountPerDose: 200, unit: 'mg', pillsPerDose: 1, form: 'Capsule', nutrientKey: 'magnesium', timing: 'Evening before bed' },
+      { id: 'supp_3', name: 'Omega-3 (EPA/DHA)', amountPerDose: 1000, unit: 'mg', pillsPerDose: 1, form: 'Softgel', nutrientKey: 'omega3', timing: 'With lunch' }
+    ];
+  });
+
+  const [supplementLogs, setSupplementLogs] = useState(() => {
+    const saved = localStorage.getItem('bed_supplement_logs');
+    const todayStr = new Date().toISOString().split('T')[0];
+    return saved ? JSON.parse(saved) : [
+      { id: 'slog_1', supplementId: 'supp_1', name: 'Vitamin D3', amountPerDose: 1000, unit: 'IU', pillsPerDose: 1, date: todayStr, time: '08:30 AM', timestamp: Date.now() - 3600000 * 4 },
+      { id: 'slog_2', supplementId: 'supp_3', name: 'Omega-3 (EPA/DHA)', amountPerDose: 1000, unit: 'mg', pillsPerDose: 1, date: todayStr, time: '01:15 PM', timestamp: Date.now() - 3600000 * 1 }
+    ];
+  });
+
+  const addSupplement = (suppData) => {
+    const newSupp = {
+      id: 'supp_' + Date.now(),
+      name: suppData.name?.trim() || 'Supplement',
+      amountPerDose: Number(suppData.amountPerDose) || 1,
+      unit: suppData.unit || 'mg',
+      pillsPerDose: Number(suppData.pillsPerDose) || 1,
+      form: suppData.form || 'Capsule',
+      nutrientKey: suppData.nutrientKey || 'other',
+      timing: suppData.timing || 'Daily',
+      createdAt: Date.now()
+    };
+    setSupplements(prev => [...prev, newSupp]);
+    return newSupp;
+  };
+
+  const editSupplement = (id, suppData) => {
+    setSupplements(prev => prev.map(s => s.id === id ? { ...s, ...suppData } : s));
+  };
+
+  const deleteSupplement = (id) => {
+    setSupplements(prev => prev.filter(s => s.id !== id));
+  };
+
+  const logSupplementDose = (supplementId) => {
+    const supp = supplements.find(s => s.id === supplementId);
+    if (!supp) return null;
+
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const newLog = {
+      id: 'slog_' + Date.now(),
+      supplementId: supp.id,
+      name: supp.name,
+      amountPerDose: supp.amountPerDose,
+      unit: supp.unit,
+      pillsPerDose: supp.pillsPerDose,
+      date: todayStr,
+      time: timeStr,
+      timestamp: Date.now()
+    };
+
+    setSupplementLogs(prev => [newLog, ...prev]);
+    return newLog;
+  };
+
+  const getSupplementStats = (period = 'week') => {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
+
+    const filteredLogs = supplementLogs.filter(log => {
+      if (period === 'today') return log.date === todayStr;
+      if (period === 'week') return new Date(log.date) >= sevenDaysAgo;
+      return new Date(log.date) >= thirtyDaysAgo;
+    });
+
+    const suppMap = {};
+    supplements.forEach(supp => {
+      const logsForSupp = filteredLogs.filter(l => l.supplementId === supp.id || l.name === supp.name);
+      const isLoggedToday = supplementLogs.some(l => l.date === todayStr && (l.supplementId === supp.id || l.name === supp.name));
+      
+      let consistencyText = 'Ready to log';
+      if (period === 'today') {
+        consistencyText = isLoggedToday ? 'Taken today ✓' : 'Not logged today yet';
+      } else if (period === 'week') {
+        consistencyText = logsForSupp.length >= 5 
+          ? `${supp.name} was logged on most days this week.`
+          : logsForSupp.length > 0 
+            ? `${supp.name} logged ${logsForSupp.length} time${logsForSupp.length === 1 ? '' : 's'} this week.`
+            : `No logs this week yet.`;
+      } else {
+        consistencyText = logsForSupp.length >= 20 
+          ? `Consistent habit this month (${logsForSupp.length} doses logged).`
+          : `${logsForSupp.length} doses logged this month.`;
+      }
+
+      suppMap[supp.id] = {
+        supplement: supp,
+        dosesCount: logsForSupp.length,
+        isLoggedToday,
+        consistencyText
+      };
+    });
+
+    return {
+      totalDoses: filteredLogs.length,
+      suppMap,
+      filteredLogs
+    };
+  };
+
+  // 29. Rest & Night Recovery Sleep Logs (Smartwatch Sync & Manual Entry)
+  const [sleepLogs, setSleepLogs] = useState(() => {
+    const saved = localStorage.getItem('bed_sleep_logs');
+    const todayStr = new Date().toISOString().split('T')[0];
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 'sleep_today',
+        date: todayStr,
+        sleepTime: '23:00',
+        wakeTime: '07:00',
+        durationHours: 8.0,
+        quality: 'Rested',
+        source: 'synced', // 'synced' | 'manual'
+        deviceName: 'Smartwatch (Apple Watch / Garmin)',
+        deepSleep: '1h 45m',
+        remSleep: '2h 10m',
+        lightSleep: '4h 05m'
+      }
+    ];
+  });
+
+  const logSleepManual = ({ sleepTime = '23:00', wakeTime = '07:00', quality = 'Rested', date = null }) => {
+    const todayStr = date || new Date().toISOString().split('T')[0];
+    
+    // Auto-calculate duration from sleepTime (HH:MM) to wakeTime (HH:MM)
+    const [sH, sM] = sleepTime.split(':').map(Number);
+    const [wH, wM] = wakeTime.split(':').map(Number);
+
+    let startMin = sH * 60 + (sM || 0);
+    let endMin = wH * 60 + (wM || 0);
+    if (endMin <= startMin) {
+      endMin += 24 * 60; // Crosses midnight
+    }
+    const diffHours = Math.round(((endMin - startMin) / 60) * 10) / 10;
+
+    const newLog = {
+      id: 'sleep_' + Date.now(),
+      date: todayStr,
+      sleepTime,
+      wakeTime,
+      durationHours: diffHours,
+      quality,
+      source: 'manual',
+      deviceName: 'Manual Entry',
+      deepSleep: `${Math.round(diffHours * 0.22 * 10) / 10}h`,
+      remSleep: `${Math.round(diffHours * 0.28 * 10) / 10}h`,
+      lightSleep: `${Math.round(diffHours * 0.5 * 10) / 10}h`
+    };
+
+    setSleepLogs(prev => [newLog, ...prev.filter(l => l.date !== todayStr)]);
+    return newLog;
+  };
+
+  const syncDeviceSleep = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const syncedLog = {
+      id: 'sleep_' + Date.now(),
+      date: todayStr,
+      sleepTime: '22:45',
+      wakeTime: '06:50',
+      durationHours: 8.1,
+      quality: 'Optimal Recovery',
+      source: 'synced',
+      deviceName: 'Smartwatch (Apple Health / Garmin)',
+      deepSleep: '1h 50m',
+      remSleep: '2h 15m',
+      lightSleep: '4h 05m'
+    };
+    setSleepLogs(prev => [syncedLog, ...prev.filter(l => l.date !== todayStr)]);
+    return syncedLog;
+  };
+
+  // 30. Wellness Hub Visibility Sync (Home Overview & Hub navigation)
+  const [wellnessHubVisibility, setWellnessHubVisibility] = useState(() => {
+    const saved = localStorage.getItem('bed_wellness_hub_visibility');
+    return saved ? JSON.parse(saved) : {
+      move: true,
+      nourish: true,
+      hydrate: true,
+      rest: true,
+      mind: true,
+      soundscapes: true,
+      breathwork: true,
+      cycle: true,
+      calendar: true
+    };
+  });
+
+  const updateWellnessHubVisibility = (hubId, isVisible) => {
+    setWellnessHubVisibility(prev => {
+      const next = { ...prev, [hubId]: isVisible };
+      localStorage.setItem('bed_wellness_hub_visibility', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const setAllWellnessHubVisibility = (visibilityMap) => {
+    setWellnessHubVisibility(visibilityMap);
+    localStorage.setItem('bed_wellness_hub_visibility', JSON.stringify(visibilityMap));
+  };
+
+  // Persist new state to local storage
+  useEffect(() => {
+    localStorage.setItem('bed_saved_custom_meals', JSON.stringify(savedCustomMeals));
+  }, [savedCustomMeals]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_shared_community_meals', JSON.stringify(sharedCommunityMeals));
+  }, [sharedCommunityMeals]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_supplements', JSON.stringify(supplements));
+  }, [supplements]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_supplement_logs', JSON.stringify(supplementLogs));
+  }, [supplementLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_sleep_logs', JSON.stringify(sleepLogs));
+  }, [sleepLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_wellness_hub_visibility', JSON.stringify(wellnessHubVisibility));
+  }, [wellnessHubVisibility]);
 
   // Derive Better Every Day Score
   const betterEveryDayScore = calculateBetterEveryDayScore({
@@ -2008,6 +2407,27 @@ export function WellnessProvider({ children }) {
       setCompletedWorkouts,
       loggedMeals,
       logMeal,
+      editMeal,
+      deleteMeal,
+      savedCustomMeals,
+      saveMealAsCustom,
+      deleteCustomMeal,
+      editCustomMeal,
+      toggleShareMealToCommunity,
+      sharedCommunityMeals,
+      supplements,
+      supplementLogs,
+      addSupplement,
+      editSupplement,
+      deleteSupplement,
+      logSupplementDose,
+      getSupplementStats,
+      sleepLogs,
+      logSleepManual,
+      syncDeviceSleep,
+      wellnessHubVisibility,
+      updateWellnessHubVisibility,
+      setAllWellnessHubVisibility,
       cravingsLogs,
       logCraving,
       journalEntries,
@@ -2177,3 +2597,4 @@ export function WellnessProvider({ children }) {
 export function useWellness() {
   return useContext(WellnessContext);
 }
+

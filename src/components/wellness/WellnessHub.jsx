@@ -6,7 +6,9 @@ import RestHub from './rest/RestHub';
 import MindHub from '../mind/MindHub';
 import BreathworkHub from './breathwork/BreathworkHub';
 import CycleHub from './cycle/CycleHub';
+import SoundscapesHub from './soundscapes/SoundscapesHub';
 import WellnessCalendar from './calendar/WellnessCalendar';
+import { useWellness } from '../../context/WellnessContext';
 import {
   Footprints,
   Utensils,
@@ -16,6 +18,7 @@ import {
   Wind,
   Heart,
   Calendar as CalendarIcon,
+  Volume2,
   Compass
 } from 'lucide-react';
 
@@ -23,7 +26,8 @@ export const WELLNESS_CATEGORIES = [
   { id: 'move', label: 'Move', icon: Footprints, desc: 'Workouts & Steps', color: '#3a86c8' },
   { id: 'nourish', label: 'Nourish', icon: Utensils, desc: 'Meals & Recipes', color: '#d97736' },
   { id: 'hydrate', label: 'Hydrate', icon: Droplet, desc: 'Water & Rhythms', color: '#3a86c8' },
-  { id: 'rest', label: 'Rest', icon: Moon, desc: 'Sleep & Soundscapes', color: '#7b61ff' },
+  { id: 'rest', label: 'Rest', icon: Moon, desc: 'Sleep & Night Recovery', color: '#7b61ff' },
+  { id: 'soundscapes', label: 'Soundscapes', icon: Volume2, desc: 'Ambient Calm & Sleep Audio', color: '#7b61ff' },
   { id: 'mind', label: 'Mind', icon: Sparkles, desc: 'Gratitude & Mindset', color: '#8b5cf6' },
   { id: 'breathwork', label: 'Breathwork', icon: Wind, desc: 'Guided Regulation', color: '#40916c' },
   { id: 'cycle', label: 'Cycle', icon: Heart, desc: 'Hormone Sync', color: '#d64062' },
@@ -31,6 +35,7 @@ export const WELLNESS_CATEGORIES = [
 ];
 
 export default function WellnessHub({ initialCategory = 'move', onNavigateTab }) {
+  const { wellnessHubVisibility } = useWellness();
   const [activeCategory, setActiveCategory] = useState(initialCategory || 'move');
 
   useEffect(() => {
@@ -38,6 +43,11 @@ export default function WellnessHub({ initialCategory = 'move', onNavigateTab })
       setActiveCategory(initialCategory);
     }
   }, [initialCategory]);
+
+  const visibleCategories = WELLNESS_CATEGORIES.filter(cat => {
+    if (!wellnessHubVisibility) return true;
+    return wellnessHubVisibility[cat.id] !== false;
+  });
 
   return (
     <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
@@ -58,7 +68,7 @@ export default function WellnessHub({ initialCategory = 'move', onNavigateTab })
               <Compass size={12} /> Wellness Categories
             </span>
             <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-              Category → Feature
+              Explore Hubs & Features
             </span>
           </div>
 
@@ -77,7 +87,7 @@ export default function WellnessHub({ initialCategory = 'move', onNavigateTab })
             scrollbarWidth: 'none'
           }}
         >
-          {WELLNESS_CATEGORIES.map(cat => {
+          {visibleCategories.map(cat => {
             const Icon = cat.icon;
             const isActive = activeCategory === cat.id;
 
@@ -118,8 +128,9 @@ export default function WellnessHub({ initialCategory = 'move', onNavigateTab })
       <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
         {activeCategory === 'move' && <MoveHub />}
         {activeCategory === 'nourish' && <NourishHub />}
-        {activeCategory === 'hydrate' && <HydrateHub onNavigateTab={onNavigateTab} />}
-        {activeCategory === 'rest' && <RestHub onNavigateTab={onNavigateTab} />}
+        {activeCategory === 'hydrate' && <HydrateHub />}
+        {activeCategory === 'rest' && <RestHub onNavigateTab={cat => setActiveCategory(cat.toLowerCase())} />}
+        {activeCategory === 'soundscapes' && <SoundscapesHub />}
         {activeCategory === 'mind' && <MindHub />}
         {activeCategory === 'breathwork' && <BreathworkHub onNavigateTab={onNavigateTab} />}
         {activeCategory === 'cycle' && <CycleHub onNavigateTab={onNavigateTab} />}
@@ -129,3 +140,4 @@ export default function WellnessHub({ initialCategory = 'move', onNavigateTab })
     </div>
   );
 }
+

@@ -254,7 +254,7 @@ export default function JournalStudio() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.6rem' }}>
           {[
             { id: 'my_gratitude', label: '✍️ My Gratitude (What I Wrote)' },
-            { id: 'discovery', label: `🌱 Gratitude Discovery (${discoveredGratitude.filter(d => d.status === 'discovered').length} New)` },
+            { id: 'discovery', label: '🌱 Gratitude Discovery' },
             { id: 'comparison', label: '⚖️ Side-by-Side Comparison' },
             { id: 'trends', label: '📈 Gratitude Themes & Patterns' }
           ].map(sub => (

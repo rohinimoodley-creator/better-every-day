@@ -114,11 +114,11 @@ export default function SocialChallengesView() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', background: 'var(--bg-tertiary)', padding: '0.25rem', borderRadius: 'var(--radius-pill)' }}>
           {[
-            { id: 'challenges', label: `🎯 Challenges (${socialChallenges.length})` },
-            { id: 'feed', label: `💛 Social Feed & Cheers (${socialFeedPosts.length})` },
-            { id: 'leaderboard', label: `🏆 Safe Leaderboards` },
-            { id: 'badges', label: `🎖️ Badges (${userBadges.filter(b => b.unlocked).length}/${userBadges.length})` },
-            { id: 'themes', label: `🎨 Community Themes (${sharedCommunityThemes.length})` }
+            { id: 'challenges', label: '🎯 Challenges' },
+            { id: 'feed', label: '💛 Social Feed & Cheers' },
+            { id: 'leaderboard', label: '🏆 Safe Leaderboards' },
+            { id: 'badges', label: '🎖️ Badges' },
+            { id: 'themes', label: '🎨 Community Themes' }
           ].map(tab => (
             <button
               key={tab.id}

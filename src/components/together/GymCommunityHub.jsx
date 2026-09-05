@@ -173,10 +173,10 @@ export default function GymCommunityHub() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
           <div style={{ display: 'flex', gap: '0.35rem' }}>
             {[
-              { id: 'discussions', label: `💬 Discussions (${(community.discussions || []).length})` },
-              { id: 'tips', label: `💡 Tips & Tricks (${(community.tips || []).length})` },
-              { id: 'activities', label: `🏃 Group Activities (${(community.activities || []).length})` },
-              { id: 'members', label: `👥 Members (${(community.members || []).length})` }
+              { id: 'discussions', label: '💬 Discussions' },
+              { id: 'tips', label: '💡 Tips & Tricks' },
+              { id: 'activities', label: '🏃 Group Activities' },
+              { id: 'members', label: '👥 Members' }
             ].map(tab => (
               <button
                 key={tab.id}

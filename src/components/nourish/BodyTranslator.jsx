@@ -235,7 +235,7 @@ export default function BodyTranslator() {
             <div>
               <h4 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0 }}>Craving Reflections</h4>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                {cravingsLogs.length} saved mindful reflection(s)
+                Your saved mindful reflections and decoded signals.
               </span>
             </div>
 
@@ -245,12 +245,15 @@ export default function BodyTranslator() {
               style={{ gap: '0.35rem', fontSize: '0.78rem' }}
             >
               {showRecentCravings ? <EyeOff size={13} /> : <Eye size={13} />}
-              <span>{showRecentCravings ? 'Hide Recent Cravings' : `View Recent Cravings (${cravingsLogs.length})`}</span>
+              <span>{showRecentCravings ? 'Hide Craving Reflections' : 'View Craving Reflections'}</span>
             </button>
           </div>
 
           {showRecentCravings && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem', animation: 'fadeIn 0.2s ease-out' }}>
+              <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                {cravingsLogs.length} saved mindful {cravingsLogs.length === 1 ? 'reflection' : 'reflections'}
+              </div>
               {cravingsLogs.map(log => (
                 <div 
                   key={log.id}

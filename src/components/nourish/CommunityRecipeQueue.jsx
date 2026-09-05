@@ -90,7 +90,7 @@ export default function CommunityRecipeQueue({ isOpen, onClose }) {
               gap: '0.35rem'
             }}
           >
-            <ShieldCheck size={14} /> Moderation Queue ({moderationQueue.length})
+            <ShieldCheck size={14} /> Moderation Queue
           </button>
         </div>
 

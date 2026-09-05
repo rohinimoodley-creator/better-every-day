@@ -268,7 +268,7 @@ export default function BodySignalsModal({ isOpen, onClose }) {
         {/* Recent History Timeline */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
-            <strong style={{ fontSize: '0.9rem' }}>Recent Signal Timeline ({bodySignals.length}):</strong>
+            <strong style={{ fontSize: '0.9rem' }}>Recent Signal Timeline:</strong>
           </div>
 
           {bodySignals.length === 0 ? (

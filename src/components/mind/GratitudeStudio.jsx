@@ -222,7 +222,7 @@ export default function GratitudeStudio() {
                   Saved Gratitude Library
                 </h4>
                 <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
-                  {savedEntries.length} saved reflection {savedEntries.length === 1 ? 'entry' : 'entries'} in your private vault.
+                  Your private collection of appreciated moments.
                 </p>
               </div>
 
@@ -233,13 +233,18 @@ export default function GratitudeStudio() {
                 style={{ gap: '0.35rem', fontSize: '0.78rem' }}
               >
                 <Bookmark size={13} color="var(--accent-primary)" />
-                <span>{showSavedGratitude ? 'Hide Gratitude History' : `View My Gratitude (${savedEntries.length})`}</span>
+                <span>{showSavedGratitude ? 'Hide Gratitude History' : 'View Previous Gratitude'}</span>
               </button>
             </div>
 
             {/* Revealed Gratitude Entries */}
             {showSavedGratitude && (
               <div style={{ marginTop: '1.15rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.15rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    {savedEntries.length} saved {savedEntries.length === 1 ? 'reflection' : 'reflections'}
+                  </span>
+                </div>
                 {/* Search / Filter Input */}
                 <input
                   type="text"

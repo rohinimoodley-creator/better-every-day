@@ -272,7 +272,7 @@ export default function PetProfileModal({ isOpen, onClose }) {
         {/* Saved Pets List */}
         <div>
           <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.55rem' }}>
-            Your Pets ({petProfiles.length})
+            Your Pets
           </label>
 
           {petProfiles.length > 0 ? (

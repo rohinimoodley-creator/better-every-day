@@ -141,7 +141,7 @@ export default function CustomWorkoutModal({ isOpen, onClose, onSave }) {
           <div style={{ marginBottom: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                Exercises ({exercises.length})
+                Exercises in Routine
               </label>
               <button 
                 type="button" 

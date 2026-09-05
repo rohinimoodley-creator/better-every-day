@@ -184,7 +184,7 @@ export default function MealLogger() {
             className="btn btn-secondary btn-sm"
             style={{ fontSize: '0.78rem', gap: '0.35rem', padding: '0.35rem 0.65rem' }}
           >
-            <PieChart size={13} /> Review My Meals ({loggedMeals.length})
+            <PieChart size={13} /> Review My Meals
           </button>
 
           {/* Quick Log Button */}
@@ -434,9 +434,9 @@ export default function MealLogger() {
             {/* Timeframe Tabs: Today | This Week | This Month */}
             <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '0.25rem', borderRadius: 'var(--radius-pill)', marginBottom: '1.25rem' }}>
               {[
-                { id: 'today', label: `Today (${mealsByPeriod.today.length})` },
-                { id: 'week', label: `This Week (${mealsByPeriod.week.length})` },
-                { id: 'month', label: `This Month (${mealsByPeriod.month.length})` }
+                { id: 'today', label: 'Today' },
+                { id: 'week', label: 'This Week' },
+                { id: 'month', label: 'This Month' }
               ].map(tab => (
                 <button
                   key={tab.id}

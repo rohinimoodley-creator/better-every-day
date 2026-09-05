@@ -144,11 +144,11 @@ export default function TrustCentreHub() {
         }}
       >
         {[
-          { id: 'devices', label: `⌚ Connected Devices (${connectedDevices.filter(d => d.connected).length})` },
-          { id: 'tracked', label: `📊 What I Track` },
-          { id: 'integrity', label: `🔄 Data Integrity & Duplicates (${duplicateSuggestions.filter(d => d.status === 'pending').length})` },
-          { id: 'privacy', label: `🛡️ Privacy Boundaries` },
-          { id: 'export', label: `📦 Export & Account Erasure` }
+          { id: 'devices', label: '⌚ Connected Devices' },
+          { id: 'tracked', label: '📊 What I Track' },
+          { id: 'integrity', label: '🔄 Data Integrity & Duplicates' },
+          { id: 'privacy', label: '🛡️ Privacy Boundaries' },
+          { id: 'export', label: '📦 Export & Account Erasure' }
         ].map(tab => (
           <button
             key={tab.id}

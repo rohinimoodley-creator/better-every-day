@@ -104,7 +104,7 @@ export default function WellnessCircles() {
               cursor: 'pointer'
             }}
           >
-            🌱 Circles ({circles.length})
+            🌱 Circles
           </button>
           <button
             onClick={() => setActiveSection('relationships')}
@@ -119,7 +119,7 @@ export default function WellnessCircles() {
               cursor: 'pointer'
             }}
           >
-            👥 Friends & Follows ({relationships.length})
+            👥 Friends & Follows
           </button>
           <button
             onClick={() => setActiveSection('accountability')}
@@ -134,7 +134,7 @@ export default function WellnessCircles() {
               cursor: 'pointer'
             }}
           >
-            🎯 Accountability ({accountabilityPartners.length})
+            🎯 Accountability
           </button>
         </div>
 

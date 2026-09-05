@@ -97,7 +97,7 @@ export default function AIMemoryModal({ onClose }) {
         {/* List of Remembered Context Items */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
           <h4 style={{ fontSize: '0.88rem', margin: 0, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-            Stored Preferences ({aiMemories.length})
+            Stored Preferences
           </h4>
           {aiMemories.length > 0 && (
             <button

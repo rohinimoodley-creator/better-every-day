@@ -168,7 +168,7 @@ export default function MicroMovementSection() {
               </h3>
               {microMovementSettings.enabled ? (
                 <span className="pill-badge primary" style={{ fontSize: '0.66rem', padding: '2px 8px', fontWeight: 700 }}>
-                  {stats.breaksTodayCount} breaks today
+                  Active Habit 🌱
                 </span>
               ) : (
                 <span className="pill-badge" style={{ fontSize: '0.66rem', padding: '2px 8px', background: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}>
@@ -340,7 +340,7 @@ export default function MicroMovementSection() {
                     }}
                   >
                     <BookOpen size={12} />
-                    <span>Review Time Log History ({stats.totalLogsCount})</span>
+                    <span>Review Time Log History</span>
                   </button>
                 </div>
               </div>

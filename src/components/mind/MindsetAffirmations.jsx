@@ -173,7 +173,7 @@ export default function MindsetAffirmations() {
               Saved Affirmations Vault
             </h4>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
-              {favoriteAffirmations.length} saved {favoriteAffirmations.length === 1 ? 'affirmation' : 'affirmations'} bookmarked.
+              Your private collection of empowering affirmations.
             </p>
           </div>
 
@@ -184,13 +184,18 @@ export default function MindsetAffirmations() {
             style={{ gap: '0.35rem', fontSize: '0.78rem' }}
           >
             <Bookmark size={13} color="var(--accent-primary)" />
-            <span>{showSavedAffirmations ? 'Hide Saved Affirmations' : `View My Affirmations (${favoriteAffirmations.length})`}</span>
+            <span>{showSavedAffirmations ? 'Hide Saved Affirmations' : 'View Saved Affirmations'}</span>
           </button>
         </div>
 
         {/* Revealed Saved Affirmations */}
         {showSavedAffirmations && (
           <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                {favoriteAffirmations.length} saved {favoriteAffirmations.length === 1 ? 'affirmation' : 'affirmations'}
+              </span>
+            </div>
             {favoriteAffirmations.length > 0 ? (
               favoriteAffirmations.map((fav, i) => (
                 <div 

@@ -774,7 +774,7 @@ export default function RecordHub({ onNavigateTab }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <FileText size={16} color="var(--accent-primary)" />
                 <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                  Review Previous Entries ({journalEntries?.length || 0})
+                  Review Previous Entries
                 </span>
               </div>
               <div style={{ color: 'var(--text-muted)' }}>

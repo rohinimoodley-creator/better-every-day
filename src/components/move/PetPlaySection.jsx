@@ -275,7 +275,7 @@ export default function PetPlaySection() {
           }}
         >
           <BookOpen size={13} />
-          <span>Review Pet Play History ({petPlayLogs.length})</span>
+          <span>Review Pet Play History</span>
         </button>
       </div>
 

@@ -307,15 +307,15 @@ export default function WellnessIntelligenceHub({ onNavigateTab }) {
         }}
       >
         {[
-          { id: 'patterns', label: `🔎 Patterns (${report.patterns.length})` },
-          { id: 'progress', label: `📈 Progress (${report.progressSummary.length})` },
-          { id: 'gaps', label: `🌱 Gaps (${report.gaps.length})` },
-          { id: 'recommendations', label: `💡 Suggestions (${activeRecommendations.length})` },
-          { id: 'kudos', label: `🎉 Kudos (${report.kudos.length})` },
-          { id: 'alerts', label: `⚠️ Alerts (${activeAlerts.length})` },
-          { id: 'nutrition_craving', label: `🥗 Nutrition & Cravings` },
-          { id: 'gratitude', label: `💛 Gratitude Discovery` },
-          { id: 'my_story', label: `📖 My Wellness Story` }
+          { id: 'patterns', label: '🔎 Patterns' },
+          { id: 'progress', label: '📈 Progress' },
+          { id: 'gaps', label: '🌱 Gaps' },
+          { id: 'recommendations', label: '💡 Suggestions' },
+          { id: 'kudos', label: '🎉 Kudos' },
+          { id: 'alerts', label: '⚠️ Alerts' },
+          { id: 'nutrition_craving', label: '🥗 Nutrition & Cravings' },
+          { id: 'gratitude', label: '💛 Gratitude Discovery' },
+          { id: 'my_story', label: '📖 My Wellness Story' }
         ].map(tab => (
           <button
             key={tab.id}

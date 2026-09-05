@@ -148,7 +148,7 @@ export default function SocialCalendar() {
             cursor: 'pointer'
           }}
         >
-          📅 Confirmed Activities ({confirmedEvents.length})
+          📅 Confirmed Activities
         </button>
         <button
           onClick={() => setActiveSubTab('invitations')}
@@ -163,7 +163,7 @@ export default function SocialCalendar() {
             cursor: 'pointer'
           }}
         >
-          📥 Activity Invitations ({pendingInvitations.length})
+          📥 Activity Invitations
         </button>
       </div>
 

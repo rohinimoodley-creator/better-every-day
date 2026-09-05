@@ -172,7 +172,7 @@ export default function HomeScreen({ onNavigateTab }) {
                     style={{ fontSize: '0.68rem', cursor: 'pointer', padding: '2px 8px' }}
                     title="Tap to open Micro-Movement in Move Hub"
                   >
-                    🌱 {(getMicroMovementStats ? getMicroMovementStats().breaksTodayCount : 6)} movement breaks today
+                    🌱 30-30 Micro-Movement Active
                   </span>
                 )}
                 <span 

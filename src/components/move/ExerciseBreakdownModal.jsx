@@ -21,6 +21,48 @@ export const EXERCISE_BREAKDOWNS = {
       { id: '4', title: 'Return', desc: 'Slowly push through your feet to stand back up.' }
     ]
   },
+  march: {
+    id: 'march',
+    title: 'Marching in Place',
+    category: 'Gentle Cardio & Pacing',
+    icon: '🚶',
+    overview: 'Lift your knees and swing your arms rhythmically to boost circulation and energy.',
+    focusPoint: 'Stand tall and lift each knee to about hip level while swinging the opposite arm.',
+    steps: [
+      { id: '1', title: 'Get ready', desc: 'Stand tall with your feet about hip-width apart and arms relaxed.' },
+      { id: '2', title: 'Move', desc: 'Lift your left knee up to hip height while swinging your right arm forward.' },
+      { id: '3', title: 'Hold', desc: 'Pause briefly at the top of your march.' },
+      { id: '4', title: 'Switch', desc: 'Lower your left foot down and lift your right knee while swinging your left arm.' }
+    ]
+  },
+  heel_raise: {
+    id: 'heel_raise',
+    title: 'Heel & Calf Raises',
+    category: 'Ankles & Lower Body',
+    icon: '👟',
+    overview: 'Strengthen your calves and ankles with smooth, controlled upward lifts.',
+    focusPoint: 'Push straight up onto the balls of your feet and lower down with control.',
+    steps: [
+      { id: '1', title: 'Get ready', desc: 'Stand tall with feet flat on the floor, about hip-width apart. Rest hands on hips for balance.' },
+      { id: '2', title: 'Move', desc: 'Press into the balls of your feet and lift both heels high off the floor.' },
+      { id: '3', title: 'Hold', desc: 'Pause at the top for 1–2 seconds to feel your calves working.' },
+      { id: '4', title: 'Return', desc: 'Slowly lower your heels back flat onto the floor without slamming down.' }
+    ]
+  },
+  arm_swing: {
+    id: 'arm_swing',
+    title: 'Gentle Arm Swings',
+    category: 'Shoulders & Mobility',
+    icon: '🙆',
+    overview: 'Loosen your shoulders and upper back with relaxed, rhythmic swinging.',
+    focusPoint: 'Keep your shoulders relaxed and let your arms swing freely through their natural arc.',
+    steps: [
+      { id: '1', title: 'Get ready', desc: 'Stand tall with soft knees and let your arms hang loosely at your sides.' },
+      { id: '2', title: 'Move', desc: 'Swing both arms forward and up in front of your chest with a smooth, easy motion.' },
+      { id: '3', title: 'Hold', desc: 'Pause for a fraction of a second at the top of the swing.' },
+      { id: '4', title: 'Return', desc: 'Let your arms swing naturally down and slightly behind your hips.' }
+    ]
+  },
   pushup: {
     id: 'pushup',
     title: 'Push-Up (Wall or Floor)',

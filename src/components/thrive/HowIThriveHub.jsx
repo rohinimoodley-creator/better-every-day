@@ -17,8 +17,35 @@ import {
   Music,
   Clock,
   Upload,
-  Sparkles
+  Sparkles,
+  Footprints,
+  Utensils,
+  Droplet,
+  Moon,
+  Wind,
+  Heart,
+  Volume2,
+  Calendar as CalendarIcon,
+  ShieldCheck,
+  Check,
+  Eye,
+  EyeOff,
+  HelpCircle,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
+
+export const ALL_WELLNESS_HUBS = [
+  { id: 'move', label: 'Move', desc: 'Workouts, daily step tracking, and active pacing', icon: Footprints, color: '#3a86c8' },
+  { id: 'nourish', label: 'Nourish', desc: 'Meals, intuitive nourishment logs, and vitality balance', icon: Utensils, color: '#d97736' },
+  { id: 'hydrate', label: 'Hydrate', desc: 'Daily water intake & hydration flow', icon: Droplet, color: '#3a86c8' },
+  { id: 'rest', label: 'Rest', desc: 'Sleep logs, smartwatch sync, and nighttime recovery metrics', icon: Moon, color: '#7b61ff' },
+  { id: 'mind', label: 'Mind', desc: 'Gratitude reflections, mindset studio & daily reflections', icon: Sparkles, color: '#8b5cf6' },
+  { id: 'breathwork', label: 'Breathwork', desc: 'Calming nervous system regulation and guided breathing', icon: Wind, color: '#40916c' },
+  { id: 'cycle', label: 'Cycle', desc: 'Cycle phase syncing, energy tracking, and hormone wellness', icon: Heart, color: '#d64062' },
+  { id: 'soundscapes', label: 'Soundscapes', desc: 'Ambient audio, binaural calm, and restorative sleep sounds', icon: Volume2, color: '#7b61ff' },
+  { id: 'calendar', label: 'Calendar', desc: 'Wellness schedule, social events, and rhythm planning', icon: CalendarIcon, color: '#40916c' }
+];
 
 export default function HowIThriveHub() {
   const {
@@ -29,7 +56,9 @@ export default function HowIThriveHub() {
     smallStepState,
     overviewFrequency,
     updateOverviewFrequency,
-    overviewPillars
+    overviewPillars,
+    wellnessHubVisibility = {},
+    updateWellnessHubVisibility
   } = useWellness();
 
   const [activeTab, setActiveTab] = useState('rhythm');
@@ -811,76 +840,206 @@ export default function HowIThriveHub() {
       )}
 
       {/* =========================================================================
-          TAB 6: CONTENT FILTERS
+          TAB 6: CONTENT PREFERENCES & EXCLUSIONS (Master Control for Wellness Hubs)
           ========================================================================= */}
       {activeTab === 'content' && (
-        <div className="card-glass" style={{ padding: '1.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
-            Content Preferences & Exclusions 📝
-          </h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-            You control what categories appear in your recommendations, feeds, and searches. Private & non-diagnostic.
-          </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          
+          {/* 1. MASTER WELLNESS HUB AVAILABILITY */}
+          <div className="card-glass" style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
+              <span className="pill-badge primary" style={{ fontSize: '0.72rem' }}>
+                <ShieldCheck size={12} /> Master Control System
+              </span>
+            </div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
+              Master Wellness Hub Availability 🧭
+            </h3>
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: 1.45 }}>
+              Controls whether a wellness hub is active across Better Every Day. Turning a hub <strong>OFF</strong> removes it from the main Wellness Hub and <strong>automatically hides it from Home → Wellness Overview</strong>. Your historical data, logged metrics, and records are safely preserved and never deleted.
+            </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {CONTENT_CATEGORIES.map(cat => {
-              const prefs = howIThrive.contentPreferences || { showMore: [], showLess: [], hidden: [] };
-              const isHidden = prefs.hidden?.includes(cat.id);
-              const isMore = prefs.showMore?.includes(cat.id);
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {ALL_WELLNESS_HUBS.map(hub => {
+                const isHubActive = wellnessHubVisibility[hub.id] !== false;
+                const Icon = hub.icon;
+                const isShownOnOverview = (overviewPillars || []).includes(hub.id) && isHubActive;
 
-              return (
-                <div 
-                  key={cat.id}
-                  style={{
-                    background: isHidden ? 'rgba(0,0,0,0.03)' : 'var(--bg-tertiary)',
-                    padding: '0.75rem 1rem',
-                    borderRadius: 'var(--radius-md)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    opacity: isHidden ? 0.6 : 1
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontSize: '1.3rem' }}>{cat.icon}</span>
-                    <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>{cat.name}</span>
+                return (
+                  <div
+                    key={hub.id}
+                    style={{
+                      background: isHubActive ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
+                      border: isHubActive ? '1.5px solid var(--border-subtle)' : '1px dashed var(--border-subtle)',
+                      padding: '0.85rem 1.1rem',
+                      borderRadius: 'var(--radius-md)',
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.75rem',
+                      opacity: isHubActive ? 1 : 0.65,
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', maxWidth: '70%' }}>
+                      <div
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: '50%',
+                          background: isHubActive ? 'var(--bg-tertiary)' : 'var(--bg-primary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        <Icon size={18} color={isHubActive ? hub.color : 'var(--text-muted)'} />
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>
+                            {hub.label}
+                          </strong>
+                          <span
+                            style={{
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: 'var(--radius-pill)',
+                              background: isHubActive ? 'var(--accent-primary-light)' : 'var(--bg-primary)',
+                              color: isHubActive ? 'var(--accent-primary)' : 'var(--text-muted)',
+                              border: isHubActive ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)'
+                            }}
+                          >
+                            {isHubActive ? '● Active' : '○ Turned Off'}
+                          </span>
+                          {isHubActive && (
+                            <span
+                              style={{
+                                fontSize: '0.68rem',
+                                color: 'var(--text-muted)'
+                              }}
+                            >
+                              • {isShownOnOverview ? '🏠 Visible on Home' : '🏠 Hidden from Home'}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                          {hub.desc}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          updateWellnessHubVisibility(hub.id, !isHubActive);
+                          triggerSaveNotification();
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          padding: '0.4rem 0.85rem',
+                          borderRadius: 'var(--radius-pill)',
+                          border: isHubActive ? '1.5px solid var(--accent-primary)' : '1.5px solid var(--border-subtle)',
+                          background: isHubActive ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                          color: isHubActive ? 'var(--accent-primary)' : 'var(--text-primary)',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {isHubActive ? (
+                          <>
+                            <Check size={14} /> Active (ON)
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff size={14} /> Disabled (OFF)
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+          </div>
 
-                  <div style={{ display: 'flex', gap: '0.3rem' }}>
-                    <button
-                      onClick={() => handleToggleContentPreference(cat.id, 'showMore')}
-                      style={{
-                        padding: '0.25rem 0.55rem',
-                        borderRadius: 'var(--radius-pill)',
-                        border: isMore ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                        background: isMore ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
-                        color: isMore ? 'var(--accent-primary)' : 'var(--text-muted)',
-                        fontSize: '0.72rem',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      ⭐ Show More
-                    </button>
-                    <button
-                      onClick={() => handleToggleContentPreference(cat.id, 'hidden')}
-                      style={{
-                        padding: '0.25rem 0.55rem',
-                        borderRadius: 'var(--radius-pill)',
-                        border: isHidden ? '1px solid var(--accent-rose)' : '1px solid var(--border-subtle)',
-                        background: isHidden ? 'rgba(214, 64, 98, 0.15)' : 'var(--bg-secondary)',
-                        color: isHidden ? 'var(--accent-rose)' : 'var(--text-muted)',
-                        fontSize: '0.72rem',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {isHidden ? '🚫 Hidden' : 'Hide Topic'}
-                    </button>
+          {/* 2. TOPIC & RECOMMENDATION EXCLUSIONS */}
+          <div className="card-glass" style={{ padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
+              Topic & Recommendation Filters 📝
+            </h3>
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+              Fine-tune specific lifestyle topics and suggestions in your feeds and daily reflections.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {CONTENT_CATEGORIES.map(cat => {
+                const prefs = howIThrive.contentPreferences || { showMore: [], showLess: [], hidden: [] };
+                const isHidden = prefs.hidden?.includes(cat.id);
+                const isMore = prefs.showMore?.includes(cat.id);
+
+                return (
+                  <div 
+                    key={cat.id}
+                    style={{
+                      background: isHidden ? 'rgba(0,0,0,0.03)' : 'var(--bg-tertiary)',
+                      padding: '0.75rem 1rem',
+                      borderRadius: 'var(--radius-md)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      opacity: isHidden ? 0.6 : 1
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '1.3rem' }}>{cat.icon}</span>
+                      <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>{cat.name}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.3rem' }}>
+                      <button
+                        onClick={() => handleToggleContentPreference(cat.id, 'showMore')}
+                        style={{
+                          padding: '0.25rem 0.55rem',
+                          borderRadius: 'var(--radius-pill)',
+                          border: isMore ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                          background: isMore ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                          color: isMore ? 'var(--accent-primary)' : 'var(--text-muted)',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ⭐ Show More
+                      </button>
+                      <button
+                        onClick={() => handleToggleContentPreference(cat.id, 'hidden')}
+                        style={{
+                          padding: '0.25rem 0.55rem',
+                          borderRadius: 'var(--radius-pill)',
+                          border: isHidden ? '1px solid var(--accent-rose)' : '1px solid var(--border-subtle)',
+                          background: isHidden ? 'rgba(214, 64, 98, 0.15)' : 'var(--bg-secondary)',
+                          color: isHidden ? 'var(--accent-rose)' : 'var(--text-muted)',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {isHidden ? '🚫 Hidden' : 'Hide Topic'}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

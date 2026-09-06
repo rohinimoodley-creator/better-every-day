@@ -39,6 +39,7 @@ export default function HomeScreen({ onNavigateTab }) {
     updateOverviewFrequency,
     overviewPillars,
     updateOverviewPillars,
+    wellnessHubVisibility = {},
     microMovementSettings,
     getMicroMovementStats
   } = useWellness();
@@ -99,6 +100,10 @@ export default function HomeScreen({ onNavigateTab }) {
   };
 
   const activePillarsList = (overviewPillars || ['hydrate', 'move', 'nourish', 'rest', 'mind'])
+    .filter(id => {
+      if (id === 'steps') return wellnessHubVisibility?.move !== false;
+      return wellnessHubVisibility?.[id] !== false;
+    })
     .map(id => allPillarConfigs[id])
     .filter(Boolean);
 

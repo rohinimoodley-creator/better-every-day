@@ -82,15 +82,76 @@ export function WellnessProvider({ children }) {
     setUserProfile(prev => ({ ...prev, wellnessOverviewFrequency: freq }));
   };
 
-  // Customizable Weekly Overview Pillars
+  // Master Wellness Hub Visibility (Master Setting)
+  const [wellnessHubVisibility, setWellnessHubVisibility] = useState(() => {
+    const saved = localStorage.getItem('bed_wellness_hub_visibility');
+    return saved ? JSON.parse(saved) : {
+      move: true,
+      nourish: true,
+      hydrate: true,
+      rest: true,
+      mind: true,
+      soundscapes: true,
+      breathwork: true,
+      cycle: true,
+      calendar: true
+    };
+  });
+
+  // Customizable Weekly Overview Pillars (Secondary Display Preference)
   const [overviewPillars, setOverviewPillars] = useState(() => {
     const saved = localStorage.getItem('bed_overview_pillars');
-    return saved ? JSON.parse(saved) : ['hydrate', 'move', 'nourish', 'rest', 'mind'];
+    const parsed = saved ? JSON.parse(saved) : ['hydrate', 'move', 'nourish', 'rest', 'mind'];
+    const vSaved = localStorage.getItem('bed_wellness_hub_visibility');
+    const hubVisibility = vSaved ? JSON.parse(vSaved) : { move: true, nourish: true, hydrate: true, rest: true, mind: true };
+    return parsed.filter(id => {
+      if (id === 'steps') return hubVisibility.move !== false;
+      return hubVisibility[id] !== false;
+    });
   });
 
   const updateOverviewPillars = (pillars) => {
-    setOverviewPillars(pillars);
-    localStorage.setItem('bed_overview_pillars', JSON.stringify(pillars));
+    const validPillars = (pillars || []).filter(id => {
+      if (id === 'steps') return wellnessHubVisibility.move !== false;
+      return wellnessHubVisibility[id] !== false;
+    });
+    setOverviewPillars(validPillars);
+    localStorage.setItem('bed_overview_pillars', JSON.stringify(validPillars));
+  };
+
+  const updateWellnessHubVisibility = (hubId, isVisible) => {
+    setWellnessHubVisibility(prev => {
+      const next = { ...prev, [hubId]: isVisible };
+      localStorage.setItem('bed_wellness_hub_visibility', JSON.stringify(next));
+      return next;
+    });
+
+    // Master rule: If turned OFF in Wellness Hub, automatically turn OFF / hide from Home Overview
+    if (!isVisible) {
+      setOverviewPillars(prev => {
+        const nextPillars = prev.filter(p => {
+          if (hubId === 'move') return p !== 'move' && p !== 'steps';
+          return p !== hubId;
+        });
+        localStorage.setItem('bed_overview_pillars', JSON.stringify(nextPillars));
+        return nextPillars;
+      });
+    }
+  };
+
+  const setAllWellnessHubVisibility = (visibilityMap) => {
+    setWellnessHubVisibility(visibilityMap);
+    localStorage.setItem('bed_wellness_hub_visibility', JSON.stringify(visibilityMap));
+    
+    // Master rule: Automatically remove any disabled hubs from Home Overview
+    setOverviewPillars(prev => {
+      const nextPillars = prev.filter(p => {
+        if (p === 'steps') return visibilityMap.move !== false;
+        return visibilityMap[p] !== false;
+      });
+      localStorage.setItem('bed_overview_pillars', JSON.stringify(nextPillars));
+      return nextPillars;
+    });
   };
 
   // Interaction Mode ('guide_me' | 'explore' | 'decide_as_i_go')
@@ -2429,34 +2490,6 @@ export function WellnessProvider({ children }) {
     return syncedLog;
   };
 
-  // 30. Wellness Hub Visibility Sync (Home Overview & Hub navigation)
-  const [wellnessHubVisibility, setWellnessHubVisibility] = useState(() => {
-    const saved = localStorage.getItem('bed_wellness_hub_visibility');
-    return saved ? JSON.parse(saved) : {
-      move: true,
-      nourish: true,
-      hydrate: true,
-      rest: true,
-      mind: true,
-      soundscapes: true,
-      breathwork: true,
-      cycle: true,
-      calendar: true
-    };
-  });
-
-  const updateWellnessHubVisibility = (hubId, isVisible) => {
-    setWellnessHubVisibility(prev => {
-      const next = { ...prev, [hubId]: isVisible };
-      localStorage.setItem('bed_wellness_hub_visibility', JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const setAllWellnessHubVisibility = (visibilityMap) => {
-    setWellnessHubVisibility(visibilityMap);
-    localStorage.setItem('bed_wellness_hub_visibility', JSON.stringify(visibilityMap));
-  };
 
   // Persist new state to local storage
   useEffect(() => {

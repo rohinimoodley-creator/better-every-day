@@ -49,6 +49,13 @@ export default function WellnessHub({ initialCategory = 'move', onNavigateTab })
     return wellnessHubVisibility[cat.id] !== false;
   });
 
+  useEffect(() => {
+    // If activeCategory is not in visibleCategories, fallback to first visible category
+    if (visibleCategories.length > 0 && !visibleCategories.some(c => c.id === activeCategory)) {
+      setActiveCategory(visibleCategories[0].id);
+    }
+  }, [visibleCategories, activeCategory]);
+
   return (
     <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
       

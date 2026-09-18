@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AuthProvider } from './context/AuthContext';
 import { WellnessProvider } from './context/WellnessContext';
 import { AudioProvider } from './context/AudioContext';
 import Header from './components/common/Header';
@@ -150,10 +151,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <WellnessProvider>
-      <AudioProvider>
-        <AppContent />
-      </AudioProvider>
-    </WellnessProvider>
+    <AuthProvider>
+      <WellnessProvider>
+        <AudioProvider>
+          <AppContent />
+        </AudioProvider>
+      </WellnessProvider>
+    </AuthProvider>
   );
 }

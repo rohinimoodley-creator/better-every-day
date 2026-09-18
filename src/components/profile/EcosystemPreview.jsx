@@ -28,6 +28,15 @@ export default function EcosystemPreview() {
       badge: 'Desk Companion'
     },
     {
+      id: 'eco_mobile',
+      title: 'Native Android App (.apk)',
+      category: 'Mobile Application',
+      icon: '📱',
+      desc: 'Native Android experience with haptics, system status bar syncing, edge-to-edge support, and offline-first storage.',
+      badge: 'Available Now',
+      downloadUrl: './BetterEveryDay.apk'
+    },
+    {
       id: 'eco_4',
       title: 'Mascot Plushies, Enamel Pins & Sticker Packs',
       category: 'Wellness Merch',
@@ -82,7 +91,18 @@ export default function EcosystemPreview() {
 
             <div style={{ marginTop: '0.85rem', paddingTop: '0.65rem', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               <span>Category: {item.category}</span>
-              <span style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>Preview</span>
+              {item.downloadUrl ? (
+                <a
+                  href={item.downloadUrl}
+                  download="BetterEveryDay.apk"
+                  className="pill-badge primary"
+                  style={{ textDecoration: 'none', fontWeight: 700, fontSize: '0.72rem', padding: '0.2rem 0.6rem' }}
+                >
+                  ⬇️ Download APK
+                </a>
+              ) : (
+                <span style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>Preview</span>
+              )}
             </div>
           </div>
         ))}

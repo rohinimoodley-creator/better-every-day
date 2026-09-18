@@ -242,6 +242,36 @@ export default function WhatCanITrackDrawer({
           />
         </div>
 
+        {/* Download Android APK Banner */}
+        <a
+          href="./BetterEveryDay.apk"
+          download="BetterEveryDay.apk"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0.75rem 1rem',
+            margin: '0.65rem 1.25rem 0',
+            borderRadius: 'var(--radius-md)',
+            background: 'linear-gradient(135deg, rgba(45, 106, 79, 0.15) 0%, rgba(82, 183, 136, 0.1) 100%)',
+            border: '1px solid var(--accent-primary)',
+            color: 'var(--text-primary)',
+            textDecoration: 'none',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <span style={{ fontSize: '1.4rem' }}>📱</span>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.84rem' }}>Download Android App (.apk)</div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Direct install on your phone or tablet</div>
+            </div>
+          </div>
+          <span className="pill-badge primary" style={{ fontSize: '0.72rem', padding: '0.25rem 0.55rem' }}>
+            ⬇️ Download (5MB)
+          </span>
+        </a>
+
         {/* Scrollable Categories List */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0.75rem 1.25rem' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

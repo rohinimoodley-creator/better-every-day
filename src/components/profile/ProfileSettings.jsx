@@ -31,18 +31,19 @@ import {
   Key,
   Database,
   Lock,
-  Sun
+  Sun,
+  AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const YOU_SECTIONS = [
   { id: 'how_i_thrive', label: 'How I Thrive', icon: Sliders, desc: 'Adaptive Personalization' },
   { id: 'appearance', label: 'Appearance', icon: Palette, desc: 'Themes & Text Scaling' },
-  { id: 'privacy_data', label: 'Privacy & Data', icon: ShieldCheck, desc: 'Vault & PDF Export' },
-  { id: 'account', label: 'Account', icon: User, desc: 'Profile & Targets' }
+  { id: 'privacy_data', label: 'Privacy & Data Vault', icon: ShieldCheck, desc: 'Local-first controls & export' },
+  { id: 'account', label: 'Account', icon: User, desc: 'Personal profile, height & weight' }
 ];
 
-export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
+export default function ProfileSettings({ onNavigateTab, initialSection }) {
   const {
     userProfile,
     setUserProfile,
@@ -53,7 +54,8 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
     howIThrive,
     updateHowIThrive,
     toggleOneThingMode,
-    toggleLowEnergyMode
+    toggleLowEnergyMode,
+    evaluateWaterGoalSafety
   } = useWellness();
 
   // Normalize initialSection in case legacy links pass notifications/accessibility
@@ -68,12 +70,29 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
   const [isOverwhelmOpen, setIsOverwhelmOpen] = useState(false);
   const [isBreakItDownOpen, setIsBreakItDownOpen] = useState(false);
 
-  // Account State
+  // Account State (Personal Profile, Height & Weight)
   const [name, setName] = useState(userProfile.name || 'Rohini');
   const [goal, setGoal] = useState(userProfile.wellnessGoal || 'energy_vitality');
+  const [heightCm, setHeightCm] = useState(userProfile.heightCm || 168);
+  const [weightKg, setWeightKg] = useState(userProfile.weightKg || 64);
   const [hydrationGoal, setHydrationGoal] = useState(userProfile.hydrationGoalMl || 2250);
   const [stepGoal, setStepGoal] = useState(userProfile.stepGoal || 8000);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  React.useEffect(() => {
+    if (userProfile) {
+      if (userProfile.name) setName(userProfile.name);
+      if (userProfile.wellnessGoal) setGoal(userProfile.wellnessGoal);
+      if (userProfile.heightCm) setHeightCm(userProfile.heightCm);
+      if (userProfile.weightKg) setWeightKg(userProfile.weightKg);
+      if (userProfile.hydrationGoalMl) setHydrationGoal(userProfile.hydrationGoalMl);
+      if (userProfile.stepGoal) setStepGoal(userProfile.stepGoal);
+    }
+  }, [userProfile]);
+
+  const profileHydrationSafety = evaluateWaterGoalSafety 
+    ? evaluateWaterGoalSafety(hydrationGoal) 
+    : { status: 'normal', isLow: false, isHigh: false, estimatedTarget: 2250, suggestedGoal: 2250 };
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
@@ -81,6 +100,8 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
       ...prev,
       name,
       wellnessGoal: goal,
+      heightCm: Number(heightCm) || 168,
+      weightKg: Number(weightKg) || 64,
       hydrationGoalMl: Number(hydrationGoal),
       stepGoal: Number(stepGoal)
     }));
@@ -286,15 +307,21 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
           <TrustCentreHub />
         )}
 
-        {/* 3.8 ACCOUNT */}
+        {/* 3.4 ACCOUNT */}
         {activeSection === 'account' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <form onSubmit={handleSaveProfile} className="card-glass" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <User size={17} color="var(--accent-primary)" /> Profile & Wellness Baseline
-              </h3>
+              <div style={{ marginBottom: '1.15rem' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
+                  <User size={18} color="var(--accent-primary)" /> Account & Personal Profile
+                </h3>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
+                  Manage your personal identity, baseline physiological parameters, and daily wellness intentions.
+                </p>
+              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+              {/* 1. Personal Identity & Primary Intention */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
                     Your Name
@@ -305,37 +332,106 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
                     value={name}
                     onChange={e => setName(e.target.value)}
                     className="input-field"
+                    placeholder="Rohini"
                   />
                 </div>
 
                 <div>
                   <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
-                    Primary Wellness Goal
+                    Primary Wellness Intention
                   </label>
                   <select value={goal} onChange={e => setGoal(e.target.value)} className="select-field">
-                    <option value="energy_vitality">⚡ Energy & Vitality</option>
-                    <option value="stress_relief">🍃 Stress Relief & Calm</option>
+                    <option value="energy_vitality">⚡ Sustained Daytime Energy & Vitality</option>
+                    <option value="gentle_consistency">🌱 Gentle Daily Consistency & Routine</option>
+                    <option value="stress_reduction">🌿 Stress Reduction & Nervous System Calm</option>
                     <option value="movement_habits">🏃 Daily Movement Rhythm</option>
                     <option value="balanced_eating">🥗 Balanced Nourishment</option>
-                    <option value="better_sleep">🌙 Deeper Rest & Sleep</option>
+                    <option value="better_sleep">🌙 Deeper Rest & Sleep Recovery</option>
                   </select>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+              {/* 2. Baseline Physiological Parameters (Height & Weight) */}
+              <div style={{ background: 'var(--bg-secondary)', padding: '1.15rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', marginBottom: '1rem' }}>
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    Personal Baseline (Height & Weight)
+                  </div>
+                  <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                    Used exclusively to calibrate hydration pacing and exercise energy estimations.
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>
+                      Baseline Height (cm)
+                    </label>
+                    <input
+                      type="number"
+                      min="100"
+                      max="250"
+                      value={heightCm}
+                      onChange={e => setHeightCm(e.target.value)}
+                      className="input-field"
+                      placeholder="168"
+                    />
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
+                      e.g. 168 cm (~5'6")
+                    </span>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>
+                      Baseline Weight (kg)
+                    </label>
+                    <input
+                      type="number"
+                      min="30"
+                      max="300"
+                      value={weightKg}
+                      onChange={e => setWeightKg(e.target.value)}
+                      className="input-field"
+                      placeholder="64"
+                    />
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
+                      e.g. 64 kg (~141 lbs)
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '0.85rem', fontSize: '0.75rem', color: 'var(--text-muted)', borderLeft: '3px solid var(--accent-primary)', paddingLeft: '0.6rem', lineHeight: 1.4 }}>
+                  💡 <strong>Non-Judgmental Baseline:</strong> Height and weight are personal reference values for calculation calibration. They are never treated as mandatory daily weigh-in requirements, streak demands, or daily judgment metrics.
+                </div>
+              </div>
+
+              {/* 3. Daily Targets */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
                 <div>
                   <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
                     Daily Hydration Target (ml)
                   </label>
                   <input
                     type="number"
-                    min="1000"
-                    max="5000"
+                    min="500"
+                    max="6000"
                     step="250"
                     value={hydrationGoal}
                     onChange={e => setHydrationGoal(e.target.value)}
                     className="input-field"
                   />
+                  {profileHydrationSafety.isLow && (
+                    <div style={{ fontSize: '0.74rem', color: '#d97736', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <AlertCircle size={12} />
+                      <span>Looks a little low for your usual day (~{profileHydrationSafety.estimatedTarget} ml estimated).</span>
+                    </div>
+                  )}
+                  {profileHydrationSafety.isHigh && (
+                    <div style={{ fontSize: '0.74rem', color: '#e63946', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <AlertCircle size={12} />
+                      <span>Looks quite high for one day. Consider a more moderate goal (~{profileHydrationSafety.suggestedGoal} ml).</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -356,7 +452,7 @@ export default function ProfileSettings({ initialSection = 'how_i_thrive' }) {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <button type="submit" className="btn btn-primary">
-                  Save Profile Settings
+                  Save Account Settings
                 </button>
                 {savedSuccess && (
                   <span style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: 700 }}>

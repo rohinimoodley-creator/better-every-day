@@ -39,9 +39,14 @@ export function getPersonalizedRecommendations({ checkIn, userProfile, cycleInfo
   let smallStep = SMALL_STEPS_POOL[0];
   let mascotMessage = "Hey there! Let's make today a little gentler together.";
 
-  // 1. Evaluate Cycle Phase if enabled
+  // 1. Evaluate Cycle Phase if enabled and recommendations sync is ON
   let cycleSignal = null;
-  if (userProfile?.cycleTrackingEnabled && userProfile?.lastPeriodStart && !hiddenContent.includes('menstrual')) {
+  const isCycleSyncEnabled = Boolean(
+    userProfile?.cycleTrackingEnabled && 
+    userProfile?.syncCycleRecommendations !== false && 
+    !hiddenContent.includes('menstrual')
+  );
+  if (isCycleSyncEnabled && userProfile?.lastPeriodStart) {
     cycleSignal = getCyclePhaseInfo(userProfile.lastPeriodStart, userProfile.cycleLength || 28);
   }
 

@@ -40,6 +40,7 @@ export const ALL_WELLNESS_HUBS = [
   { id: 'nourish', label: 'Nourish', desc: 'Meals, intuitive nourishment logs, and vitality balance', icon: Utensils, color: '#d97736' },
   { id: 'hydrate', label: 'Hydrate', desc: 'Daily water intake & hydration flow', icon: Droplet, color: '#3a86c8' },
   { id: 'rest', label: 'Rest', desc: 'Sleep logs, smartwatch sync, and nighttime recovery metrics', icon: Moon, color: '#7b61ff' },
+  { id: 'skincare', label: 'Skincare', desc: 'Morning & evening skincare steps, product shelf & routine pacing', icon: Sparkles, color: '#e7a93b' },
   { id: 'mind', label: 'Mind', desc: 'Gratitude reflections, mindset studio & daily reflections', icon: Sparkles, color: '#8b5cf6' },
   { id: 'breathwork', label: 'Breathwork', desc: 'Calming nervous system regulation and guided breathing', icon: Wind, color: '#40916c' },
   { id: 'cycle', label: 'Cycle', desc: 'Cycle phase syncing, energy tracking, and hormone wellness', icon: Heart, color: '#d64062' },
@@ -105,7 +106,6 @@ export default function HowIThriveHub() {
   const [customPauseReason, setCustomPauseReason] = useState('');
 
   const tabs = [
-    { id: 'profile', label: '👤 Profile & Baseline', desc: 'Height, weight & goals' },
     { id: 'rhythm', label: '🌱 My Daily Rhythm', desc: 'Schedule & shifts' },
     { id: 'streaks', label: '🎯 Flexible Streaks', desc: 'Shame-free pauses' },
     { id: 'communication', label: '💬 Communication Tone', desc: 'Language & phrasing' },
@@ -183,111 +183,6 @@ export default function HowIThriveHub() {
           );
         })}
       </div>
-
-      {/* =========================================================================
-          TAB 1: PROFILE & WELLNESS BASELINE
-          ========================================================================= */}
-      {activeTab === 'profile' && (
-        <div className="card-glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-              <span className="pill-badge primary" style={{ fontSize: '0.72rem' }}>
-                👤 Personal Baseline
-              </span>
-            </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
-              Profile & Wellness Baseline 👤
-            </h3>
-            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0 }}>
-              Your basic profile information and physiological baseline parameters.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-            {/* Name Input */}
-            <div style={{ background: 'var(--bg-secondary)', padding: '1.1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.35rem' }}>
-                Your Name
-              </label>
-              <input
-                type="text"
-                value={userProfile.name || 'Rohini'}
-                onChange={e => {
-                  setUserProfile(prev => ({ ...prev, name: e.target.value }));
-                  triggerSaveNotification();
-                }}
-                className="input-field"
-                placeholder="Rohini"
-              />
-            </div>
-
-            {/* Wellness Goal */}
-            <div style={{ background: 'var(--bg-secondary)', padding: '1.1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.35rem' }}>
-                Primary Wellness Intention
-              </label>
-              <select
-                value={userProfile.wellnessGoal || 'energy_vitality'}
-                onChange={e => {
-                  setUserProfile(prev => ({ ...prev, wellnessGoal: e.target.value }));
-                  triggerSaveNotification();
-                }}
-                className="select-field"
-              >
-                <option value="energy_vitality">⚡ Sustained Daytime Energy & Vitality</option>
-                <option value="gentle_consistency">🌱 Gentle Daily Consistency & Routine</option>
-                <option value="stress_reduction">🌿 Stress Reduction & Nervous System Calm</option>
-                <option value="strength_mobility">🧘 Mobility, Balance & Functional Movement</option>
-                <option value="restful_sleep">🌙 Deeper Rest & Sleep Recovery</option>
-              </select>
-            </div>
-
-            {/* Baseline Height */}
-            <div style={{ background: 'var(--bg-secondary)', padding: '1.1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.35rem' }}>
-                Baseline Height (cm)
-              </label>
-              <input
-                type="number"
-                value={userProfile.heightCm || 168}
-                onChange={e => {
-                  setUserProfile(prev => ({ ...prev, heightCm: Number(e.target.value) || 168 }));
-                  triggerSaveNotification();
-                }}
-                className="input-field"
-                placeholder="168"
-              />
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
-                e.g. 168 cm (~5'6")
-              </span>
-            </div>
-
-            {/* Baseline Weight */}
-            <div style={{ background: 'var(--bg-secondary)', padding: '1.1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.35rem' }}>
-                Baseline Weight (kg)
-              </label>
-              <input
-                type="number"
-                value={userProfile.weightKg || 64}
-                onChange={e => {
-                  setUserProfile(prev => ({ ...prev, weightKg: Number(e.target.value) || 64 }));
-                  triggerSaveNotification();
-                }}
-                className="input-field"
-                placeholder="64"
-              />
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
-                e.g. 64 kg (~141 lbs)
-              </span>
-            </div>
-          </div>
-
-          <div style={{ background: 'var(--bg-tertiary)', padding: '0.9rem 1.1rem', borderRadius: 'var(--radius-sm)', fontSize: '0.78rem', color: 'var(--text-muted)', borderLeft: '3px solid var(--accent-primary)', lineHeight: 1.45 }}>
-            💡 <strong>Non-Judgmental Reference:</strong> Height and weight are stored exclusively as baseline parameters to calibrate hydration pacing and general metabolic estimations. They are never treated as performance targets or daily judgment metrics.
-          </div>
-        </div>
-      )}
 
       {/* =========================================================================
           TAB 2: MY DAILY RHYTHM

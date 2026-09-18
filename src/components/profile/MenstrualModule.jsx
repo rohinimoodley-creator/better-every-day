@@ -78,34 +78,69 @@ export default function MenstrualModule() {
           <div 
             style={{
               background: 'var(--bg-tertiary)',
-              border: '1px solid var(--border-subtle)',
-              padding: '0.9rem 1.1rem',
-              borderRadius: 'var(--radius-md)',
+              border: `1.5px solid ${syncCycleRecommendations ? 'rgba(214, 64, 98, 0.35)' : 'var(--border-subtle)'}`,
+              padding: '1rem 1.25rem',
+              borderRadius: 'var(--radius-lg)',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
+              flexDirection: 'column',
+              gap: '0.75rem',
               marginBottom: '1.25rem',
-              gap: '1rem'
+              transition: 'all 0.2s ease'
             }}
           >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)' }}>
-                <RefreshCw size={15} color="var(--accent-rose)" />
-                <span>Sync Recommendations With My Cycle</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <RefreshCw size={17} color="var(--accent-rose)" />
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <span style={{ fontWeight: 800, fontSize: '0.96rem', color: 'var(--text-primary)' }}>
+                      Sync Recommendations With My Cycle
+                    </span>
+                    <span 
+                      className={`pill-badge ${syncCycleRecommendations ? 'rose' : 'subtle'}`}
+                      style={{ fontSize: '0.68rem', padding: '1px 8px', fontWeight: 800 }}
+                    >
+                      {syncCycleRecommendations ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.2rem', lineHeight: 1.4 }}>
-                When enabled, Better Every Day offers supportive movement and nourishment suggestions aligned with your phase. You always retain full agency to accept, see, or skip any suggestion.
-              </div>
+
+              <label className="toggle-switch" style={{ flexShrink: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={syncCycleRecommendations}
+                  onChange={e => toggleSyncCycleRecommendations(e.target.checked)}
+                />
+                <span className="toggle-slider" />
+              </label>
             </div>
 
-            <label className="toggle-switch" style={{ flexShrink: 0 }}>
-              <input
-                type="checkbox"
-                checked={syncCycleRecommendations}
-                onChange={toggleSyncCycleRecommendations}
-              />
-              <span className="toggle-slider" />
-            </label>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>
+              {syncCycleRecommendations ? (
+                <>
+                  🌸 <strong>ON:</strong> Better Every Day uses your cycle phase as optional context for recommendations. Cycle-aware suggestions become available as an optional preview layer in <strong>Move 🏃</strong> and <strong>Nourish 🥗</strong> without automatically altering any workout or meal plans.
+                </>
+              ) : (
+                <>
+                  🔒 <strong>OFF:</strong> Cycle information will not influence Move or Nutrition recommendations, and cycle suggestion layers are hidden in those hubs. Your cycle tracking and calendar history remain fully active and private.
+                </>
+              )}
+            </p>
+
+            {syncCycleRecommendations && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: '0.25rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsDemoModalOpen(true)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.76rem', gap: '0.35rem', borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)', padding: '0.35rem 0.8rem' }}
+                >
+                  <Sparkles size={13} />
+                  <span>Preview Suggestion Layer in Move & Nourish</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Phase Card */}

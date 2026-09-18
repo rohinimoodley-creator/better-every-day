@@ -27,11 +27,11 @@ function calculateSleepDuration(sleepTimeStr, wakeTimeStr) {
   const [sH, sM] = sleepTimeStr.split(':').map(Number);
   const [wH, wM] = wakeTimeStr.split(':').map(Number);
 
-  let sTotal = sH * 60 + sM;
-  let wTotal = wH * 60 + wM;
+  let sTotal = sH * 60 + (sM || 0);
+  let wTotal = wH * 60 + (wM || 0);
 
   if (wTotal <= sTotal) {
-    wTotal += 24 * 60; // Next day
+    wTotal += 24 * 60; // Next day / crosses midnight
   }
 
   const diffMin = wTotal - sTotal;
@@ -53,21 +53,20 @@ export default function RestHub({ onNavigateTab }) {
     dailyCheckIn, 
     sleepLogs, 
     logSleepManual, 
-    syncDeviceSleep 
+    syncDeviceSleep,
+    dailyRhythm,
+    getWellnessDayInfo
   } = useWellness();
 
-  // Manual Sleep Form State
-  const [sleepTime, setSleepTime] = useState('22:45');
-  const [wakeTime, setWakeTime] = useState('07:15');
+  const rhythmInfo = getWellnessDayInfo ? getWellnessDayInfo() : { dayStartTime: '07:00', sleepTime: '23:00' };
+
+  // Manual Sleep Form State (defaults informed by user's daily rhythm)
+  const [sleepTime, setSleepTime] = useState(dailyRhythm?.sleepTime || '22:45');
+  const [wakeTime, setWakeTime] = useState(dailyRhythm?.dayStartTime || '07:15');
   const [sleepQuality, setSleepQuality] = useState('Deep & Restorative');
   const [showLogForm, setShowLogForm] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccessMsg, setSyncSuccessMsg] = useState('');
-
-  // Bedtime Routine Target
-  const [targetBedtime, setTargetBedtime] = useState('22:30');
-  const [targetWakeup, setTargetWakeup] = useState('07:00');
-  const [savedSuccess, setSavedSuccess] = useState(false);
 
   // Calculate live duration for form preview
   const liveDuration = useMemo(() => {
@@ -76,12 +75,13 @@ export default function RestHub({ onNavigateTab }) {
 
   const latestSleep = sleepLogs[0] || {
     hours: 7.5,
-    sleepTime: '22:45',
-    wakeTime: '07:15',
+    sleepTime: dailyRhythm?.sleepTime || '22:45',
+    wakeTime: dailyRhythm?.dayStartTime || '07:15',
     quality: 'Deep & Restorative',
     deepSleep: '1h 45m',
     rem: '2h 10m',
-    light: '3h 35m'
+    light: '3h 35m',
+    source: 'synced'
   };
 
   const handleSaveManualSleep = (e) => {
@@ -102,21 +102,12 @@ export default function RestHub({ onNavigateTab }) {
     setTimeout(() => {
       const synced = syncDeviceSleep();
       setIsSyncing(false);
-      setSyncSuccessMsg(`Synced with ${synced.source}! (${synced.hours} hrs logged)`);
+      setSyncSuccessMsg(`Synced with ${synced.deviceName || synced.source}! (${synced.durationHours || synced.hours} hrs logged)`);
       setTimeout(() => setSyncSuccessMsg(''), 3000);
       try {
         confetti({ particleCount: 30, spread: 50, origin: { y: 0.7 } });
       } catch(err) {}
     }, 1000);
-  };
-
-  const handleSaveRoutine = (e) => {
-    e.preventDefault();
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2500);
-    try {
-      confetti({ particleCount: 20, spread: 35, origin: { y: 0.7 } });
-    } catch(err) {}
   };
 
   return (
@@ -243,7 +234,7 @@ export default function RestHub({ onNavigateTab }) {
         </form>
       )}
 
-      {/* Sleep Quality Snapshot (Without Recovery Battery) */}
+      {/* Sleep Quality Snapshot */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
         
         {/* Latest Sleep Score Card */}
@@ -276,11 +267,16 @@ export default function RestHub({ onNavigateTab }) {
           </div>
 
           <div>
-            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
-              Last Logged Sleep
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.1rem' }}>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                Last Logged Sleep
+              </span>
+              <span className="pill-badge primary" style={{ fontSize: '0.62rem', padding: '1px 6px' }}>
+                {latestSleep.source === 'manual' ? 'Manual Entry' : 'Device Synced'}
+              </span>
             </div>
             <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.1rem 0' }}>
-              {latestSleep.hours} hrs
+              {latestSleep.durationHours || latestSleep.hours} hrs
             </div>
             <div style={{ fontSize: '0.76rem', color: 'var(--accent-calm)', fontWeight: 700 }}>
               ✨ {latestSleep.quality} ({latestSleep.sleepTime} → {latestSleep.wakeTime})
@@ -351,62 +347,17 @@ export default function RestHub({ onNavigateTab }) {
 
           <div style={{ background: 'var(--bg-secondary)', padding: '0.85rem', borderRadius: 'var(--radius-md)' }}>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>REM Sleep</span>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#3a86c8', marginTop: '0.2rem' }}>{latestSleep.rem || '2h 10m'}</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#3a86c8', marginTop: '0.2rem' }}>{latestSleep.remSleep || latestSleep.rem || '2h 10m'}</div>
             <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Memory & mood reset</span>
           </div>
 
           <div style={{ background: 'var(--bg-secondary)', padding: '0.85rem', borderRadius: 'var(--radius-md)' }}>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>Light Sleep</span>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-primary)', marginTop: '0.2rem' }}>{latestSleep.light || '3h 35m'}</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-primary)', marginTop: '0.2rem' }}>{latestSleep.lightSleep || latestSleep.light || '3h 35m'}</div>
             <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Restful baseline</span>
           </div>
         </div>
       </div>
-
-      {/* Bedtime Routine Target */}
-      <form onSubmit={handleSaveRoutine} className="card-glass" style={{ padding: '1.25rem' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: '0 0 0.85rem 0' }}>
-          Target Rest Rhythm
-        </h3>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem', marginBottom: '1rem' }}>
-          <div>
-            <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>
-              Target Wind-Down Bedtime
-            </label>
-            <input
-              type="time"
-              value={targetBedtime}
-              onChange={e => setTargetBedtime(e.target.value)}
-              className="input-field"
-            />
-          </div>
-
-          <div>
-            <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>
-              Target Wake-up Time
-            </label>
-            <input
-              type="time"
-              value={targetWakeup}
-              onChange={e => setTargetWakeup(e.target.value)}
-              className="input-field"
-            />
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button type="submit" className="btn btn-primary btn-sm">
-            Save Rest Rhythm
-          </button>
-          {savedSuccess && (
-            <span style={{ fontSize: '0.76rem', color: 'var(--accent-primary)', fontWeight: 700 }}>
-              ✓ Bedtime schedule updated!
-            </span>
-          )}
-        </div>
-      </form>
     </div>
   );
 }
-

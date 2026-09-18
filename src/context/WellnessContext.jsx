@@ -32,7 +32,11 @@ import {
   INITIAL_BADGES_DATABASE,
   INITIAL_SHARED_COMMUNITY_THEMES,
   INITIAL_SOCIAL_FEED_POSTS,
-  INITIAL_BODY_SIGNALS
+  INITIAL_BODY_SIGNALS,
+  DEFAULT_SKINCARE_PRODUCTS,
+  DEFAULT_SKINCARE_ROUTINES,
+  DEFAULT_SKINCARE_GOALS,
+  SKINCARE_CATEGORIES
 } from '../data/mockData';
 import { getPersonalizedRecommendations } from '../engine/personalization';
 import { calculateBetterEveryDayScore } from '../engine/scoreEngine';
@@ -94,7 +98,8 @@ export function WellnessProvider({ children }) {
       soundscapes: true,
       breathwork: true,
       cycle: true,
-      calendar: true
+      calendar: true,
+      skincare: true
     };
   });
 
@@ -2076,12 +2081,26 @@ export function WellnessProvider({ children }) {
     updateDailyRhythm({ customShifts: currentList.filter(s => s.id !== shiftId) });
   };
 
+  const toggleCycleTracking = (enabled) => {
+    setUserProfile(prev => ({
+      ...prev,
+      cycleTrackingEnabled: enabled,
+      syncCycleRecommendations: enabled ? (prev.syncCycleRecommendations !== false) : false
+    }));
+  };
+
   const toggleSyncCycleRecommendations = (val) => {
     setUserProfile(prev => ({
       ...prev,
       syncCycleRecommendations: typeof val === 'boolean' ? val : !prev.syncCycleRecommendations
     }));
   };
+
+  const isCycleSyncActive = Boolean(
+    userProfile?.cycleTrackingEnabled &&
+    wellnessHubVisibility?.cycle !== false &&
+    userProfile?.syncCycleRecommendations
+  );
 
   /**
    * Estimates an appropriate daily water goal and pacing based on:
@@ -2142,6 +2161,147 @@ export function WellnessProvider({ children }) {
       pacingText,
       targetMl: baseTargetMl,
       currentMl: hydrationMl
+    };
+  };
+
+  // Environmental / Hot Weather Context for Hydration
+  const [isHotWeather, setIsHotWeather] = useState(() => {
+    try {
+      return localStorage.getItem('bed_is_hot_weather') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const toggleHotWeather = () => {
+    setIsHotWeather(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('bed_is_hot_weather', String(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  /**
+   * Contextual Water Goal Safety Check:
+   * Evaluates if a selected daily water goal is unusually low or unusually high
+   * for the user's personal context (weight/body size, activity level, workouts/steps in Move,
+   * hot-weather context, My Daily Rhythm waking hours).
+   *
+   * Avoids false precision: uses gentle wellness guidance terminology (estimated, may be appropriate, looks low/high).
+   */
+  const evaluateWaterGoalSafety = (goalInput, options = {}) => {
+    const goalVal = parseInt(goalInput, 10);
+    if (!goalVal || isNaN(goalVal)) {
+      return { 
+        status: 'normal', 
+        isLow: false, 
+        isHigh: false, 
+        estimatedTarget: 2250, 
+        suggestedGoal: 2250,
+        contextKey: 'default' 
+      };
+    }
+
+    // 1. Contextual estimated baseline
+    let estimatedTarget = 2250;
+    
+    // Body size / weight modifier if available (approx. 30-35 ml per kg baseline)
+    if (userProfile?.weightKg && userProfile.weightKg >= 40) {
+      estimatedTarget = Math.round(userProfile.weightKg * 33);
+    }
+
+    // Baseline activity level modifier
+    const actLvl = userProfile?.activityLevel || 'moderate';
+    if (actLvl === 'very_active') {
+      estimatedTarget += 400;
+    } else if (actLvl === 'active') {
+      estimatedTarget += 250;
+    } else if (actLvl === 'sedentary') {
+      estimatedTarget -= 150;
+    }
+
+    // Recorded workouts / steps in Move today
+    let moveBuffer = 0;
+    if (activeWorkoutMinutes >= 45 || stepCount >= 10000) {
+      moveBuffer = 450;
+    } else if (activeWorkoutMinutes >= 20 || stepCount >= 6000) {
+      moveBuffer = 250;
+    }
+    estimatedTarget += moveBuffer;
+
+    // Hot-weather or environmental context where available
+    const hotActive = options.isHotWeather !== undefined ? options.isHotWeather : isHotWeather;
+    if (hotActive) {
+      estimatedTarget += 350;
+    }
+
+    // My Daily Rhythm waking hours context
+    try {
+      const rhythm = getWellnessDayInfo();
+      const [startH] = (rhythm.dayStartTime || '07:00').split(':').map(Number);
+      const [sleepH] = (rhythm.sleepTime || '23:00').split(':').map(Number);
+      const awakeHours = rhythm.isOvernight ? (24 - startH + sleepH) : (sleepH - startH);
+      if (awakeHours >= 17 || rhythm.isOvernight) {
+        estimatedTarget += 200; // Longer waking distribution requires slightly more fluid
+      } else if (awakeHours <= 13) {
+        estimatedTarget -= 100;
+      }
+    } catch (e) {}
+
+    // Clamp baseline between realistic bounds for general wellness
+    estimatedTarget = Math.max(1800, Math.min(3400, estimatedTarget));
+
+    // Dynamic contextual thresholds (not a single static number)
+    const minSafe = Math.max(1200, Math.round(estimatedTarget * 0.65));
+    const maxSafe = Math.min(4800, Math.max(3800, Math.round(estimatedTarget * 1.65)));
+
+    // Context key to track material changes in activity or environment
+    const activityTier = (activeWorkoutMinutes >= 30 || stepCount >= 8000) ? 'high' : 'standard';
+    const contextKey = `${goalVal}_act:${activityTier}_hot:${hotActive ? '1' : '0'}`;
+
+    if (goalVal < minSafe) {
+      return {
+        status: 'low',
+        isLow: true,
+        isHigh: false,
+        title: '💧 Your water goal looks a little low',
+        message: "This amount may be lower than what you need for your usual day. Consider increasing it slightly, especially if you're active or it's a hot day.",
+        estimatedTarget,
+        minSafe,
+        maxSafe,
+        suggestedGoal: estimatedTarget,
+        contextKey
+      };
+    }
+
+    if (goalVal > maxSafe) {
+      return {
+        status: 'high',
+        isLow: false,
+        isHigh: true,
+        title: '💧 Your water goal looks quite high',
+        message: "That's a lot of water for one day. Drinking excessive amounts of water too quickly can be unsafe. Consider choosing a more moderate goal.",
+        estimatedTarget,
+        minSafe,
+        maxSafe,
+        suggestedGoal: Math.min(3000, estimatedTarget),
+        contextKey
+      };
+    }
+
+    return {
+      status: 'normal',
+      isLow: false,
+      isHigh: false,
+      title: 'Healthy Hydration Target',
+      message: 'Your goal fits within your estimated daily wellness range.',
+      estimatedTarget,
+      minSafe,
+      maxSafe,
+      suggestedGoal: estimatedTarget,
+      contextKey
     };
   };
 
@@ -2490,6 +2650,229 @@ export function WellnessProvider({ children }) {
     return syncedLog;
   };
 
+  // 30. Skincare Routine & Product Shelf State
+  const [skincareProducts, setSkincareProducts] = useState(() => {
+    const saved = localStorage.getItem('bed_skincare_products');
+    return saved ? JSON.parse(saved) : DEFAULT_SKINCARE_PRODUCTS;
+  });
+
+  const [skincareRoutines, setSkincareRoutines] = useState(() => {
+    const saved = localStorage.getItem('bed_skincare_routines');
+    return saved ? JSON.parse(saved) : DEFAULT_SKINCARE_ROUTINES;
+  });
+
+  const [skincareLogs, setSkincareLogs] = useState(() => {
+    const saved = localStorage.getItem('bed_skincare_logs');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const [skincareGoals, setSkincareGoals] = useState(() => {
+    const saved = localStorage.getItem('bed_skincare_goals');
+    return saved ? JSON.parse(saved) : DEFAULT_SKINCARE_GOALS;
+  });
+
+  const [skincareSettings, setSkincareSettings] = useState(() => {
+    const saved = localStorage.getItem('bed_skincare_settings');
+    return saved ? JSON.parse(saved) : {
+      morningReminder: true,
+      eveningReminder: true,
+      showOnlyTodaySteps: false
+    };
+  });
+
+  const addSkincareProduct = (productData) => {
+    const newProduct = {
+      id: 'prod_' + Date.now(),
+      name: productData.name || 'New Product',
+      brand: productData.brand || '',
+      category: productData.category || 'custom',
+      icon: productData.icon || '🧴',
+      whenUsed: productData.whenUsed || 'both',
+      frequency: productData.frequency || 'daily',
+      scheduleDays: productData.scheduleDays || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      keyIngredients: productData.keyIngredients || [],
+      notes: productData.notes || '',
+      isFavorite: productData.isFavorite || false,
+      addedAt: new Date().toISOString().split('T')[0],
+      ...productData
+    };
+
+    setSkincareProducts(prev => [newProduct, ...prev]);
+
+    // Auto-link to appropriate routines
+    if (productData.whenUsed === 'morning' || productData.whenUsed === 'both') {
+      addSkincareStepToRoutine('morning', { productId: newProduct.id, customName: newProduct.name, notes: newProduct.notes });
+    }
+    if (productData.whenUsed === 'evening' || productData.whenUsed === 'both') {
+      addSkincareStepToRoutine('evening', { productId: newProduct.id, customName: newProduct.name, notes: newProduct.notes, scheduleDays: newProduct.scheduleDays });
+    }
+    if (productData.whenUsed === 'weekly') {
+      addSkincareStepToRoutine('weekly', { productId: newProduct.id, customName: newProduct.name, notes: newProduct.notes, scheduleDays: newProduct.scheduleDays });
+    }
+
+    return newProduct;
+  };
+
+  const updateSkincareProduct = (productId, updates) => {
+    setSkincareProducts(prev => prev.map(p => p.id === productId ? { ...p, ...updates } : p));
+  };
+
+  const deleteSkincareProduct = (productId) => {
+    setSkincareProducts(prev => prev.filter(p => p.id !== productId));
+    // Remove from all routines
+    setSkincareRoutines(prev => {
+      const next = { ...prev };
+      Object.keys(next).forEach(rKey => {
+        if (next[rKey]?.steps) {
+          next[rKey] = {
+            ...next[rKey],
+            steps: next[rKey].steps.filter(s => s.productId !== productId)
+          };
+        }
+      });
+      return next;
+    });
+  };
+
+  const toggleSkincareStepComplete = (routineKey, stepId, targetDate = null) => {
+    const dateStr = targetDate || new Date().toISOString().split('T')[0];
+    setSkincareLogs(prev => {
+      const dayLogs = prev[dateStr] || {};
+      const routineLogs = dayLogs[routineKey] || { completedSteps: [] };
+      const currentSteps = routineLogs.completedSteps || [];
+      const isCompleted = currentSteps.includes(stepId);
+      const updatedSteps = isCompleted ? currentSteps.filter(id => id !== stepId) : [...currentSteps, stepId];
+
+      return {
+        ...prev,
+        [dateStr]: {
+          ...dayLogs,
+          [routineKey]: {
+            ...routineLogs,
+            completedSteps: updatedSteps,
+            lastCompletedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }
+        }
+      };
+    });
+  };
+
+  const resetSkincareRoutineDay = (routineKey, targetDate = null) => {
+    const dateStr = targetDate || new Date().toISOString().split('T')[0];
+    setSkincareLogs(prev => {
+      const dayLogs = prev[dateStr] || {};
+      return {
+        ...prev,
+        [dateStr]: {
+          ...dayLogs,
+          [routineKey]: {
+            completedSteps: [],
+            lastCompletedAt: null
+          }
+        }
+      };
+    });
+  };
+
+  const addSkincareStepToRoutine = (routineKey, stepData) => {
+    setSkincareRoutines(prev => {
+      const routine = prev[routineKey] || { steps: [] };
+      const existingSteps = routine.steps || [];
+      const newStep = {
+        id: 'step_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        productId: stepData.productId,
+        customName: stepData.customName || 'Skincare Step',
+        order: existingSteps.length + 1,
+        notes: stepData.notes || '',
+        scheduleDays: stepData.scheduleDays || null,
+        ...stepData
+      };
+      return {
+        ...prev,
+        [routineKey]: {
+          ...routine,
+          steps: [...existingSteps, newStep]
+        }
+      };
+    });
+  };
+
+  const updateSkincareRoutineStep = (routineKey, stepId, updates) => {
+    setSkincareRoutines(prev => {
+      const routine = prev[routineKey];
+      if (!routine) return prev;
+      return {
+        ...prev,
+        [routineKey]: {
+          ...routine,
+          steps: routine.steps.map(s => s.id === stepId ? { ...s, ...updates } : s)
+        }
+      };
+    });
+  };
+
+  const removeSkincareStepFromRoutine = (routineKey, stepId) => {
+    setSkincareRoutines(prev => {
+      const routine = prev[routineKey];
+      if (!routine) return prev;
+      return {
+        ...prev,
+        [routineKey]: {
+          ...routine,
+          steps: routine.steps.filter(s => s.id !== stepId)
+        }
+      };
+    });
+  };
+
+  const reorderSkincareRoutineSteps = (routineKey, newSteps) => {
+    setSkincareRoutines(prev => {
+      const routine = prev[routineKey];
+      if (!routine) return prev;
+      return {
+        ...prev,
+        [routineKey]: {
+          ...routine,
+          steps: newSteps
+        }
+      };
+    });
+  };
+
+  const addSkincareRoutine = (key, routineData) => {
+    const routineKey = key || 'custom_' + Date.now();
+    setSkincareRoutines(prev => ({
+      ...prev,
+      [routineKey]: {
+        id: routineKey,
+        name: routineData.name || 'Custom Routine',
+        shortTitle: routineData.shortTitle || routineData.name || 'Custom',
+        icon: routineData.icon || '✨',
+        targetTime: routineData.targetTime || 'Flexible',
+        reminderText: routineData.reminderText || 'Your skincare routine is ready.',
+        isCustom: true,
+        steps: routineData.steps || []
+      }
+    }));
+    return routineKey;
+  };
+
+  const deleteSkincareRoutine = (routineKey) => {
+    if (routineKey === 'morning' || routineKey === 'evening') return;
+    setSkincareRoutines(prev => {
+      const next = { ...prev };
+      delete next[routineKey];
+      return next;
+    });
+  };
+
+  const updateSkincareGoals = (goalsList) => {
+    setSkincareGoals(goalsList);
+  };
+
+  const updateSkincareSettings = (updates) => {
+    setSkincareSettings(prev => ({ ...prev, ...updates }));
+  };
 
   // Persist new state to local storage
   useEffect(() => {
@@ -2515,6 +2898,26 @@ export function WellnessProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('bed_wellness_hub_visibility', JSON.stringify(wellnessHubVisibility));
   }, [wellnessHubVisibility]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_skincare_products', JSON.stringify(skincareProducts));
+  }, [skincareProducts]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_skincare_routines', JSON.stringify(skincareRoutines));
+  }, [skincareRoutines]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_skincare_logs', JSON.stringify(skincareLogs));
+  }, [skincareLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_skincare_goals', JSON.stringify(skincareGoals));
+  }, [skincareGoals]);
+
+  useEffect(() => {
+    localStorage.setItem('bed_skincare_settings', JSON.stringify(skincareSettings));
+  }, [skincareSettings]);
 
   // Derive Better Every Day Score
   const betterEveryDayScore = calculateBetterEveryDayScore({
@@ -2749,8 +3152,13 @@ export function WellnessProvider({ children }) {
       showMealSummary,
       setShowMealSummary,
       toggleMealSummary,
+      isCycleSyncActive,
+      toggleCycleTracking,
       toggleSyncCycleRecommendations,
       getWaterRecommendation,
+      evaluateWaterGoalSafety,
+      isHotWeather,
+      toggleHotWeather,
       microMovementSettings,
       microMovementLogs,
       toggleMicroMovement,
@@ -2781,7 +3189,25 @@ export function WellnessProvider({ children }) {
       deleteCustomExercise,
       socialActivities,
       logSocialActivity,
-      deleteSocialActivity
+      deleteSocialActivity,
+      skincareProducts,
+      skincareRoutines,
+      skincareLogs,
+      skincareGoals,
+      skincareSettings,
+      addSkincareProduct,
+      updateSkincareProduct,
+      deleteSkincareProduct,
+      toggleSkincareStepComplete,
+      resetSkincareRoutineDay,
+      addSkincareStepToRoutine,
+      updateSkincareRoutineStep,
+      removeSkincareStepFromRoutine,
+      reorderSkincareRoutineSteps,
+      addSkincareRoutine,
+      deleteSkincareRoutine,
+      updateSkincareGoals,
+      updateSkincareSettings
     }}>
       {children}
     </WellnessContext.Provider>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useWellness } from '../../context/WellnessContext';
-import { X, Check, Sparkles, MapPin, Calendar, Clock, Plus, Tag } from 'lucide-react';
+import { X, Check, Sparkles, MapPin, Calendar, Clock, Plus, Trash2, ChevronDown, ChevronUp, History } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const POPULAR_ACTIVITIES = [
@@ -20,7 +20,7 @@ const POPULAR_ACTIVITIES = [
 ];
 
 export default function SocialActivityModal({ isOpen, onClose }) {
-  const { logSocialActivity, setActiveWorkoutMinutes } = useWellness();
+  const { logSocialActivity, setActiveWorkoutMinutes, socialActivities = [], deleteSocialActivity } = useWellness();
 
   const [selectedPreset, setSelectedPreset] = useState('hiking');
   const [isCustom, setIsCustom] = useState(false);
@@ -31,6 +31,7 @@ export default function SocialActivityModal({ isOpen, onClose }) {
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
   const [savedMessage, setSavedMessage] = useState('');
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false); // Hidden by default
 
   if (!isOpen) return null;
 
@@ -84,7 +85,7 @@ export default function SocialActivityModal({ isOpen, onClose }) {
         className="modal-sheet card-glass" 
         onClick={e => e.stopPropagation()} 
         style={{ 
-          maxWidth: 520, 
+          maxWidth: 540, 
           maxHeight: '90vh', 
           overflowY: 'auto',
           borderRadius: 'var(--radius-xl)',
@@ -95,7 +96,7 @@ export default function SocialActivityModal({ isOpen, onClose }) {
         }}
       >
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <span className="pill-badge primary" style={{ fontSize: '0.72rem', padding: '2px 8px', fontWeight: 800 }}>
               <Sparkles size={12} /> Recreational & Social Movement
@@ -122,19 +123,20 @@ export default function SocialActivityModal({ isOpen, onClose }) {
         </div>
 
         <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.25rem 0', color: 'var(--text-primary)' }}>
-          Log Social & Outdoor Activity 🤝
+          Social Activity ⛷️
         </h3>
         <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0 0 1.25rem 0', lineHeight: 1.45 }}>
-          Record fun, social, or seasonal physical activities that don't fit into traditional workouts. No calories, intensity scores, or judgment.
+          Record fun, social, seasonal, or recreational activities that don't fit into traditional workouts. No calories, intensity scores, or competitive metrics.
         </p>
 
+        {/* 1. Add Social Activity Form */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
           {/* Activity Presets Grid */}
           <div>
             <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>
               Choose an Activity:
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '0.4rem', maxHeight: '170px', overflowY: 'auto', padding: '2px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(115px, 1fr))', gap: '0.4rem', maxHeight: '170px', overflowY: 'auto', padding: '2px' }}>
               {POPULAR_ACTIVITIES.map(preset => {
                 const active = !isCustom && selectedPreset === preset.id;
                 return (
@@ -262,7 +264,7 @@ export default function SocialActivityModal({ isOpen, onClose }) {
                 type="text"
                 value={location}
                 onChange={e => setLocation(e.target.value)}
-                placeholder="e.g. Pine Valley Trail, With family"
+                placeholder="e.g. Pine Valley Trail, With friends"
                 className="input-field"
                 style={{ fontSize: '0.82rem' }}
               />
@@ -270,13 +272,13 @@ export default function SocialActivityModal({ isOpen, onClose }) {
 
             <div>
               <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>
-                Notes / Experience (Optional)
+                Notes / Context (Optional)
               </label>
               <input
                 type="text"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
-                placeholder="e.g. Great weather, felt refreshed and happy"
+                placeholder="e.g. Sunny day, felt refreshed and energized"
                 className="input-field"
                 style={{ fontSize: '0.82rem' }}
               />
@@ -290,7 +292,7 @@ export default function SocialActivityModal({ isOpen, onClose }) {
           )}
 
           {/* Submit Buttons */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
             <button
               type="submit"
               className="btn btn-primary"
@@ -307,7 +309,99 @@ export default function SocialActivityModal({ isOpen, onClose }) {
             </button>
           </div>
         </form>
+
+        {/* 2. Collapsible Show / Hide History (Hidden by Default) */}
+        <div style={{ marginTop: '1.4rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+          <button
+            type="button"
+            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: isHistoryOpen ? 'var(--bg-tertiary)' : 'transparent',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-md)',
+              padding: '0.65rem 0.95rem',
+              color: 'var(--text-primary)',
+              fontSize: '0.84rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <History size={15} color="var(--accent-primary)" />
+              <span>
+                {isHistoryOpen ? 'Hide History' : `Show History (${socialActivities.length})`}
+              </span>
+            </div>
+            {isHistoryOpen ? <ChevronUp size={16} color="var(--text-muted)" /> : <ChevronDown size={16} color="var(--text-muted)" />}
+          </button>
+
+          {isHistoryOpen && (
+            <div style={{ marginTop: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', animation: 'fadeIn 0.2s ease-out' }}>
+              {socialActivities.length === 0 ? (
+                <div style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                  No previous social activities logged yet.
+                </div>
+              ) : (
+                socialActivities.map(act => (
+                  <div
+                    key={act.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.7rem 0.9rem',
+                      background: 'var(--bg-secondary)',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border-subtle)',
+                      gap: '0.6rem'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                      <span style={{ fontSize: '1.3rem' }}>{act.icon || '🏃'}</span>
+                      <div>
+                        <div style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                          {act.name || act.activityName}
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginTop: '0.15rem' }}>
+                          <span>⏱️ {act.durationMinutes} mins</span>
+                          {act.date && <span>📅 {act.date}</span>}
+                          {act.location && <span>📍 {act.location}</span>}
+                          {act.notes && <span>💬 {act.notes}</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteSocialActivity && deleteSocialActivity(act.id)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        padding: '0.35rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: '4px',
+                        transition: 'color 0.15s ease'
+                      }}
+                      title="Delete activity record"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+

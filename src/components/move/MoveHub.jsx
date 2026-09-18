@@ -11,7 +11,7 @@ import BeginnerPlanFlowModal from './BeginnerPlanFlowModal';
 import ExercisePlansSection from './ExercisePlansSection';
 import ActivityTracker from './ActivityTracker';
 import SocialActivityModal from './SocialActivityModal';
-import ContextualPip from '../mascot/ContextualPip';
+import { getCyclePhaseInfo } from '../../engine/cycleEngine';
 import { 
   Zap, 
   Sparkles, 
@@ -22,12 +22,16 @@ import {
   Activity,
   ArrowRight,
   ShieldCheck,
-  Plus,
-  Trash2
+  Plus
 } from 'lucide-react';
 
 export default function MoveHub() {
-  const { completedWorkouts, setCompletedWorkouts, socialActivities, deleteSocialActivity } = useWellness();
+  const { 
+    completedWorkouts, 
+    setCompletedWorkouts, 
+    userProfile,
+    isCycleSyncActive
+  } = useWellness();
 
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
@@ -37,8 +41,12 @@ export default function MoveHub() {
   const [isSocialModalOpen, setIsSocialModalOpen] = useState(false);
   const [isBeginnerPlanModalOpen, setIsBeginnerPlanModalOpen] = useState(false);
   const [isMicroMovementOpen, setIsMicroMovementOpen] = useState(false);
+  const [isCyclePreviewOpen, setIsCyclePreviewOpen] = useState(false);
   const [isStrategyOpen, setIsStrategyOpen] = useState(false);
-  const [isTrackerOpen, setIsTrackerOpen] = useState(false);
+
+  const cycleInfo = isCycleSyncActive && userProfile?.lastPeriodStart
+    ? getCyclePhaseInfo(userProfile.lastPeriodStart, userProfile.cycleLength || 28)
+    : null;
 
   const handleWorkoutComplete = (workoutId) => {
     if (!completedWorkouts.includes(workoutId)) {
@@ -53,29 +61,19 @@ export default function MoveHub() {
   return (
     <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.4rem', paddingBottom: '3.5rem' }}>
       
-      {/* 1. Header with Calm Contextual Pip */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-            <span className="pill-badge primary" style={{ fontSize: '0.72rem' }}>
-              <Zap size={12} /> Movement & Pacing
-            </span>
-          </div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0, color: 'var(--text-primary)' }}>
-            MOVE 🏃
-          </h2>
-          <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
-            Listen to your body, celebrate gentle consistency, and move freely.
-          </p>
+      {/* 1. Header */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
+          <span className="pill-badge primary" style={{ fontSize: '0.72rem' }}>
+            <Zap size={12} /> Movement & Pacing
+          </span>
         </div>
-
-        <ContextualPip
-          context="move"
-          size={58}
-          mood="calm"
-          message="One gentle step at a time 🌱"
-          showSpeechBubble={false}
-        />
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0, color: 'var(--text-primary)' }}>
+          MOVE 🏃
+        </h2>
+        <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
+          Listen to your body, celebrate gentle consistency, and move freely.
+        </p>
       </div>
 
       {/* ========================================================================= */}
@@ -206,6 +204,111 @@ export default function MoveHub() {
       )}
 
       {/* ========================================================================= */}
+      {/* 🌸 OPTIONAL PREVIEW SUGGESTION LAYER (Only when Cycle Sync is ON)         */}
+      {/* ========================================================================= */}
+      {isCycleSyncActive && cycleInfo && (
+        <div 
+          className="card-glass" 
+          style={{
+            padding: '1.1rem 1.35rem',
+            background: 'linear-gradient(135deg, rgba(214, 64, 98, 0.06) 0%, rgba(123, 97, 255, 0.06) 100%)',
+            border: '1.5px solid rgba(214, 64, 98, 0.28)',
+            borderRadius: 'var(--radius-lg)',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <div 
+            onClick={() => setIsCyclePreviewOpen(!isCyclePreviewOpen)}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              cursor: 'pointer',
+              userSelect: 'none'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div 
+                style={{ 
+                  width: 38, 
+                  height: 38, 
+                  borderRadius: '50%', 
+                  background: 'rgba(214, 64, 98, 0.15)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  fontSize: '1.2rem',
+                  flexShrink: 0
+                }}
+              >
+                {cycleInfo.icon}
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.1rem' }}>
+                  <span className="pill-badge rose" style={{ fontSize: '0.66rem', padding: '1px 6px', fontWeight: 800 }}>
+                    🌸 Preview Suggestion Layer
+                  </span>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {cycleInfo.phase} Phase • Day {cycleInfo.day} of {cycleInfo.totalDays}
+                  </span>
+                </div>
+                <h4 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Preview Cycle-Aware Suggestions
+                </h4>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--accent-rose)' }}>
+                {isCyclePreviewOpen ? 'Hide Preview' : 'View Preview'}
+              </span>
+              {isCyclePreviewOpen ? <ChevronUp size={16} color="var(--accent-rose)" /> : <ChevronDown size={16} color="var(--accent-rose)" />}
+            </div>
+          </div>
+
+          {isCyclePreviewOpen && (
+            <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(214, 64, 98, 0.18)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.85rem', animation: 'fadeIn 0.2s ease-out' }}>
+              
+              {/* Current Plan vs Cycle-Aware Preview Side-by-Side */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem' }}>
+                <div style={{ background: 'var(--bg-secondary)', padding: '0.9rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
+                    Current Move Plan
+                  </div>
+                  <p style={{ fontSize: '0.84rem', color: 'var(--text-primary)', margin: 0, fontWeight: 700 }}>
+                    Your usual plan remains unchanged.
+                  </p>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block', lineHeight: 1.35 }}>
+                    Your workout plans, difficulty settings, and streak goals are never automatically replaced.
+                  </span>
+                </div>
+
+                <div style={{ background: 'rgba(214, 64, 98, 0.08)', padding: '0.9rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(214, 64, 98, 0.3)' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-rose)', textTransform: 'uppercase', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Sparkles size={12} /> 🌸 Cycle-Aware Preview
+                  </div>
+                  <p style={{ fontSize: '0.84rem', color: 'var(--text-primary)', margin: 0, fontWeight: 700 }}>
+                    Based on your current cycle phase ({cycleInfo.phase}):
+                  </p>
+                  <p style={{ fontSize: '0.79rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0', lineHeight: 1.45 }}>
+                    {cycleInfo.workoutGuidance}
+                  </p>
+                </div>
+              </div>
+
+              {/* Explicit User Agency Guarantee */}
+              <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.45rem', lineHeight: 1.4 }}>
+                <ShieldCheck size={15} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+                <span>
+                  <strong>Preview only.</strong> You remain in full control of what activity you choose today. Feel free to follow your usual routine, scale down, or rest as feels right for your body.
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
       {/* 3. INTERACTIVE MOVEMENT HIERARCHY                                         */}
       {/* 1. Quick Start 🌱 | 2. Outdoor & Indoor Activity 🌳 | 3. Exercise Strategy 🧩 */}
       {/* ========================================================================= */}
@@ -257,131 +360,8 @@ export default function MoveHub() {
           </button>
         </div>
 
-        {/* 2. Outdoor & Indoor Activity */}
-        <div className="card-glass" style={{ padding: '1.15rem 1.35rem', borderRadius: 'var(--radius-lg)' }}>
-          <div 
-            onClick={() => setIsTrackerOpen(!isTrackerOpen)}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              cursor: 'pointer',
-              userSelect: 'none'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-              <div style={{ width: 42, height: 42, borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
-                🌳
-              </div>
-              <div>
-                <h4 style={{ fontSize: '1.02rem', fontWeight: 800, margin: '0 0 0.1rem 0', color: 'var(--text-primary)' }}>
-                  2. Outdoor & Indoor Activity
-                </h4>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
-                  Walking, running, hiking, indoor stretches & pet-linked adventures.
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', gap: '0.3rem' }}
-                onClick={(e) => { e.stopPropagation(); setIsSocialModalOpen(true); }}
-              >
-                <span>+ Add Social Activity</span>
-              </button>
-              <button
-                type="button"
-                className={`btn ${isTrackerOpen ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-                style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', gap: '0.3rem' }}
-                onClick={(e) => { e.stopPropagation(); setIsTrackerOpen(!isTrackerOpen); }}
-              >
-                <span>{isTrackerOpen ? 'Hide Activities' : 'Open Activities'}</span>
-                {isTrackerOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              </button>
-            </div>
-          </div>
-
-          {isTrackerOpen && (
-            <div style={{ marginTop: '1.15rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.15rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', animation: 'fadeIn 0.2s ease-out' }}>
-              <ActivityTracker />
-
-              {/* Logged Social & Recreational Movement Sessions */}
-              {socialActivities && socialActivities.length > 0 && (
-                <div style={{ background: 'var(--bg-secondary)', padding: '1rem 1.15rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <span style={{ fontSize: '1.1rem' }}>🎉</span>
-                      <h5 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                        Joyful & Social Movement Logs
-                      </h5>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsSocialModalOpen(true)}
-                      className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem' }}
-                    >
-                      + Log Another
-                    </button>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {socialActivities.map(act => (
-                      <div
-                        key={act.id}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '0.65rem 0.85rem',
-                          background: 'var(--bg-tertiary)',
-                          borderRadius: 'var(--radius-sm)',
-                          border: '1px solid var(--border-subtle)',
-                          gap: '0.6rem'
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                          <span style={{ fontSize: '1.3rem' }}>{act.icon || '🏃'}</span>
-                          <div>
-                            <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                              {act.name || act.activityName}
-                            </div>
-                            <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-                              <span>⏱️ {act.durationMinutes} mins</span>
-                              {act.location && <span>📍 {act.location}</span>}
-                              {act.notes && <span>💬 {act.notes}</span>}
-                            </div>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => deleteSocialActivity && deleteSocialActivity(act.id)}
-                          style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: 'var(--text-muted)',
-                            cursor: 'pointer',
-                            padding: '0.3rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            borderRadius: '4px'
-                          }}
-                          title="Delete log"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        {/* 2. Live Move Tracker — Outdoor & Indoor Activity (Always Visible & Full Screen Accessible) */}
+        <ActivityTracker />
 
         {/* 3. Exercise Strategy (Reveals: My Exercise Plan, Browse Plans, Favourites) */}
         <div className="card-glass" style={{ padding: '1.15rem 1.35rem', borderRadius: 'var(--radius-lg)' }}>

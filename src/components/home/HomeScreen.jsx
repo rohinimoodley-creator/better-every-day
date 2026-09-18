@@ -41,7 +41,9 @@ export default function HomeScreen({ onNavigateTab }) {
     updateOverviewPillars,
     wellnessHubVisibility = {},
     microMovementSettings,
-    getMicroMovementStats
+    getMicroMovementStats,
+    skincareRoutines = {},
+    skincareLogs = {}
   } = useWellness();
 
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
@@ -86,6 +88,13 @@ export default function HomeScreen({ onNavigateTab }) {
     .filter(e => e.date >= todayDateStr && (e.status === 'accepted' || !e.status))
     .slice(0, 3);
 
+  const activeRoutineKey = new Date().getHours() < 15 ? 'morning' : 'evening';
+  const currentRoutineSteps = skincareRoutines?.[activeRoutineKey]?.steps || [];
+  const todayRoutineLogs = (skincareLogs[todayDateStr] && skincareLogs[todayDateStr][activeRoutineKey])?.completedSteps || [];
+  const skincarePercent = currentRoutineSteps.length > 0 
+    ? Math.min(100, Math.round((todayRoutineLogs.length / currentRoutineSteps.length) * 100)) 
+    : 100;
+
   // Weekly Overview Mock Days Data (Mon-Sun)
   const weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const allPillarConfigs = {
@@ -93,6 +102,7 @@ export default function HomeScreen({ onNavigateTab }) {
     move: { id: 'move', label: 'Move', icon: Footprints, color: '#3a86c8', activeDays: [0, 2, 3, 5], pct: 68, dailyVal: `${currentSteps} steps`, dailyPct: stepsPercent },
     nourish: { id: 'nourish', label: 'Nourish', icon: Utensils, color: '#d97736', activeDays: [0, 1, 2, 3, 4, 5], pct: 85, dailyVal: `${mealsCount} meals`, dailyPct: 70 },
     rest: { id: 'rest', label: 'Rest', icon: Moon, color: '#7b61ff', activeDays: [0, 1, 3, 4, 5], pct: 75, dailyVal: '7h 15m', dailyPct: 85 },
+    skincare: { id: 'skincare', label: 'Skincare', icon: Sparkles, color: '#e7a93b', activeDays: [0, 1, 2, 3, 4, 5, 6], pct: 90, dailyVal: `${todayRoutineLogs.length}/${currentRoutineSteps.length || 4} steps`, dailyPct: skincarePercent },
     mind: { id: 'mind', label: 'Mind', icon: Sparkles, color: '#8b5cf6', activeDays: [1, 2, 4], pct: 60, dailyVal: '2 moments', dailyPct: 65 },
     breathwork: { id: 'breathwork', label: 'Breathwork', icon: Wind, color: '#40916c', activeDays: [0, 2, 4, 5], pct: 70, dailyVal: '1 session', dailyPct: 80 },
     cycle: { id: 'cycle', label: 'Cycle', icon: Heart, color: '#d64062', activeDays: [0, 1, 2, 3, 4, 5, 6], pct: 90, dailyVal: 'Follicular', dailyPct: 100 },

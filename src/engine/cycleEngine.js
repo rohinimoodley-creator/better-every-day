@@ -18,47 +18,47 @@ export function getCyclePhaseInfo(lastPeriodDateStr, cycleLength = 28, periodLen
   let headline = 'Rising Energy & Renewal';
   let icon = '🌱';
   let color = '#40916c';
-  let recommendationTip = 'Focus on fresh, vibrant foods and progressive strength building.';
-  let workoutGuidance = 'Ideal for moderate-to-high intensity workouts, strength, and trying new activities.';
-  let nutritionGuidance = 'Prioritize lean proteins, sprouted foods, complex carbs, and fermented vegetables.';
-  let restGuidance = 'Energy is building naturally. Great time for creative brainstorming and social connection.';
+  let recommendationTip = 'Some people notice steady vitality returning. You might enjoy fresh, colorful meals and progressive movement.';
+  let workoutGuidance = 'You might prefer brisk walks, strength training, or cardio routines if your vitality feels high.';
+  let nutritionGuidance = 'Some people enjoy fresh greens, citrus fruits, sprouted foods, and lighter proteins as energy returns.';
+  let restGuidance = 'If mental alertness feels high, channel this into your favorite routines at your own comfortable pace.';
 
   if (currentDayOfCycle <= periodLength) {
     phase = 'Menstrual';
     headline = 'Rest, Renewal & Inward Focus';
     icon = '🩸';
     color = '#d64062';
-    recommendationTip = 'Prioritize warm iron-rich meals, gentle stretching, and extra restful sleep.';
-    workoutGuidance = 'Gentle walks, restorative yoga, mobility, or taking a complete rest day.';
-    nutritionGuidance = 'Warm stews, bone or vegetable broths, iron-rich greens, vitamin C, and dark chocolate.';
-    restGuidance = 'Give yourself permission to slow down, journal, and protect your evening boundary.';
+    recommendationTip = 'You may want to include warm, iron-rich meals or take extra rest if this feels good for you.';
+    workoutGuidance = 'Some people find that gentle walks, mobility, or restorative yoga feel comforting. Your usual workouts remain fully available if you feel energized.';
+    nutritionGuidance = 'You may want to include meals containing foods rich in iron and vitamin C (such as dark leafy greens, citrus, lentils, or warm vegetable broths) during this part of your cycle.';
+    restGuidance = 'Give yourself permission to slow down, rest, or wind down earlier in the evening if your body asks for quiet time.';
   } else if (currentDayOfCycle > periodLength && currentDayOfCycle <= 13) {
     phase = 'Follicular';
     headline = 'Vibrant Energy & Clarity';
     icon = '🌱';
     color = '#52b788';
-    recommendationTip = 'Estrogen is gently rising. Great time for stamina, creative projects, and light workouts.';
-    workoutGuidance = 'Brisk walking, cardio, Pilates, and resistance training feel especially good.';
-    nutritionGuidance = 'Fresh greens, pumpkin & flax seeds, light stir-fries, and citrus fruits.';
-    restGuidance = 'Mental alertness is high. Channel this into your favorite habits and new routines.';
+    recommendationTip = 'Estrogen gently rises. You might enjoy stamina, creative habits, or exploring new activities.';
+    workoutGuidance = 'You might prefer brisk walking, cardio, Pilates, or resistance routines if you feel energized.';
+    nutritionGuidance = 'Some people enjoy fresh greens, pumpkin & flax seeds, light stir-fries, and citrus fruits.';
+    restGuidance = 'Mental alertness is often clear. Channel this into your favorite habits and routines at your own pace.';
   } else if (currentDayOfCycle >= 14 && currentDayOfCycle <= 16) {
     phase = 'Ovulation';
     headline = 'Peak Stamina & Connection';
     icon = '🌸';
     color = '#f4a261';
-    recommendationTip = 'Energy and social confidence peak. Great window for challenging workouts and social events.';
-    workoutGuidance = 'HIIT, group workouts, heavier resistance lifting, and outdoor adventures.';
-    nutritionGuidance = 'Antioxidant-rich berries, leafy greens, wild salmon, and ample hydration.';
-    restGuidance = 'High communicative energy. Great for connecting with friends or wellness circles.';
+    recommendationTip = 'Some people experience peak stamina around this window. Energetic movement or social connections might feel appealing.';
+    workoutGuidance = 'One option could be higher-tempo workouts, resistance training, or outdoor activities if you feel up for it.';
+    nutritionGuidance = 'Staying well-hydrated and enjoying colorful antioxidant-rich berries and balanced fiber can support your daily vitality.';
+    restGuidance = 'High communicative energy. Great for connecting with friends or wellness circles if you feel inclined.';
   } else {
     phase = 'Luteal';
     headline = 'Comfort, Calm & Grounding';
     icon = '🌙';
     color = '#7b61ff';
-    recommendationTip = 'Progesterone creates a calming inward pull. Prioritize magnesium-rich foods and steady movement.';
-    workoutGuidance = 'Pilates, steady-state walking, yoga, and gentle bodyweight strength.';
-    nutritionGuidance = 'Magnesium-rich foods (dark cacao, sunflower seeds, pumpkin seeds, sweet potatoes), soothing herbal teas.';
-    restGuidance = 'Wind down earlier in the evening. Keep your environment cozy and unhurried.';
+    recommendationTip = 'Progesterone creates a calming inward cadence. You might prefer grounding meals and steady movement.';
+    workoutGuidance = 'Some people prefer steady-state walking, mindful Pilates, yoga, or gentle bodyweight mobility.';
+    nutritionGuidance = 'Some people find that grounding complex carbohydrates (sweet potatoes, oats) and magnesium-rich foods (dark cacao, pumpkin seeds) feel nourishing.';
+    restGuidance = 'An unhurried wind-down routine in the evening and cozy surroundings may feel comforting.';
   }
 
   return {

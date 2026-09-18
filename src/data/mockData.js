@@ -1357,3 +1357,210 @@ export const TRACKING_CATEGORIES_DIRECTORY = [
     ]
   }
 ];
+
+// =========================================================================
+// SKINCARE ROUTINE DATASETS (Prompt: Skin Care Routine 🧴✨)
+// =========================================================================
+
+export const SKINCARE_CATEGORIES = [
+  { id: 'cleanser', label: 'Cleanser', icon: '🧼', color: '#3a86c8' },
+  { id: 'toner', label: 'Toner / Essence', icon: '💧', color: '#40916c' },
+  { id: 'serum', label: 'Serum / Ampoule', icon: '🧪', color: '#7b61ff' },
+  { id: 'moisturiser', label: 'Moisturiser', icon: '🧴', color: '#d97736' },
+  { id: 'sunscreen', label: 'Sunscreen (SPF)', icon: '☀️', color: '#e7a93b' },
+  { id: 'exfoliant', label: 'Exfoliant (AHA/BHA/PHA)', icon: '✨', color: '#d64062' },
+  { id: 'mask', label: 'Face Mask / Sheet Mask', icon: '🧖‍♀️', color: '#8b5cf6' },
+  { id: 'eye_care', label: 'Eye Care', icon: '👁️', color: '#3a86c8' },
+  { id: 'treatment', label: 'Treatment / Spot Care', icon: '🩹', color: '#ef4444' },
+  { id: 'body_care', label: 'Body Care', icon: '🫧', color: '#52b788' },
+  { id: 'lip_care', label: 'Lip Care', icon: '👄', color: '#f43f5e' },
+  { id: 'custom', label: 'Custom / Other', icon: '⭐', color: '#64748b' }
+];
+
+export const DEFAULT_SKINCARE_PRODUCTS = [
+  {
+    id: 'prod_1',
+    name: 'Hydrating Gentle Foaming Cleanser',
+    brand: 'CeraVe',
+    category: 'cleanser',
+    icon: '🧼',
+    whenUsed: 'both', // 'morning' | 'evening' | 'both' | 'weekly'
+    frequency: 'daily', // 'daily' | 'specific_days' | 'weekly' | 'as_needed'
+    scheduleDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    keyIngredients: ['Ceramides 1, 3, 6-II', 'Hyaluronic Acid', 'Niacinamide'],
+    notes: 'Massage gently with lukewarm water for 30-45 seconds.',
+    isFavorite: true,
+    addedAt: '2026-01-10'
+  },
+  {
+    id: 'prod_2',
+    name: '15% Vitamin C + Ferulic Radiance Serum',
+    brand: "Paula's Choice",
+    category: 'serum',
+    icon: '🧪',
+    whenUsed: 'morning',
+    frequency: 'daily',
+    scheduleDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    keyIngredients: ['Vitamin C (L-Ascorbic Acid)', 'Ferulic Acid', 'Vitamin E'],
+    notes: 'Apply 3-4 drops on clean, dry face and neck before moisturiser.',
+    isFavorite: true,
+    addedAt: '2026-01-12'
+  },
+  {
+    id: 'prod_3',
+    name: 'Toleriane Double Repair Daily Moisturiser',
+    brand: 'La Roche-Posay',
+    category: 'moisturiser',
+    icon: '🧴',
+    whenUsed: 'both',
+    frequency: 'daily',
+    scheduleDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    keyIngredients: ['Ceramide-3', 'Niacinamide', 'Prebiotic Thermal Water', 'Glycerin'],
+    notes: 'Smooth over face and neck for soothing all-day barrier comfort.',
+    isFavorite: true,
+    addedAt: '2026-01-15'
+  },
+  {
+    id: 'prod_4',
+    name: 'Relief Sun Rice + Probiotics SPF 50+ PA++++',
+    brand: 'Beauty of Joseon',
+    category: 'sunscreen',
+    icon: '☀️',
+    whenUsed: 'morning',
+    frequency: 'daily',
+    scheduleDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    keyIngredients: ['Rice Extract 30%', 'Grain Ferment Probiotics', 'Niacinamide'],
+    notes: 'Apply generous 2-finger amount as the final morning step.',
+    isFavorite: true,
+    addedAt: '2026-01-18'
+  },
+  {
+    id: 'prod_5',
+    name: 'Skin Perfecting 2% BHA Salicylic Liquid Exfoliant',
+    brand: "Paula's Choice",
+    category: 'exfoliant',
+    icon: '✨',
+    whenUsed: 'evening',
+    frequency: 'specific_days',
+    scheduleDays: ['Mon', 'Wed', 'Fri'],
+    keyIngredients: ['2% Salicylic Acid (BHA)', 'Green Tea Leaf Extract'],
+    notes: 'Mon / Wed / Fri evenings. Apply with fingers or cotton pad, do not rinse.',
+    isFavorite: true,
+    addedAt: '2026-01-20'
+  },
+  {
+    id: 'prod_6',
+    name: 'Hyaluronic Acid 2% + B5 Multi-Depth Serum',
+    brand: 'The Ordinary',
+    category: 'serum',
+    icon: '💧',
+    whenUsed: 'evening',
+    frequency: 'daily',
+    scheduleDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    keyIngredients: ['Low/Medium/High HA Molecules', 'Pro-Vitamin B5'],
+    notes: 'Pat a few drops into damp skin before sealing with moisturiser.',
+    isFavorite: false,
+    addedAt: '2026-02-01'
+  },
+  {
+    id: 'prod_7',
+    name: 'Cica Sleeping Recovery Mask',
+    brand: 'Laneige',
+    category: 'mask',
+    icon: '🧖‍♀️',
+    whenUsed: 'weekly',
+    frequency: 'weekly',
+    scheduleDays: ['Sun'],
+    keyIngredients: ['Forest Yeast Cica Extract', 'Shea Butter', 'Panthenol'],
+    notes: 'Sunday evening barrier boost before sleep. Rinse gently next morning.',
+    isFavorite: true,
+    addedAt: '2026-02-05'
+  },
+  {
+    id: 'prod_8',
+    name: 'Peptide & Caffeine Smoothing Eye Contour Cream',
+    brand: 'The INKEY List',
+    category: 'eye_care',
+    icon: '👁️',
+    whenUsed: 'both',
+    frequency: 'daily',
+    scheduleDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    keyIngredients: ['Matrixyl 3000 Peptides', 'Caffeine', 'Centella'],
+    notes: 'Gently dab a rice-grain amount around the orbital bone with ring finger.',
+    isFavorite: false,
+    addedAt: '2026-02-10'
+  },
+  {
+    id: 'prod_9',
+    name: 'Vanilla Butter Conditioning Lip Mask',
+    brand: 'Summer Fridays',
+    category: 'lip_care',
+    icon: '👄',
+    whenUsed: 'both',
+    frequency: 'daily',
+    scheduleDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    keyIngredients: ['Shea & Murumuru Seed Butters', 'Vegan Waxes'],
+    notes: 'Apply as needed for soft, conditioned lips.',
+    isFavorite: true,
+    addedAt: '2026-02-12'
+  }
+];
+
+export const DEFAULT_SKINCARE_ROUTINES = {
+  morning: {
+    id: 'routine_morning',
+    name: 'Morning Routine ☀️',
+    shortTitle: 'Morning',
+    icon: '☀️',
+    targetTime: '07:00', // Aligned with Day Start
+    reminderText: "It's a good time for your fresh morning skincare routine.",
+    steps: [
+      { id: 'step_m1', productId: 'prod_1', customName: 'Gentle Hydrating Cleanse', order: 1, notes: 'Lukewarm water, pat dry gently' },
+      { id: 'step_m2', productId: 'prod_2', customName: 'Vitamin C Antioxidant Serum', order: 2, notes: 'Antioxidant daytime defense' },
+      { id: 'step_m3', productId: 'prod_3', customName: 'Daily Barrier Moisturiser', order: 3, notes: 'Nourishing hydration layer' },
+      { id: 'step_m4', productId: 'prod_4', customName: 'SPF 50+ Sunscreen Shield', order: 4, notes: 'Generous 2-finger layer' }
+    ]
+  },
+  evening: {
+    id: 'routine_evening',
+    name: 'Evening Routine 🌙',
+    shortTitle: 'Evening',
+    icon: '🌙',
+    targetTime: '22:30', // Aligned with Wind-down before sleep
+    reminderText: 'Your evening wind-down skincare routine is ready.',
+    steps: [
+      { id: 'step_e1', productId: 'prod_1', customName: 'Gentle Evening Cleanse', order: 1, notes: 'Wash away daily SPF and pollution' },
+      { id: 'step_e2', productId: 'prod_5', customName: '2% BHA Gentle Exfoliant (Mon/Wed/Fri)', order: 2, scheduleDays: ['Mon', 'Wed', 'Fri'], notes: 'Unclogs pores & smooths texture' },
+      { id: 'step_e3', productId: 'prod_6', customName: 'Hyaluronic Acid Hydration Serum', order: 3, notes: 'Pat into slightly damp skin' },
+      { id: 'step_e4', productId: 'prod_8', customName: 'Peptide Eye Care', order: 4, notes: 'Dab around under-eye contour' },
+      { id: 'step_e5', productId: 'prod_3', customName: 'Overnight Barrier Cream', order: 5, notes: 'Lock in moisture before sleep' },
+      { id: 'step_e6', productId: 'prod_9', customName: 'Conditioning Lip Butter', order: 6, notes: 'Keep lips soft overnight' }
+    ]
+  },
+  weekly: {
+    id: 'routine_weekly',
+    name: 'Weekly Self-Care Ritual 📅',
+    shortTitle: 'Weekly Ritual',
+    icon: '📅',
+    targetTime: 'Sunday Evening',
+    reminderText: 'Sunday evening relaxation & barrier pampering ritual.',
+    steps: [
+      { id: 'step_w1', productId: 'prod_7', customName: 'Cica Overnight Barrier Mask', order: 1, scheduleDays: ['Sun'], notes: 'Restorative weekend barrier recharge' }
+    ]
+  }
+};
+
+export const AVAILABLE_SKIN_GOALS = [
+  { id: 'hydration', label: 'Hydration', icon: '💧', desc: 'Plump, comfortable, and well-hydrated skin feeling' },
+  { id: 'sun_protection', label: 'Sun Protection', icon: '☀️', desc: 'Daily UV defense and healthy barrier shield' },
+  { id: 'brightening', label: 'Brightening', icon: '✨', desc: 'Healthy-looking glow with daily antioxidants' },
+  { id: 'even_skin', label: 'Even-Looking Skin', icon: '🌸', desc: 'Balanced tone and gentle daily nourishment' },
+  { id: 'texture', label: 'Texture', icon: '🌿', desc: 'Gentle pacing with non-abrasive exfoliants' },
+  { id: 'simplicity', label: 'Simplicity', icon: '🧘', desc: 'Streamlined, low-effort 3-4 step daily flow' },
+  { id: 'maintenance', label: 'General Maintenance', icon: '🌱', desc: 'Consistent, everyday healthy routine baseline' },
+  { id: 'custom', label: 'Custom Skincare Intention', icon: '⭐', desc: 'Your personal skincare routine preference' }
+];
+
+export const DEFAULT_SKINCARE_GOALS = ['hydration', 'sun_protection', 'simplicity', 'maintenance'];
+
+

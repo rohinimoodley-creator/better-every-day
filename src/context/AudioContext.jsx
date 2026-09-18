@@ -3,14 +3,14 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 const AudioContext = createContext(null);
 
 export const SOUNDSCAPES_LIBRARY = [
-  { id: 'rain', name: 'Gentle Rain', icon: '🌧️', desc: 'Soft drops falling on green leaves', color: '#3a86c8' },
-  { id: 'ocean', name: 'Ocean Swell', icon: '🌊', desc: 'Slow rhythmic tidal breathing', color: '#2a9d8f' },
-  { id: 'forest', name: 'Forest Peace (528Hz)', icon: '🌲', desc: 'Harmonic frequency for calm & clarity', color: '#40916c' },
-  { id: 'wind', name: 'Mountain Breeze', icon: '🍃', desc: 'Gentle rustling wind through pine trees', color: '#52b788' },
-  { id: 'brownNoise', name: 'Deep Brown Noise', icon: '📻', desc: 'Heavy soothing low-pass focus blanket', color: '#d97736' },
-  { id: 'whiteNoise', name: 'Soft White Noise', icon: '💨', desc: 'Even, crisp ambient static for masking distraction', color: '#8d99ae' },
-  { id: 'fireplace', name: 'Cozy Fireplace', icon: '🪵', desc: 'Warm gentle crackle and soft flame warmth', color: '#e76f51' },
-  { id: 'gentleAmbience', name: 'Warm Sunset Drone', icon: '✨', desc: 'Subtle ambient pads for writing & reflection', color: '#8b5cf6' },
+  { id: 'rain', name: 'Rain', icon: '🌧️', desc: 'Soft drops falling on green leaves', color: '#3a86c8' },
+  { id: 'ocean', name: 'Ocean', icon: '🌊', desc: 'Slow rhythmic tidal breathing', color: '#2a9d8f' },
+  { id: 'forest', name: 'Forest', icon: '🌲', desc: 'Harmonic frequency for calm & clarity (528Hz)', color: '#40916c' },
+  { id: 'wind', name: 'Wind', icon: '💨', desc: 'Gentle rustling wind through pine trees', color: '#52b788' },
+  { id: 'whiteNoise', name: 'White Noise', icon: '🤍', desc: 'Even, crisp ambient static for masking distraction', color: '#8d99ae' },
+  { id: 'brownNoise', name: 'Brown Noise', icon: '🤎', desc: 'Heavy soothing low-pass focus blanket', color: '#d97736' },
+  { id: 'fireplace', name: 'Fireplace', icon: '🔥', desc: 'Warm gentle crackle and soft flame warmth', color: '#e76f51' },
+  { id: 'gentleAmbience', name: 'Gentle Ambience', icon: '🌿', desc: 'Subtle ambient pads for writing & reflection', color: '#8b5cf6' },
   { id: 'sleepDrone', name: 'Theta Sleep Wave (432Hz)', icon: '🌙', desc: 'Binaural delta/theta state relaxation', color: '#7b61ff' }
 ];
 
@@ -350,10 +350,20 @@ export function AudioProvider({ children }) {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
   };
 
+  // Pause active sound without clearing active sound selection
+  const pauseSound = () => {
+    Object.keys(trackNodesRef.current).forEach(id => {
+      stopTrack(id);
+    });
+    setActiveTracks({});
+    setIsPlaying(false);
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+  };
+
   // Toggle single sound on/off
   const toggleSingleSound = (soundId, timerMinutes = null) => {
     if (activeSoundId === soundId && isPlaying) {
-      stopAll();
+      pauseSound();
     } else {
       playSingleSound(soundId, timerMinutes !== undefined ? timerMinutes : selectedTimerMinutes);
     }
@@ -400,12 +410,14 @@ export function AudioProvider({ children }) {
     <AudioContext.Provider value={{
       isPlaying,
       activeSoundId,
+      setActiveSoundId,
       activeSoundObj,
       activeTracks,
       volumes,
       soundLibrary: SOUNDSCAPES_LIBRARY,
       playSingleSound,
       toggleSingleSound,
+      pauseSound,
       stopAll,
       setTrackVolume,
       playChime,

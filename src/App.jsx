@@ -29,12 +29,14 @@ function AppContent() {
 
   const handleNavigate = (tab, params = {}) => {
     // Category mapping to Wellness
-    const wellnessCategories = ['MOVE', 'NOURISH', 'HYDRATE', 'REST', 'MIND', 'BREATHWORK', 'BREATH', 'CYCLE', 'CALENDAR'];
+    const wellnessCategories = ['MOVE', 'NOURISH', 'HYDRATE', 'REST', 'SKINCARE', 'SKIN', 'MIND', 'BREATHWORK', 'BREATH', 'CYCLE', 'CALENDAR'];
     const lowerCategoryMap = {
       'MOVE': 'move',
       'NOURISH': 'nourish',
       'HYDRATE': 'hydrate',
       'REST': 'rest',
+      'SKINCARE': 'skincare',
+      'SKIN': 'skincare',
       'MIND': 'mind',
       'BREATHWORK': 'breathwork',
       'BREATH': 'breathwork',

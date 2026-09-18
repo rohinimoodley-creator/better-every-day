@@ -7,6 +7,7 @@ export const ALL_OVERVIEW_PILLARS = [
   { id: 'nourish', label: 'Nourish', desc: 'Meals, whole foods, and vitality balance', icon: Utensils, color: '#d97736' },
   { id: 'hydrate', label: 'Hydrate', desc: 'Daily water intake & cellular flow', icon: Droplet, color: '#3a86c8' },
   { id: 'rest', label: 'Rest', desc: 'Sleep duration & night recovery', icon: Moon, color: '#7b61ff' },
+  { id: 'skincare', label: 'Skincare', desc: 'Morning & evening routines & self-care flow', icon: Sparkles, color: '#e7a93b' },
   { id: 'mind', label: 'Mind', desc: 'Gratitude reflections & mindset', icon: Sparkles, color: '#8b5cf6' },
   { id: 'cycle', label: 'Cycle', desc: 'Cycle phase & energy syncing', icon: Heart, color: '#d64062' },
   { id: 'breathwork', label: 'Breathwork', desc: 'Calming nervous system regulation', icon: Wind, color: '#40916c' },

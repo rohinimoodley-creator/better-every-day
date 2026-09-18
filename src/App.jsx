@@ -15,8 +15,11 @@ import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import WhatCanITrackDrawer from './components/navigation/WhatCanITrackDrawer';
 import BodySignalsModal from './components/body/BodySignalsModal';
 import DuplicateDataAlertModal from './components/trust/DuplicateDataAlertModal';
+import { syncStatusBarTheme, hideSplashScreen, initAndroidBackButton } from './services/nativeService';
+import { useWellness } from './context/WellnessContext';
 
 function AppContent() {
+  const { theme } = useWellness();
   const [activeTab, setActiveTab] = useState('HOME');
   const [wellnessCategory, setWellnessCategory] = useState('move');
   const [insightsTab, setInsightsTab] = useState('overview');
@@ -27,6 +30,34 @@ function AppContent() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab, wellnessCategory, insightsTab, youSection]);
+
+  // Native Mobile Initialization
+  useEffect(() => {
+    hideSplashScreen();
+  }, []);
+
+  useEffect(() => {
+    syncStatusBarTheme(theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const cleanup = initAndroidBackButton(() => {
+      if (isWhatCanITrackOpen) {
+        setIsWhatCanITrackOpen(false);
+        return true;
+      }
+      if (isBodySignalsOpen) {
+        setIsBodySignalsOpen(false);
+        return true;
+      }
+      if (activeTab !== 'HOME') {
+        setActiveTab('HOME');
+        return true;
+      }
+      return false;
+    });
+    return cleanup;
+  }, [isWhatCanITrackOpen, isBodySignalsOpen, activeTab]);
 
   const handleNavigate = (tab, params = {}) => {
     // Category mapping to Wellness

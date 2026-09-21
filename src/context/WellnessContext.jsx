@@ -878,6 +878,7 @@ export function WellnessProvider({ children }) {
     return newLog;
   };
 
+
   // 18. 🐾 Pet Play (Movement & Companionship with All Pets)
   const [petProfiles, setPetProfiles] = useState(() => {
     const saved = localStorage.getItem('bed_pet_profiles');

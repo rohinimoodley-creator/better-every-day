@@ -34,7 +34,7 @@ export default function Header({ onNavigateTab, onOpenWhatCanITrack }) {
       }}
     >
       {/* Left: Explore Drawer Icon Button + Brand Logo & Title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flexShrink: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
         {onOpenWhatCanITrack && (
           <button
             type="button"
@@ -42,8 +42,8 @@ export default function Header({ onNavigateTab, onOpenWhatCanITrack }) {
             aria-label="Open Explore Directory"
             title="Open Explore Directory"
             style={{
-              width: 44,
-              height: 44,
+              width: 38,
+              height: 38,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -56,7 +56,7 @@ export default function Header({ onNavigateTab, onOpenWhatCanITrack }) {
               boxShadow: 'var(--shadow-sm)'
             }}
           >
-            <Compass size={18} />
+            <Compass size={17} />
           </button>
         )}
 
@@ -69,21 +69,20 @@ export default function Header({ onNavigateTab, onOpenWhatCanITrack }) {
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            minWidth: 0,
-            overflow: 'hidden'
+            gap: '0.45rem',
+            flexShrink: 0
           }}
         >
           <div
             style={{
-              width: 32,
-              height: 32,
+              width: 30,
+              height: 30,
               borderRadius: '8px',
               background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-calm) 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1rem',
+              fontSize: '0.95rem',
               boxShadow: '0 2px 8px rgba(45, 106, 79, 0.25)',
               flexShrink: 0
             }}
@@ -93,14 +92,13 @@ export default function Header({ onNavigateTab, onOpenWhatCanITrack }) {
 
           <h1
             style={{
-              fontSize: '1.05rem',
+              fontSize: '1rem',
               fontWeight: 800,
               margin: 0,
               letterSpacing: '-0.02em',
               color: 'var(--text-primary)',
               whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
+              flexShrink: 0
             }}
           >
             Better Every Day

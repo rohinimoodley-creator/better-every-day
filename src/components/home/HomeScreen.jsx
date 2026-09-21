@@ -39,6 +39,7 @@ export default function HomeScreen({ onNavigateTab }) {
     overviewFrequency,
     updateOverviewFrequency,
     overviewPillars,
+    updateOverviewPillars,
     wellnessHubVisibility = {},
     skincareRoutines = {},
     skincareLogs = {},
@@ -240,24 +241,22 @@ export default function HomeScreen({ onNavigateTab }) {
             <PipSproutAvatar size={40} mood="happy" showCustomiseBadge={false} />
           </div>
 
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
               <h2
                 style={{
-                  fontSize: '1.08rem',
+                  fontSize: '1.05rem',
                   fontWeight: 800,
                   color: 'var(--text-primary)',
                   margin: 0,
                   letterSpacing: '-0.02em',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
+                  lineHeight: 1.25
                 }}
               >
                 {greeting.text}, {userName} 🌱
               </h2>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.15rem' }}>
               <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500 }}>
                 {todayDateFormatted}
               </span>
@@ -428,7 +427,8 @@ export default function HomeScreen({ onNavigateTab }) {
           />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            {/* One Thing | Full View Toggle */}
+            {/* One Thing | Full View Toggle (Hidden for now, code preserved) */}
+            {/* 
             <button
               type="button"
               onClick={() => setIsGuideMeOpen(true)}
@@ -451,6 +451,7 @@ export default function HomeScreen({ onNavigateTab }) {
               <Compass size={12} />
               <span>One Thing</span>
             </button>
+            */}
 
             {/* Customize */}
             <button
@@ -633,6 +634,8 @@ export default function HomeScreen({ onNavigateTab }) {
         <CustomizeOverviewModal
           isOpen={isCustomizeOverviewOpen}
           onClose={() => setIsCustomizeOverviewOpen(false)}
+          selectedPillars={overviewPillars}
+          onUpdatePillars={updateOverviewPillars}
         />
       )}
 

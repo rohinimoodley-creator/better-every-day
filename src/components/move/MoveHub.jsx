@@ -11,43 +11,37 @@ import BeginnerPlanFlowModal from './BeginnerPlanFlowModal';
 import ExercisePlansSection from './ExercisePlansSection';
 import ActivityTracker from './ActivityTracker';
 import SocialActivityModal from './SocialActivityModal';
-import { getCyclePhaseInfo } from '../../engine/cycleEngine';
 import { 
   Zap, 
-  Sparkles, 
-  ChevronDown, 
-  ChevronUp, 
-  Play, 
-  Compass, 
-  Activity,
-  ArrowRight,
-  ShieldCheck,
-  Plus,
-  PawPrint,
-  Layers,
-  Heart
+  Activity, 
+  PawPrint, 
+  Clock, 
+  Dumbbell, 
+  X, 
+  Sparkles,
+  ChevronRight
 } from 'lucide-react';
 
 export default function MoveHub() {
   const { 
     completedWorkouts, 
     setCompletedWorkouts, 
-    userProfile,
-    isCycleSyncActive
+    userProfile 
   } = useWellness();
 
+  // Launcher Pop-up States
+  const [isActivityTrackerOpen, setIsActivityTrackerOpen] = useState(false);
+  const [isPetPlayOpen, setIsPetPlayOpen] = useState(false);
+  const [isMicroMovementOpen, setIsMicroMovementOpen] = useState(false);
+  const [isExercisePlansOpen, setIsExercisePlansOpen] = useState(false);
+
+  // Sub-modal Flows
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
-  const [isBreakItDownOpen, setIsBreakItDownOpen] = useState(false);
-  const [isPetPlayModalOpen, setIsPetPlayModalOpen] = useState(false);
+  const [isBreakItDownOpen, setIsBreakItDownOpen] = useState(false); // Entry hidden, code preserved
   const [isSocialModalOpen, setIsSocialModalOpen] = useState(false);
   const [isBeginnerPlanModalOpen, setIsBeginnerPlanModalOpen] = useState(false);
-  const [isCyclePreviewOpen, setIsCyclePreviewOpen] = useState(false);
-
-  const cycleInfo = isCycleSyncActive && userProfile?.lastPeriodStart
-    ? getCyclePhaseInfo(userProfile.lastPeriodStart, userProfile.cycleLength || 28)
-    : null;
 
   const handleWorkoutComplete = (workoutId) => {
     if (!completedWorkouts.includes(workoutId)) {
@@ -55,14 +49,14 @@ export default function MoveHub() {
     }
   };
 
-  const handleSaveCustom = (newWorkout) => {
-    // Custom workout added
+  const handleSaveCustom = () => {
+    // Custom workout saved
   };
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingBottom: '3.5rem' }}>
+    <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '3.5rem' }}>
       
-      {/* 1. Header */}
+      {/* 1. Clean Compact Header */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.15rem' }}>
           <span className="pill-badge primary" style={{ fontSize: '0.7rem' }}>
@@ -73,220 +67,381 @@ export default function MoveHub() {
           Move 🏃
         </h2>
         <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0 0' }}>
-          Listen to your body, celebrate gentle consistency, and move freely.
+          Choose an option below to track, play, move, or explore plans.
         </p>
       </div>
 
-      {/* 2. Activity Tracker (Idle ~280dp / Focused Workout view) */}
-      <ActivityTracker />
-
-      {/* 3. Beginner Plan Quick Start Hero (~120-140dp) */}
+      {/* 2. Compact 2x2 Launcher Grid */}
       <div 
-        className="card-glass card-interactive"
-        onClick={() => setIsBeginnerPlanModalOpen(true)}
-        style={{
-          padding: '1rem 1.15rem',
-          border: '1.5px solid var(--accent-primary)',
-          background: 'linear-gradient(135deg, var(--accent-primary-light) 0%, var(--bg-glass-card) 100%)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          cursor: 'pointer',
-          borderRadius: 'var(--radius-lg)'
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(2, 1fr)', 
+          gap: '0.75rem' 
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div 
-            style={{ 
-              width: 40, 
-              height: 40, 
-              borderRadius: 'var(--radius-md)', 
-              background: 'var(--accent-primary)', 
-              color: '#fff', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              fontSize: '1.25rem' 
-            }}
-          >
-            🌱
-          </div>
-          <div>
-            <span className="pill-badge primary" style={{ fontSize: '0.65rem', marginBottom: '0.1rem' }}>
-              ACCESSIBLE ENTRY POINT
-            </span>
-            <h4 style={{ fontSize: '0.98rem', fontWeight: 800, margin: '0.1rem 0', color: 'var(--text-primary)' }}>
-              Beginner Plan · Start Gentle
-            </h4>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
-              Bite-sized starting movements for new or returning movers.
-            </p>
-          </div>
-        </div>
-
+        {/* 1. Activity Tracker */}
         <button
           type="button"
-          className="btn btn-primary btn-sm"
-          style={{ minHeight: 44, fontSize: '0.8rem', padding: '0.4rem 0.85rem', gap: '0.3rem' }}
-          aria-label="Open beginner plan"
+          onClick={() => setIsActivityTrackerOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            background: 'linear-gradient(135deg, var(--accent-primary-light) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid var(--accent-primary-light)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
         >
-          <span>Start</span>
-          <ArrowRight size={13} />
+          <div 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: 'var(--accent-primary)', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(45, 106, 79, 0.25)'
+            }}
+          >
+            <Activity size={22} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Activity Tracker
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              Live steps & pacing
+            </span>
+          </div>
+        </button>
+
+        {/* 2. Pet Play */}
+        <button
+          type="button"
+          onClick={() => setIsPetPlayOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            background: 'linear-gradient(135deg, var(--accent-secondary-light) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid var(--accent-secondary-light)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: 'var(--accent-secondary)', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              fontSize: '1.3rem',
+              boxShadow: '0 4px 12px rgba(217, 119, 54, 0.25)'
+            }}
+          >
+            🐾
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Pet Play
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              Joyful play & walks
+            </span>
+          </div>
+        </button>
+
+        {/* 3. Micro-Movement */}
+        <button
+          type="button"
+          onClick={() => setIsMicroMovementOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            background: 'linear-gradient(135deg, rgba(64, 145, 108, 0.12) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(64, 145, 108, 0.2)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: 'var(--accent-calm)', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(64, 145, 108, 0.25)'
+            }}
+          >
+            <Clock size={22} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Micro-Movement
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              30-30 & Dance breaks
+            </span>
+          </div>
+        </button>
+
+        {/* 4. Exercise Plans */}
+        <button
+          type="button"
+          onClick={() => setIsExercisePlansOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            background: 'linear-gradient(135deg, rgba(123, 97, 255, 0.12) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(123, 97, 255, 0.2)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: 'var(--accent-purple)', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(123, 97, 255, 0.25)'
+            }}
+          >
+            <Dumbbell size={22} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Exercise Plans
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              Browse & create routines
+            </span>
+          </div>
         </button>
       </div>
 
-      {/* 4. Micro-Movements Section (~300dp inline panel) */}
-      <MicroMovementSection 
-        onTryOneNow={() => setIsBreakItDownOpen(true)}
-      />
+      {/* ========================================================================= */}
+      {/* 4 FEATURE POP-UP SHEETS / MODALS                                          */}
+      {/* ========================================================================= */}
 
-      {/* 5. Exercise Plans & Library (Segmented: My Plan / Browse / Favourites) */}
-      <ExercisePlansSection
-        onStartBeginnerPlan={() => setIsBeginnerPlanModalOpen(true)}
-        onStartWorkout={(workout) => setSelectedWorkout(workout)}
-        onOpenCustomModal={() => setIsCustomModalOpen(true)}
-        onOpenPhotoModal={() => setIsPhotoModalOpen(true)}
-      />
-
-      {/* 6. Quick Launchers: Pet Play & Exercise Storyboard (~80dp cards) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.65rem' }}>
-        {/* Pet Play Launcher */}
-        <div
-          className="card-glass card-interactive"
-          onClick={() => setIsPetPlayModalOpen(true)}
-          style={{
-            padding: '0.85rem 1rem',
-            borderRadius: 'var(--radius-md)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            cursor: 'pointer'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <span style={{ fontSize: '1.4rem' }}>🐾</span>
-            <div>
-              <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                Pet Play
-              </h4>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0 }}>
-                Log active playtime & walks
-              </p>
-            </div>
-          </div>
-          <ArrowRight size={14} color="var(--accent-primary)" />
-        </div>
-
-        {/* Exercise Breakdown Launcher */}
-        <div
-          className="card-glass card-interactive"
-          onClick={() => setIsBreakItDownOpen(true)}
-          style={{
-            padding: '0.85rem 1rem',
-            borderRadius: 'var(--radius-md)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            cursor: 'pointer'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <span style={{ fontSize: '1.4rem' }}>🧩</span>
-            <div>
-              <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                Break It Down
-              </h4>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0 }}>
-                Pip storyboard & live demos
-              </p>
-            </div>
-          </div>
-          <ArrowRight size={14} color="var(--accent-primary)" />
-        </div>
-      </div>
-
-      {/* 7. Cycle Sync Preview Banner (if active) */}
-      {isCycleSyncActive && cycleInfo && (
-        <div 
-          className="card-glass" 
-          style={{
-            padding: '0.9rem 1.15rem',
-            background: 'linear-gradient(135deg, rgba(214, 64, 98, 0.06) 0%, rgba(123, 97, 255, 0.06) 100%)',
-            border: '1px solid rgba(214, 64, 98, 0.25)',
-            borderRadius: 'var(--radius-md)'
-          }}
-        >
+      {/* 1. Activity Tracker Pop-Up */}
+      {isActivityTrackerOpen && (
+        <div className="modal-backdrop" onClick={() => setIsActivityTrackerOpen(false)} style={{ zIndex: 1100 }}>
           <div 
-            onClick={() => setIsCyclePreviewOpen(!isCyclePreviewOpen)}
-            style={{
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 540, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              cursor: 'pointer',
-              userSelect: 'none'
+              flexDirection: 'column',
+              gap: '1rem'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <span style={{ fontSize: '1.2rem' }}>{cycleInfo.icon}</span>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <span className="pill-badge rose" style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
-                    Cycle Sync
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    {cycleInfo.phase} Phase
-                  </span>
-                </div>
-                <h4 style={{ fontSize: '0.88rem', fontWeight: 800, margin: '0.1rem 0 0 0', color: 'var(--text-primary)' }}>
-                  Movement Guidance
-                </h4>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Activity size={18} color="var(--accent-primary)" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Activity Tracker
+                </h3>
               </div>
+              <button 
+                type="button"
+                onClick={() => setIsActivityTrackerOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            <span style={{ fontSize: '0.74rem', color: 'var(--accent-rose)', fontWeight: 700 }}>
-              {isCyclePreviewOpen ? 'Hide' : 'View'}
-            </span>
+            <ActivityTracker />
           </div>
+        </div>
+      )}
 
-          {isCyclePreviewOpen && (
-            <div style={{ marginTop: '0.75rem', borderTop: '1px solid rgba(214, 64, 98, 0.15)', paddingTop: '0.75rem', animation: 'fadeIn 0.2s ease-out' }}>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 0.5rem 0', lineHeight: 1.45 }}>
-                {cycleInfo.workoutGuidance}
-              </p>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <ShieldCheck size={13} color="var(--accent-primary)" />
-                <span>You remain in full control of your workout intensity.</span>
+      {/* 2. Pet Play Pop-Up */}
+      {isPetPlayOpen && (
+        <PetPlayFlowModal
+          isOpen={isPetPlayOpen}
+          onClose={() => setIsPetPlayOpen(false)}
+        />
+      )}
+
+      {/* 3. Micro-Movement Pop-Up */}
+      {isMicroMovementOpen && (
+        <div className="modal-backdrop" onClick={() => setIsMicroMovementOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 540, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Clock size={18} color="var(--accent-calm)" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Micro-Movement & Breaks
+                </h3>
               </div>
+              <button 
+                type="button"
+                onClick={() => setIsMicroMovementOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
             </div>
-          )}
+
+            <MicroMovementSection onTryOneNow={() => {}} />
+          </div>
+        </div>
+      )}
+
+      {/* 4. Exercise Plans Pop-Up */}
+      {isExercisePlansOpen && (
+        <div className="modal-backdrop" onClick={() => setIsExercisePlansOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 580, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Dumbbell size={18} color="var(--accent-purple)" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Exercise Plans
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsExercisePlansOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <ExercisePlansSection
+              onStartBeginnerPlan={() => setIsBeginnerPlanModalOpen(true)}
+              onStartWorkout={(workout) => setSelectedWorkout(workout)}
+              onOpenCustomModal={() => setIsCustomModalOpen(true)}
+              onOpenPhotoModal={() => setIsPhotoModalOpen(true)}
+            />
+          </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* ALL MODALS & INTERACTIVE FLOWS                                            */}
+      {/* SECONDARY MODAL FLOWS & WORKOUT PLAYER                                    */}
       {/* ========================================================================= */}
 
-      {/* Beginner Plan Progressive Modal */}
+      {/* Beginner Plan Flow Modal */}
       {isBeginnerPlanModalOpen && (
         <BeginnerPlanFlowModal
           isOpen={isBeginnerPlanModalOpen}
           onClose={() => setIsBeginnerPlanModalOpen(false)}
-        />
-      )}
-
-      {/* Break It Down Exercise Breakdown Modal */}
-      {isBreakItDownOpen && (
-        <ExerciseBreakdownModal
-          isOpen={isBreakItDownOpen}
-          onClose={() => setIsBreakItDownOpen(false)}
-        />
-      )}
-
-      {/* Pet Play Flow Modal */}
-      {isPetPlayModalOpen && (
-        <PetPlayFlowModal
-          isOpen={isPetPlayModalOpen}
-          onClose={() => setIsPetPlayModalOpen(false)}
         />
       )}
 
@@ -308,15 +463,7 @@ export default function MoveHub() {
         />
       )}
 
-      {/* Social Activity Modal */}
-      {isSocialModalOpen && (
-        <SocialActivityModal
-          isOpen={isSocialModalOpen}
-          onClose={() => setIsSocialModalOpen(false)}
-        />
-      )}
-
-      {/* Photo Activity AI Modal */}
+      {/* Photo Activity AI Scanner Modal */}
       {isPhotoModalOpen && (
         <PhotoActivityModal
           isOpen={isPhotoModalOpen}
@@ -325,8 +472,25 @@ export default function MoveHub() {
         />
       )}
 
+      {/* Social Activity Modal */}
+      {isSocialModalOpen && (
+        <SocialActivityModal
+          isOpen={isSocialModalOpen}
+          onClose={() => setIsSocialModalOpen(false)}
+        />
+      )}
+
+      {/* Exercise Breakdown Storyboard Modal (Hidden for now, preserved) */}
+      {isBreakItDownOpen && (
+        <ExerciseBreakdownModal
+          isOpen={isBreakItDownOpen}
+          onClose={() => setIsBreakItDownOpen(false)}
+        />
+      )}
+
     </div>
   );
 }
+
 
 

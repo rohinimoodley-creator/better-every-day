@@ -21,7 +21,7 @@ import SegmentedControl from '../common/SegmentedControl';
 import confetti from 'canvas-confetti';
 
 const PLAN_SEGMENTS = [
-  { id: 'my_plan', label: 'My Plan' },
+  { id: 'create', label: 'Create Your Own' },
   { id: 'browse', label: 'Browse' },
   { id: 'favourites', label: 'Favourites' }
 ];
@@ -51,7 +51,7 @@ export default function ExercisePlansSection({
     deleteCustomExercise
   } = useWellness();
 
-  const [activeTab, setActiveTab] = useState('my_plan');
+  const [activeTab, setActiveTab] = useState('browse');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [toastMessage, setToastMessage] = useState('');
 
@@ -124,9 +124,9 @@ export default function ExercisePlansSection({
       />
 
       {/* ========================================================================= */}
-      {/* 1. MY PLAN SUB-VIEW                                                       */}
+      {/* 1. CREATE YOUR OWN SUB-VIEW                                               */}
       {/* ========================================================================= */}
-      {activeTab === 'my_plan' && (
+      {activeTab === 'create' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
           
           {/* Active Plan Card (~140dp) */}
@@ -268,6 +268,61 @@ export default function ExercisePlansSection({
       {/* ========================================================================= */}
       {activeTab === 'browse' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          
+          {/* Quick Start Beginner Plan Hero (Inside Browse) */}
+          <div 
+            className="card-glass card-interactive"
+            onClick={onStartBeginnerPlan}
+            style={{
+              padding: '0.85rem 1rem',
+              border: '1.5px solid var(--accent-primary)',
+              background: 'linear-gradient(135deg, var(--accent-primary-light) 0%, var(--bg-glass-card) 100%)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              cursor: 'pointer',
+              borderRadius: 'var(--radius-lg)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <div 
+                style={{ 
+                  width: 36, 
+                  height: 36, 
+                  borderRadius: 'var(--radius-md)', 
+                  background: 'var(--accent-primary)', 
+                  color: '#fff', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  fontSize: '1.1rem' 
+                }}
+              >
+                🌱
+              </div>
+              <div>
+                <span className="pill-badge primary" style={{ fontSize: '0.62rem', marginBottom: '0.1rem' }}>
+                  QUICK START
+                </span>
+                <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: '0.05rem 0', color: 'var(--text-primary)' }}>
+                  Beginner Plan · Start Gentle
+                </h4>
+                <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: 0 }}>
+                  Bite-sized starting movements for new or returning movers.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              style={{ minHeight: 38, fontSize: '0.76rem', padding: '0.35rem 0.75rem', gap: '0.25rem' }}
+              aria-label="Open beginner plan"
+            >
+              <span>Start</span>
+              <ChevronRight size={13} />
+            </button>
+          </div>
           
           {/* Category Filter Chips */}
           <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '0.15rem' }}>

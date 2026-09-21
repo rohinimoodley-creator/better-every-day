@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Heart } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import ContextualPip from '../mascot/ContextualPip';
+import PipSproutAvatar from '../mascot/PipSproutAvatar';
 
 const MOTIVATIONAL_MESSAGES = [
   {
@@ -111,16 +111,15 @@ export default function QuickSupportModal({ isOpen, onClose }) {
           <div 
             onClick={handlePipClick}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-            title="Tap Pip's face for a gentle spark! ✨"
+            title="Tap Pip for a warm reaction! 🌱"
           >
-            <ContextualPip 
-              context="mind" 
+            <PipSproutAvatar 
               size={64} 
               mood={pipMood}
-              message="Take a gentle breath. You're doing great."
-              showSpeechBubble={false}
+              animated={true}
+              showCustomiseBadge={false}
             />
-            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.2rem', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.25rem', fontWeight: 600 }}>
               (Tap Pip for a warm reaction 🌱)
             </span>
           </div>

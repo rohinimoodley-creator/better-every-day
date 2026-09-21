@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { X, Play, ArrowRight, Check, Sparkles, ChevronDown, ChevronUp, RotateCcw, Heart, Shield } from 'lucide-react';
-import ContextualPip from '../mascot/ContextualPip';
+import { 
+  X, 
+  Play, 
+  ArrowRight, 
+  Check, 
+  Sparkles, 
+  ChevronDown, 
+  ChevronUp, 
+  RotateCcw, 
+  Heart, 
+  ShieldCheck,
+  RefreshCw
+} from 'lucide-react';
 import ExerciseMiniAnimation from './ExerciseMiniAnimations';
 import { useWellness } from '../../context/WellnessContext';
 import { useAudio } from '../../context/AudioContext';
@@ -11,52 +22,55 @@ const BEGINNER_PLAN_EXERCISES = [
   {
     id: 'bp_1',
     stage: 1,
-    stageName: 'Stage 1 — Ease In',
-    stageBadge: '🌿 Gentle Mobility',
+    stageName: 'Stage 1 · Ease In',
+    stageBadge: 'Gentle Mobility',
     name: 'Gentle Neck & Shoulder Release',
     animationId: 'stretch',
     durationSec: 45,
+    equipment: 'None needed',
+    whyThisHelps: 'Releases neck tension from sitting and promotes calm breathing.',
     seatedAlt: 'Sit tall in a supportive chair with feet flat.',
-    tip: 'Drop your shoulders down from your ears and breathe slowly.',
+    tip: 'Drop shoulders down from ears and breathe slowly.',
     steps: [
-      { title: 'Get ready', desc: 'Sit or stand tall and relax your shoulders.' },
-      { title: 'Move', desc: 'Gently tilt your right ear toward your right shoulder.' },
-      { title: 'Hold', desc: 'Take 2 slow, easy breaths.' },
-      { title: 'Return', desc: 'Bring your head up, roll shoulders, and repeat on your left side.' }
+      { title: 'Get ready', desc: 'Sit or stand tall with relaxed shoulders.' },
+      { title: 'Move', desc: 'Gently tilt right ear toward right shoulder.' },
+      { title: 'Hold & return', desc: 'Take 2 slow breaths, then switch to left side.' }
     ]
   },
   {
     id: 'bp_2',
     stage: 1,
-    stageName: 'Stage 1 — Ease In',
-    stageBadge: '🌿 Gentle Mobility',
+    stageName: 'Stage 1 · Ease In',
+    stageBadge: 'Gentle Mobility',
     name: 'Shoulder Circles & Arm Reaches',
-    animationId: 'stretch',
+    animationId: 'wrist',
     durationSec: 50,
+    equipment: 'None needed',
+    whyThisHelps: 'Restores upper-back mobility and eases shoulder stiffness.',
     seatedAlt: 'Can be done sitting or standing.',
     tip: 'Roll both shoulders up, back, and down in slow circular motions.',
     steps: [
-      { title: 'Get ready', desc: 'Stand or sit with your arms resting at your sides.' },
-      { title: 'Move', desc: 'Roll your shoulders up toward your ears, then back and down.' },
-      { title: 'Reach', desc: 'Gently reach one arm up toward the ceiling and breathe in.' },
-      { title: 'Return', desc: 'Lower arm down softly and repeat with the other side.' }
+      { title: 'Get ready', desc: 'Stand or sit with arms resting easily at sides.' },
+      { title: 'Circle', desc: 'Roll shoulders up toward ears, then back and down.' },
+      { title: 'Reach', desc: 'Gently reach one arm up, breathe in, and alternate sides.' }
     ]
   },
   {
     id: 'bp_3',
     stage: 1,
-    stageName: 'Stage 1 — Ease In',
-    stageBadge: '🌿 Gentle Mobility',
+    stageName: 'Stage 1 · Ease In',
+    stageBadge: 'Gentle Mobility',
     name: 'Side Body Reaches & Wrist Circles',
-    animationId: 'stretch',
+    animationId: 'wrist',
     durationSec: 50,
+    equipment: 'None needed',
+    whyThisHelps: 'Opens the ribcage and mobilizes tired wrist joints.',
     seatedAlt: 'Sit tall and gently reach side-to-side.',
-    tip: 'Feel a gentle, comfortable stretch along the side of your ribs.',
+    tip: 'Feel a gentle, comfortable stretch along the side ribs.',
     steps: [
       { title: 'Get ready', desc: 'Stand or sit tall with feet shoulder-width apart.' },
-      { title: 'Move', desc: 'Gently reach right arm overhead to the left side.' },
-      { title: 'Hold', desc: 'Circle both wrists slowly to loosen fingers.' },
-      { title: 'Return', desc: 'Return to center and switch sides.' }
+      { title: 'Reach', desc: 'Gently reach right arm overhead to the left.' },
+      { title: 'Circle', desc: 'Rotate wrists softly and repeat on the opposite side.' }
     ]
   },
 
@@ -64,450 +78,398 @@ const BEGINNER_PLAN_EXERCISES = [
   {
     id: 'bp_4',
     stage: 2,
-    stageName: 'Stage 2 — Wake Up',
-    stageBadge: '🌱 Easy Rhythm',
+    stageName: 'Stage 2 · Wake Up',
+    stageBadge: 'Easy Rhythm',
     name: 'Easy March in Place',
-    animationId: 'lunge',
+    animationId: 'squat',
     durationSec: 60,
+    equipment: 'None needed',
+    whyThisHelps: 'Gets blood flowing gently through legs without joint strain.',
     seatedAlt: 'Seated march: lift one knee at a time while seated.',
-    tip: 'Keep it gentle — you do not need to lift your knees high.',
+    tip: 'Keep it gentle — no need to lift your knees high.',
     steps: [
       { title: 'Get ready', desc: 'Stand tall with relaxed shoulders.' },
-      { title: 'Move', desc: 'Gently lift one foot, then the other, in a soft walking rhythm.' },
-      { title: 'Breathe', desc: 'Swing your arms naturally at your sides.' },
-      { title: 'Return', desc: 'Slow down to a gentle stop when ready.' }
+      { title: 'March', desc: 'Gently lift one foot, then the other, in a soft rhythm.' },
+      { title: 'Breathe', desc: 'Swing arms naturally and stop whenever you like.' }
     ]
   },
   {
     id: 'bp_5',
     stage: 2,
-    stageName: 'Stage 2 — Wake Up',
-    stageBadge: '🌱 Easy Rhythm',
-    name: 'Step Touches with Arm Swings',
-    animationId: 'lunge',
-    durationSec: 60,
-    seatedAlt: 'Tap toes side-to-side while seated.',
-    tip: 'Step side to side comfortably at your own easy pace.',
-    steps: [
-      { title: 'Get ready', desc: 'Stand with feet together and hands relaxed.' },
-      { title: 'Move', desc: 'Step your right foot out to the side and tap your left foot next to it.' },
-      { title: 'Repeat', desc: 'Step left foot out and tap right foot.' },
-      { title: 'Return', desc: 'Keep a soft, rhythmic sway that feels good.' }
-    ]
-  },
-  {
-    id: 'bp_6',
-    stage: 2,
-    stageName: 'Stage 2 — Wake Up',
-    stageBadge: '🌱 Easy Rhythm',
-    name: 'Gentle Heel & Calf Raises',
-    animationId: 'squat',
+    stageName: 'Stage 2 · Wake Up',
+    stageBadge: 'Easy Rhythm',
+    name: 'Gentle Ankle Rolls & Calf Pumps',
+    animationId: 'ankle',
     durationSec: 50,
-    seatedAlt: 'Lift heels while seated with feet flat on the floor.',
-    tip: 'Hold a wall, counter, or chair back for balance.',
+    equipment: 'None needed',
+    whyThisHelps: 'Improves circulation in lower legs and relieves heavy feet.',
+    seatedAlt: 'Lift heels while seated with feet flat.',
+    tip: 'Hold a counter or chair back for balance.',
     steps: [
-      { title: 'Get ready', desc: 'Stand tall with fingers lightly resting on a table or wall for balance.' },
+      { title: 'Get ready', desc: 'Stand tall with fingers lightly resting on a table.' },
       { title: 'Move', desc: 'Slowly rise up onto the balls of your feet.' },
-      { title: 'Hold', desc: 'Pause at the top for 1 second.' },
-      { title: 'Return', desc: 'Slowly lower your heels back to the floor.' }
+      { title: 'Lower', desc: 'Pause 1 second, then slowly lower heels back down.' }
     ]
   },
 
-  // Stage 3: Get Moving (Comfortable Bodyweight & Light Cardio)
+  // Stage 3: Get Moving (Comfortable Bodyweight & Light Movement)
   {
-    id: 'bp_7',
+    id: 'bp_6',
     stage: 3,
-    stageName: 'Stage 3 — Get Moving',
-    stageBadge: '✨ Gentle Strength',
+    stageName: 'Stage 3 · Get Moving',
+    stageBadge: 'Gentle Strength',
     name: 'Comfortable Bodyweight Squats (or Chair Sits)',
     animationId: 'squat',
     durationSec: 60,
+    equipment: 'Chair (optional)',
+    whyThisHelps: 'Builds functional leg strength for daily activities.',
     seatedAlt: 'Chair Sits: gently sit down onto chair and stand back up.',
     tip: 'Only bend as deep as feels comfortable for your knees.',
     steps: [
       { title: 'Get ready', desc: 'Stand with feet shoulder-width apart.' },
-      { title: 'Move', desc: 'Push hips back and bend knees slightly like sitting down.' },
-      { title: 'Hold', desc: 'Keep chest upright for a brief moment.' },
-      { title: 'Return', desc: 'Press through feet to stand back up.' }
-    ]
-  },
-  {
-    id: 'bp_8',
-    stage: 3,
-    stageName: 'Stage 3 — Get Moving',
-    stageBadge: '✨ Gentle Strength',
-    name: 'Low-Impact Side Steps with Reach',
-    animationId: 'lunge',
-    durationSec: 60,
-    seatedAlt: 'Side step and reach while seated in a chair.',
-    tip: 'A rhythmic full-body movement with zero jumping.',
-    steps: [
-      { title: 'Get ready', desc: 'Stand with soft knees and hands at chest.' },
-      { title: 'Move', desc: 'Step out to the right and reach right hand upward.' },
-      { title: 'Switch', desc: 'Step to the left and reach left hand upward.' },
-      { title: 'Return', desc: 'Keep your breath smooth and natural.' }
+      { title: 'Lower', desc: 'Push hips back and bend knees slightly like sitting.' },
+      { title: 'Rise', desc: 'Press through feet to return to standing.' }
     ]
   },
 
-  // Stage 4: Optional Challenge (Light Progression)
+  // Stage 4: Optional Progression
   {
-    id: 'bp_9',
+    id: 'bp_7',
     stage: 4,
-    stageName: 'Stage 4 — Optional Challenge',
-    stageBadge: '🌟 Optional Challenge',
-    name: 'Light Wall / Incline Push-Up',
-    animationId: 'pushup',
+    stageName: 'Stage 4 · Progression',
+    stageBadge: 'Optional Progression',
+    name: 'Gentle Dance Flow & Shake Out',
+    animationId: 'dance',
     durationSec: 50,
-    seatedAlt: 'Press arms forward against air or light wall.',
-    tip: 'Standing closer to the wall makes it easier and gentler.',
+    equipment: 'None needed',
+    whyThisHelps: 'Celebrates movement and shakes off stored body tension.',
+    seatedAlt: 'Seated sway and arm rhythm.',
+    tip: 'Move in whatever fun way makes your body feel alive!',
     steps: [
-      { title: 'Get ready', desc: 'Place hands flat against a wall at shoulder height.' },
-      { title: 'Move', desc: 'Gently tighten your tummy and bend elbows toward wall.' },
-      { title: 'Hold', desc: 'Keep your body in a straight line.' },
-      { title: 'Return', desc: 'Push firmly away from the wall to return to start.' }
+      { title: 'Get ready', desc: 'Stand relaxed with your favorite music.' },
+      { title: 'Flow', desc: 'Sway hips, bounce knees softly, and wave arms.' },
+      { title: 'Celebrate', desc: 'Take a deep breath and smile.' }
     ]
   }
 ];
 
-const GENTLE_PRAISES = [
-  "Nice! Let's keep it easy.",
-  "You did it! Ready for the next one?",
-  "Great start! You're already moving 🌱",
-  "Well done. Here's the next one.",
-  "Looking good! Move at whatever pace feels kind.",
-  "Awesome ease. One small step at a time."
-];
-
 export default function BeginnerPlanFlowModal({ isOpen, onClose }) {
-  const { setActiveWorkoutMinutes, setStepCount, logMicroMovement } = useWellness();
+  const { setActiveWorkoutMinutes, setStepCount, addWellnessEvent } = useWellness();
   const { playChime } = useAudio();
 
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [completedExerciseIds, setCompletedExerciseIds] = useState([]);
+  const [completedIds, setCompletedIds] = useState([]);
   const [isSlowMode, setIsSlowMode] = useState(false);
-  const [showWrittenInstructions, setShowWrittenInstructions] = useState(false);
-  const [gentlePraiseText, setGentlePraiseText] = useState('');
-  const [isSessionSummaryOpen, setIsSessionSummaryOpen] = useState(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const [showSteps, setShowSteps] = useState(false);
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [elapsedSecs, setElapsedSecs] = useState(0);
 
-  // Track session timer
   useEffect(() => {
-    let interval = null;
-    if (isOpen && isTimerRunning && !isSessionSummaryOpen) {
-      interval = setInterval(() => {
-        setElapsedSeconds(prev => prev + 1);
-      }, 1000);
+    let timer = null;
+    if (isOpen && !isSummaryOpen) {
+      timer = setInterval(() => setElapsedSecs(p => p + 1), 1000);
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isOpen, isTimerRunning, isSessionSummaryOpen]);
+    return () => { if (timer) clearInterval(timer); };
+  }, [isOpen, isSummaryOpen]);
 
   if (!isOpen) return null;
 
-  const currentExercise = BEGINNER_PLAN_EXERCISES[currentIdx] || BEGINNER_PLAN_EXERCISES[0];
-  const isLastExercise = currentIdx === BEGINNER_PLAN_EXERCISES.length - 1;
+  const currentEx = BEGINNER_PLAN_EXERCISES[currentIdx] || BEGINNER_PLAN_EXERCISES[0];
+  const totalStages = 4;
+  const currentStage = currentEx.stage;
 
-  // Pip mood gets progressively more active by stage
-  const getPipMoodForStage = (stage) => {
-    if (stage === 1) return 'calm';
-    if (stage === 2) return 'happy';
-    if (stage === 3) return 'playful';
-    return 'celebrate';
-  };
+  const handleNext = () => {
+    const nextCompleted = [...new Set([...completedIds, currentEx.id])];
+    setCompletedIds(nextCompleted);
 
-  // Continue to Next Exercise
-  const handleContinue = () => {
-    const currentId = currentExercise.id;
-    const nextCompleted = completedExerciseIds.includes(currentId) 
-      ? completedExerciseIds 
-      : [...completedExerciseIds, currentId];
-    setCompletedExerciseIds(nextCompleted);
+    try { playChime(528); } catch (e) {}
+    try { confetti({ particleCount: 25, spread: 50, origin: { y: 0.6 } }); } catch (e) {}
 
-    try { playChime(528); } catch(e) {}
-    try { confetti({ particleCount: 20, spread: 40, origin: { y: 0.6 } }); } catch(e) {}
-
-    // Random gentle praise
-    const praise = GENTLE_PRAISES[Math.floor(Math.random() * GENTLE_PRAISES.length)];
-    setGentlePraiseText(praise);
-
-    if (isLastExercise) {
-      setTimeout(() => {
-        handleStopAndSave();
-      }, 700);
+    if (currentIdx < BEGINNER_PLAN_EXERCISES.length - 1) {
+      setCurrentIdx(p => p + 1);
+      setShowSteps(false);
     } else {
-      setTimeout(() => {
-        setCurrentIdx(prev => prev + 1);
-        setGentlePraiseText('');
-        setShowWrittenInstructions(false);
-      }, 700);
+      handleFinish();
     }
   };
 
-  // Stop & Save (Valid at any point)
-  const handleStopAndSave = () => {
-    setIsTimerRunning(false);
-    const totalMinutes = Math.max(1, Math.round(elapsedSeconds / 60));
-    const estimatedSteps = Math.round(totalMinutes * 40);
-
-    // Update Wellness Context
-    if (setActiveWorkoutMinutes) {
-      setActiveWorkoutMinutes(prev => prev + totalMinutes);
-    }
-    if (setStepCount) {
-      setStepCount(prev => prev + estimatedSteps);
-    }
-    if (logMicroMovement) {
-      logMicroMovement(`Beginner Plan (${completedExerciseIds.length + 1} movements)`, 'completed');
-    }
-
-    try { playChime(660); } catch(e) {}
-    try { confetti({ particleCount: 45, spread: 65, origin: { y: 0.6 } }); } catch(e) {}
-
-    setIsSessionSummaryOpen(true);
+  const handleSwap = () => {
+    // Find next exercise in same or next stage
+    setCurrentIdx(p => (p + 1) % BEGINNER_PLAN_EXERCISES.length);
   };
 
-  // Stop Without Saving
-  const handleStopWithoutSaving = () => {
-    onClose();
+  const handleFinish = () => {
+    const totalMinutes = Math.max(1, Math.round(elapsedSecs / 60));
+    if (setActiveWorkoutMinutes) setActiveWorkoutMinutes(p => p + totalMinutes);
+    if (setStepCount) setStepCount(p => p + Math.round(totalMinutes * 45));
+
+    if (addWellnessEvent) {
+      addWellnessEvent({
+        type: 'activity',
+        activityType: 'beginner_plan',
+        durationMins: totalMinutes,
+        intensity: 'light',
+        timestamp: new Date().toISOString(),
+        notes: `Completed Beginner Plan session (${completedIds.length + 1} movements)`
+      });
+    }
+
+    try { playChime(660); } catch (e) {}
+    try { confetti({ particleCount: 45, spread: 70, origin: { y: 0.6 } }); } catch (e) {}
+    setIsSummaryOpen(true);
   };
 
   return (
     <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 1100 }}>
       <div 
-        className="modal-sheet card-glass" 
+        className="modal-sheet" 
         onClick={e => e.stopPropagation()} 
         style={{ 
-          maxWidth: 580, 
-          maxHeight: '92vh', 
-          overflowY: 'auto',
+          maxWidth: 480, 
+          maxHeight: '90vh', 
+          display: 'flex',
+          flexDirection: 'column',
+          padding: 0,
           borderRadius: 'var(--radius-xl)',
-          padding: '1.6rem 1.4rem',
-          border: '1.5px solid var(--accent-primary)',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+          overflow: 'hidden',
           animation: 'scaleUp 0.2s ease-out'
         }}
       >
-        {isSessionSummaryOpen ? (
-          /* SUPPORTIVE SESSION SUMMARY (No failure states, no checklists) */
-          <div style={{ textAlign: 'center', padding: '1.25rem 0.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', animation: 'fadeIn 0.3s ease-out' }}>
-            <ContextualPip 
-              context="move" 
-              size={72} 
-              mood="celebrate"
-              message="Wonderful movement today! 🌱"
-              showSpeechBubble={false}
-            />
-
-            <div>
-              <h3 style={{ fontSize: '1.45rem', fontWeight: 900, color: 'var(--accent-primary)', margin: '0 0 0.3rem 0' }}>
-                Nice work 🌱
-              </h3>
-              <p style={{ fontSize: '0.95rem', color: 'var(--text-primary)', fontWeight: 700, margin: 0 }}>
-                You moved for {Math.max(1, Math.round(elapsedSeconds / 60))} minutes today.
-              </p>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.35rem 0 0 0' }}>
-                Every small movement enlivens your body and refreshes your mind.
-              </p>
-            </div>
-
-            {/* Stats summary chip */}
-            <div style={{ background: 'var(--bg-secondary)', padding: '0.85rem 1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', width: '100%', maxWidth: 320 }}>
-              <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>Activity Added to Move Hub</div>
-              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--accent-primary)', marginTop: '0.15rem' }}>
-                +{Math.max(1, Math.round(elapsedSeconds / 60))} mins • +{Math.round(Math.max(1, Math.round(elapsedSeconds / 60)) * 40)} steps
-              </div>
-            </div>
-
-            <button 
-              onClick={onClose} 
-              className="btn btn-primary" 
-              style={{ width: '100%', maxWidth: 320, padding: '0.75rem', fontSize: '0.88rem', fontWeight: 800 }}
-            >
-              Done & Feeling Good ✨
-            </button>
+        {/* Sticky Header */}
+        <div 
+          style={{
+            padding: '1rem 1.25rem 0.75rem',
+            borderBottom: '1px solid var(--border-subtle)',
+            background: 'var(--bg-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <span className="pill-badge primary" style={{ fontSize: '0.72rem', fontWeight: 800 }}>
+              🌱 Beginner Plan
+            </span>
+            <span className="pill-badge" style={{ fontSize: '0.68rem', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>
+              {currentEx.stageBadge}
+            </span>
           </div>
-        ) : (
-          /* ONE EXERCISE AT A TIME VIEW */
-          <div>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                <span className="pill-badge primary" style={{ fontSize: '0.72rem', padding: '2px 8px', fontWeight: 800 }}>
-                  🌱 Beginner Plan
-                </span>
-                <span className="pill-badge gray" style={{ fontSize: '0.7rem' }}>
-                  {currentExercise.stageBadge}
-                </span>
-              </div>
 
-              <button 
-                onClick={handleStopWithoutSaving} 
-                style={{ 
-                  background: 'var(--bg-tertiary)', 
-                  border: 'none', 
-                  borderRadius: '50%', 
-                  width: 30, 
-                  height: 30, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  cursor: 'pointer', 
-                  color: 'var(--text-muted)' 
-                }}
-                title="Exit"
-              >
-                <X size={18} />
-              </button>
-            </div>
+          <button 
+            type="button"
+            onClick={onClose} 
+            style={{ 
+              background: 'var(--bg-tertiary)', 
+              border: 'none', 
+              borderRadius: '50%', 
+              width: 32, 
+              height: 32, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              cursor: 'pointer', 
+              color: 'var(--text-muted)' 
+            }}
+            aria-label="Close beginner plan"
+          >
+            <X size={16} />
+          </button>
+        </div>
 
-            {/* Exercise Title & Pip Companion */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+        {/* Scrollable Content Body */}
+        <div style={{ padding: '1rem 1.25rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.9rem', flex: 1 }}>
+          {isSummaryOpen ? (
+            <div style={{ textAlign: 'center', padding: '1.5rem 0.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ fontSize: '3rem' }}>🌱</div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 700, textTransform: 'uppercase' }}>
-                  {currentExercise.stageName}
-                </div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0.1rem 0', color: 'var(--text-primary)' }}>
-                  {currentExercise.name}
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--accent-primary)', margin: '0 0 0.25rem 0' }}>
+                  Nice work!
                 </h3>
+                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0 }}>
+                  You moved gently for {Math.max(1, Math.round(elapsedSecs / 60))} minutes today.
+                </p>
               </div>
 
-              <ContextualPip 
-                context="move" 
-                size={46} 
-                mood={getPipMoodForStage(currentExercise.stage)}
-                message="Keep it easy!"
-                showSpeechBubble={false}
-              />
-            </div>
-
-            {/* Primary Visual Animation Demonstration */}
-            <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
-                <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  ⏱️ Approx ~{currentExercise.durationSec}s easy movement
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => setIsSlowMode(!isSlowMode)}
-                  className={`btn btn-sm ${isSlowMode ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ fontSize: '0.74rem', padding: '0.3rem 0.65rem', borderRadius: 'var(--radius-pill)', fontWeight: 700 }}
-                  title="Slow down demonstration"
-                >
-                  <span>{isSlowMode ? '🐢 Slow Demo On' : '🐢 Slow Mode'}</span>
-                </button>
-              </div>
-
-              <ExerciseMiniAnimation exerciseId={currentExercise.animationId} isSlowMode={isSlowMode} />
-
-              {/* Seated Alternative & Tip */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.75rem' }}>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-primary)', fontWeight: 600, background: 'var(--bg-tertiary)', padding: '0.45rem 0.75rem', borderRadius: 'var(--radius-sm)' }}>
-                  💡 <strong>Tip:</strong> {currentExercise.tip}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', paddingLeft: '0.25rem' }}>
-                  🪑 <strong>Seated option:</strong> {currentExercise.seatedAlt}
+              <div style={{ background: 'var(--bg-secondary)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', width: '100%' }}>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Logged to Move Hub</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-primary)', marginTop: 2 }}>
+                  +{Math.max(1, Math.round(elapsedSecs / 60))} mins • Hydration Linked 🌱
                 </div>
               </div>
-            </div>
 
-            {/* Optional Written Instructions (13-year-old level) */}
-            <div style={{ marginBottom: '1.15rem' }}>
               <button
                 type="button"
-                onClick={() => setShowWrittenInstructions(!showWrittenInstructions)}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '0.6rem 0.9rem',
-                  color: 'var(--text-primary)',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
+                onClick={onClose}
+                className="btn btn-primary"
+                style={{ width: '100%', minHeight: 44, fontWeight: 800 }}
               >
-                <span>{showWrittenInstructions ? '📖 Hide Written Instructions' : '📖 Show Written Instructions'}</span>
-                {showWrittenInstructions ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                Done
               </button>
+            </div>
+          ) : (
+            <>
+              {/* Stage Eyebrow & Progress Dots */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.76rem', fontWeight: 800, color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  {currentEx.stageName}
+                </span>
 
-              {showWrittenInstructions && (
-                <div style={{ marginTop: '0.45rem', background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '0.45rem', animation: 'fadeIn 0.2s ease-out' }}>
-                  {currentExercise.steps.map((s, idx) => (
-                    <div key={idx} style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', background: 'var(--bg-secondary)', padding: '0.45rem 0.7rem', borderRadius: 'var(--radius-sm)' }}>
-                      <strong style={{ color: 'var(--text-primary)' }}>{idx + 1}. {s.title}:</strong> {s.desc}
-                    </div>
+                {/* 4 Stage dots */}
+                <div style={{ display: 'flex', gap: '0.35rem' }}>
+                  {[1, 2, 3, 4].map(s => (
+                    <span 
+                      key={s}
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: s <= currentStage ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                        transition: 'background 0.2s ease'
+                      }}
+                    />
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* Gentle Praise Notification on Advance */}
-            {gentlePraiseText && (
-              <div style={{ background: 'var(--accent-primary-light)', color: 'var(--accent-primary)', padding: '0.5rem 0.8rem', borderRadius: 'var(--radius-md)', fontWeight: 800, fontSize: '0.84rem', textAlign: 'center', marginBottom: '0.85rem', animation: 'fadeIn 0.2s ease-out' }}>
-                ✨ {gentlePraiseText}
               </div>
-            )}
 
-            {/* Primary Action: Continue (Auto-completes and smoothly advances) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              <button
-                type="button"
-                onClick={handleContinue}
-                className="btn btn-primary"
-                style={{
-                  padding: '0.8rem',
-                  fontSize: '0.94rem',
-                  fontWeight: 800,
+              {/* Title & Info */}
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 0.25rem 0', color: 'var(--text-primary)' }}>
+                  {currentEx.name}
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
+                  {currentEx.whyThisHelps}
+                </p>
+              </div>
+
+              {/* Shared Pip Animation Rig Stage */}
+              <div 
+                style={{ 
+                  background: 'var(--bg-secondary)', 
+                  borderRadius: 'var(--radius-lg)', 
+                  border: '1px solid var(--border-subtle)', 
+                  padding: '0.85rem',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.45rem',
-                  boxShadow: '0 4px 14px rgba(46, 125, 90, 0.25)'
+                  flexDirection: 'column',
+                  gap: '0.65rem'
                 }}
               >
-                <span>{isLastExercise ? 'Finish & Save Routine 🎉' : 'Continue to Next Movement'}</span>
-                <ArrowRight size={16} />
-              </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '0.35rem' }}>
+                    <span className="pill-badge" style={{ fontSize: '0.68rem', background: 'var(--bg-tertiary)' }}>
+                      ⏱️ ~{currentEx.durationSec}s
+                    </span>
+                    <span className="pill-badge" style={{ fontSize: '0.68rem', background: 'var(--bg-tertiary)' }}>
+                      {currentEx.equipment}
+                    </span>
+                  </div>
 
-              {/* Stop & Save vs Stop Without Saving (Valid at any point) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.35rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsSlowMode(!isSlowMode)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ fontSize: '0.72rem', padding: '0.2rem 0.55rem', minHeight: 32 }}
+                  >
+                    <span>{isSlowMode ? '🐢 Slow On' : '🐢 Slow Demo'}</span>
+                  </button>
+                </div>
+
+                {/* Animated Pip */}
+                <ExerciseMiniAnimation exerciseId={currentEx.animationId} isSlowMode={isSlowMode} />
+
+                {/* Quick Tip & Seated Option */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingTop: '0.35rem' }}>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--text-primary)', background: 'var(--bg-tertiary)', padding: '0.45rem 0.65rem', borderRadius: 'var(--radius-sm)' }}>
+                    💡 <strong>Tip:</strong> {currentEx.tip}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', paddingLeft: '0.2rem' }}>
+                    🪑 <strong>Seated option:</strong> {currentEx.seatedAlt}
+                  </div>
+                </div>
+              </div>
+
+              {/* Expandable Step Breakdown */}
+              <div>
                 <button
                   type="button"
-                  onClick={handleStopAndSave}
-                  className="btn btn-secondary btn-sm"
-                  style={{ fontSize: '0.78rem', gap: '0.3rem', padding: '0.4rem 0.8rem' }}
-                >
-                  <Check size={13} /> Stop & Save Activity
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleStopWithoutSaving}
+                  onClick={() => setShowSteps(!showSteps)}
                   style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'var(--text-muted)',
-                    fontSize: '0.76rem',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    padding: '0.35rem'
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.55rem 0.85rem',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
                   }}
                 >
-                  Stop Without Saving
+                  <span>{showSteps ? 'Hide Step Instructions' : 'View Step-by-Step Instructions'}</span>
+                  {showSteps ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
-              </div>
-            </div>
 
+                {showSteps && (
+                  <div style={{ marginTop: '0.4rem', background: 'var(--bg-tertiary)', padding: '0.65rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '0.35rem', animation: 'fadeIn 0.2s ease-out' }}>
+                    {currentEx.steps.map((s, idx) => (
+                      <div key={idx} style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', background: 'var(--bg-secondary)', padding: '0.4rem 0.6rem', borderRadius: 'var(--radius-sm)' }}>
+                        <strong style={{ color: 'var(--text-primary)' }}>{idx + 1}. {s.title}:</strong> {s.desc}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Sticky Bottom Action Bar */}
+        {!isSummaryOpen && (
+          <div 
+            style={{
+              padding: '0.85rem 1.25rem',
+              borderTop: '1px solid var(--border-subtle)',
+              background: 'var(--bg-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.65rem'
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleSwap}
+              className="btn btn-secondary btn-sm"
+              style={{ minHeight: 44, padding: '0.4rem 0.85rem', gap: '0.35rem', fontSize: '0.78rem' }}
+            >
+              <RefreshCw size={13} />
+              <span>Swap Movement</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleNext}
+              className="btn btn-primary"
+              style={{
+                flex: 1,
+                minHeight: 44,
+                fontSize: '0.88rem',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.4rem'
+              }}
+            >
+              <span>{currentIdx === BEGINNER_PLAN_EXERCISES.length - 1 ? 'Finish & Save 🌱' : 'Continue'}</span>
+              <ArrowRight size={15} />
+            </button>
           </div>
         )}
       </div>
     </div>
   );
 }
+

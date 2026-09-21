@@ -5,15 +5,14 @@ import {
   Sparkles,
   Edit2,
   AlertCircle,
-  Check,
   RotateCcw,
-  Info,
-  Clock,
-  ChevronRight,
-  Sun
+  Sun,
+  Undo2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import ContextualPip from '../mascot/ContextualPip';
+import SectionHeader from '../common/SectionHeader';
+import Expander from '../common/Expander';
+import { formatNumber, formatUnit } from '../../utils/formatters';
 
 export default function HydrateHub() {
   const {
@@ -21,66 +20,41 @@ export default function HydrateHub() {
     setUserProfile,
     hydrationMl,
     incrementHydration,
-    getWaterRecommendation,
-    evaluateWaterGoalSafety,
     isHotWeather,
-    toggleHotWeather
+    toggleHotWeather,
+    linkEngineOutput,
+    undoHydrationAdjustment
   } = useWellness();
 
   const [celebrationMessage, setCelebrationMessage] = useState('');
   const [pacingWarning, setPacingWarning] = useState('');
   const [goalEditing, setGoalEditing] = useState(false);
-  const [newGoal, setNewGoal] = useState(userProfile.hydrationGoalMl || 2250);
+  const [newGoal, setNewGoal] = useState(userProfile?.hydrationGoalMl || 2250);
   const [cupSizeEditing, setCupSizeEditing] = useState(false);
-  const [cupSizeMl, setCupSizeMl] = useState(userProfile.cupSizeMl || 250);
-  const [newCupSize, setNewCupSize] = useState(userProfile.cupSizeMl || 250);
-  const [customAddMl, setCustomAddMl] = useState('');
-  const [showCustomAdd, setShowCustomAdd] = useState(false);
+  const [cupSizeMl, setCupSizeMl] = useState(userProfile?.cupSizeMl || 250);
+  const [newCupSize, setNewCupSize] = useState(userProfile?.cupSizeMl || 250);
 
-  // Sliding window ref for rapid intake / pacing safety check
   const recentIntakeRef = useRef([]);
 
-  // Acknowledged warning state (persisted per contextual safety key)
-  const [acknowledgedContext, setAcknowledgedContext] = useState(() => {
-    try {
-      return localStorage.getItem('bed_ack_water_goal_context') || '';
-    } catch (e) {
-      return '';
-    }
-  });
+  // Link Engine Computed Goals & Adjustments
+  const baseGoal = userProfile?.hydrationGoalMl || 2250;
+  const activityBonus = linkEngineOutput?.adjustments?.activityHydrationBonus || 0;
+  const adjustmentReasons = linkEngineOutput?.adjustments?.hydrationAdjustmentReasons || [];
+  const adjustedGoal = linkEngineOutput?.adjustments?.adjustedHydrationGoal || baseGoal;
+  const isUndoApplied = linkEngineOutput?.adjustments?.isUndoApplied;
 
-  const goalMl = userProfile.hydrationGoalMl || 2250;
-  const percentage = Math.min(100, Math.round((hydrationMl / goalMl) * 100));
-  const remainingMl = Math.max(0, goalMl - hydrationMl);
-  const cupsDrunk = (hydrationMl / cupSizeMl).toFixed(1);
-  const cupsTarget = (goalMl / cupSizeMl).toFixed(0);
-
-  // Contextual safety evaluation of current goal
-  const safetyCheck = evaluateWaterGoalSafety 
-    ? evaluateWaterGoalSafety(goalMl) 
-    : { status: 'normal', isLow: false, isHigh: false, suggestedGoal: 2250, contextKey: 'default' };
-
-  // Live safety evaluation for edit input
-  const editSafetyCheck = evaluateWaterGoalSafety && goalEditing
-    ? evaluateWaterGoalSafety(parseInt(newGoal, 10))
-    : { status: 'normal', isLow: false, isHigh: false, estimatedTarget: 2250, suggestedGoal: 2250 };
-
-  // Show goal safety warning if goal is low/high and user hasn't explicitly acknowledged this exact material context
-  const showGoalWarning = (safetyCheck.isLow || safetyCheck.isHigh) && acknowledgedContext !== safetyCheck.contextKey;
-
-  // Dynamic Personal Water Recommendation
-  const waterRec = getWaterRecommendation ? getWaterRecommendation() : {
-    cupsTarget: Number(cupsTarget),
-    currentCups: Math.floor(hydrationMl / cupSizeMl),
-    remainingCups: Math.max(0, Number(cupsTarget) - Math.floor(hydrationMl / cupSizeMl)),
-    pacingText: 'Try approximately 1 cup every 2 hours before sleep.'
-  };
+  const currentIntake = hydrationMl || 0;
+  const percentage = Math.min(100, Math.round((currentIntake / adjustedGoal) * 100));
+  const remainingMl = Math.max(0, adjustedGoal - currentIntake);
+  const remainingCups = Math.max(0, Math.ceil(remainingMl / cupSizeMl));
+  const targetCups = Math.max(1, Math.round(adjustedGoal / cupSizeMl));
+  const currentCups = Math.floor(currentIntake / cupSizeMl);
 
   const handleSaveCupSize = () => {
     const val = parseInt(newCupSize, 10);
     if (val && val >= 100 && val <= 1000) {
       setCupSizeMl(val);
-      setUserProfile(prev => ({ ...prev, cupSizeMl: val }));
+      setUserProfile((prev) => ({ ...prev, cupSizeMl: val }));
       setCupSizeEditing(false);
     }
   };
@@ -88,19 +62,18 @@ export default function HydrateHub() {
   const handleQuickAdd = (amount) => {
     if (incrementHydration) {
       incrementHydration(amount);
-      setCelebrationMessage(`+${amount}ml water logged! 💧`);
+      setCelebrationMessage(`+${amount} ml logged! 💧`);
       setTimeout(() => setCelebrationMessage(''), 3000);
 
-      // Pacing Safety Check: gentle warning if logging large amounts at once (>= 750ml) or rapid cumulative intake
       const now = Date.now();
       recentIntakeRef.current = [
-        ...recentIntakeRef.current.filter(entry => now - entry.time < 180000), // last 3 minutes
+        ...recentIntakeRef.current.filter((entry) => now - entry.time < 180000),
         { amount, time: now }
       ];
       const rapidSum = recentIntakeRef.current.reduce((sum, entry) => sum + entry.amount, 0);
 
       if (amount >= 750 || rapidSum >= 800) {
-        setPacingWarning("Take it slowly 💧 — You don't need to drink a large amount all at once. Spread your fluids throughout the day.");
+        setPacingWarning('Take it slowly 💧 — Sip throughout the day rather than all at once.');
         setTimeout(() => setPacingWarning(''), 8000);
       } else {
         setPacingWarning('');
@@ -108,8 +81,8 @@ export default function HydrateHub() {
 
       try {
         confetti({
-          particleCount: 28,
-          spread: 45,
+          particleCount: 24,
+          spread: 40,
           origin: { y: 0.7 }
         });
       } catch (e) {}
@@ -119,475 +92,417 @@ export default function HydrateHub() {
   const handleSaveGoal = () => {
     const val = parseInt(newGoal, 10);
     if (val && val >= 500) {
-      setUserProfile(prev => ({
+      setUserProfile((prev) => ({
         ...prev,
         hydrationGoalMl: val
       }));
       setGoalEditing(false);
-      // Reset acknowledgement so newly adjusted goal is evaluated fresh against safety guidelines
-      setAcknowledgedContext('');
-      try {
-        localStorage.removeItem('bed_ack_water_goal_context');
-      } catch (e) {}
     }
   };
 
-  const handleApplySuggestedGoal = (suggested) => {
-    setUserProfile(prev => ({
-      ...prev,
-      hydrationGoalMl: suggested
-    }));
-    setNewGoal(suggested);
-    setGoalEditing(false);
-    setAcknowledgedContext('');
-    try {
-      localStorage.removeItem('bed_ack_water_goal_context');
-    } catch (e) {}
-  };
-
-  const handleAcknowledgeWarning = () => {
-    setAcknowledgedContext(safetyCheck.contextKey);
-    try {
-      localStorage.setItem('bed_ack_water_goal_context', safetyCheck.contextKey);
-    } catch (e) {}
-  };
-
   return (
-    <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      
-      {/* Header */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.25rem' }}>
-            <span className="pill-badge blue">
-              <Droplet size={12} /> Hydration & Cellular Flow
-            </span>
-          </div>
-          <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-            Hydrate & Refresh 💧
-          </h2>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
-            Steady, gentle cellular hydration to fuel mental clarity and physical vitality.
-          </p>
-        </div>
+    <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      {/* Section Header */}
+      <SectionHeader
+        title="Hydrate & Refresh"
+        emoji="💧"
+        caption="Steady cellular hydration to support vitality and focus."
+        action={
+          <button
+            id="hydrate-hot-weather-toggle"
+            type="button"
+            onClick={toggleHotWeather}
+            aria-pressed={isHotWeather}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.35rem 0.75rem',
+              minHeight: '38px',
+              borderRadius: 'var(--radius-pill)',
+              border: isHotWeather ? '1px solid #e09f3e' : '1px solid var(--border-subtle)',
+              background: isHotWeather ? 'rgba(224, 159, 62, 0.15)' : 'var(--bg-secondary)',
+              color: isHotWeather ? '#e09f3e' : 'var(--text-secondary)',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            title="Toggle warm weather recommendation boost"
+          >
+            <Sun size={13} color={isHotWeather ? '#e09f3e' : 'var(--text-muted)'} />
+            <span>{isHotWeather ? 'Hot Day (+250 ml)' : 'Warm Weather?'}</span>
+          </button>
+        }
+      />
 
-        {/* Environmental / Hot Weather Context Toggle */}
-        <button
-          id="hydrate-hot-weather-toggle"
-          type="button"
-          onClick={toggleHotWeather}
+      {/* Pacing safety notice */}
+      {pacingWarning && (
+        <div
+          className="card-compact"
           style={{
-            display: 'inline-flex',
+            background: 'rgba(58, 134, 200, 0.1)',
+            border: '1px solid rgba(58, 134, 200, 0.3)',
+            display: 'flex',
             alignItems: 'center',
-            gap: '0.4rem',
-            padding: '0.45rem 0.85rem',
-            borderRadius: 'var(--radius-pill)',
-            border: isHotWeather ? '1.5px solid #e09f3e' : '1px solid var(--border-subtle)',
-            background: isHotWeather ? 'rgba(224, 159, 62, 0.15)' : 'var(--bg-secondary)',
-            color: isHotWeather ? '#e09f3e' : 'var(--text-secondary)',
+            gap: '0.5rem',
             fontSize: '0.8rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
+            color: 'var(--text-primary)'
           }}
-          title="Adjust recommendations for warm weather or heavy perspiration"
         >
-          <span>☀️</span>
-          <span>{isHotWeather ? 'Hot Weather Active (+350 ml estimated)' : 'Warm Weather / Hot Day?'}</span>
-        </button>
-      </div>
+          <AlertCircle size={16} color="#3a86c8" style={{ flexShrink: 0 }} />
+          <span>{pacingWarning}</span>
+        </div>
+      )}
 
-      {/* =========================================================================
-          INTELLIGENT WATER GOAL SAFETY WARNING (CONTEXTUAL & GENTLE)
-          ========================================================================= */}
-      {showGoalWarning && !goalEditing && (
-        <div 
-          id="water-goal-safety-warning"
-          className="card-glass"
-          style={{
-            background: safetyCheck.isHigh 
-              ? 'linear-gradient(135deg, rgba(230, 57, 70, 0.08) 0%, var(--bg-secondary) 100%)'
-              : 'linear-gradient(135deg, rgba(217, 119, 54, 0.08) 0%, var(--bg-secondary) 100%)',
-            border: safetyCheck.isHigh 
-              ? '1.5px solid rgba(230, 57, 70, 0.35)' 
-              : '1.5px solid rgba(217, 119, 54, 0.35)',
-            padding: '1.15rem 1.35rem',
-            borderRadius: 'var(--radius-lg)',
-            animation: 'fadeIn 0.25s ease-out',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.04)'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
-            <div style={{
-              width: 36,
-              height: 36,
+      {/* 1. MAIN INTAKE CARD (Section 6.4.3 ~220dp) */}
+      <div
+        className="card-compact"
+        style={{
+          background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(58, 134, 200, 0.06) 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.85rem'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+          {/* 88dp Water Ring */}
+          <div
+            style={{
+              width: 88,
+              height: 88,
               borderRadius: '50%',
-              background: safetyCheck.isHigh ? 'rgba(230, 57, 70, 0.15)' : 'rgba(217, 119, 54, 0.15)',
+              background: `conic-gradient(#3a86c8 0deg ${percentage * 3.6}deg, var(--bg-tertiary) ${percentage * 3.6}deg 360deg)`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              flexShrink: 0,
-              color: safetyCheck.isHigh ? '#e63946' : '#d97736'
-            }}>
-              <AlertCircle size={20} />
-            </div>
-
-            <div style={{ flex: 1 }}>
-              <h4 style={{ fontSize: '1rem', fontWeight: 800, margin: '0 0 0.3rem 0', color: 'var(--text-primary)' }}>
-                {safetyCheck.title}
-              </h4>
-              <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0 0 0.85rem 0', lineHeight: 1.45 }}>
-                {safetyCheck.message}
-              </p>
-
-              {/* Action Buttons: Adjust Goal or Keep This Goal */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
-                <button
-                  id="hydrate-adjust-goal-btn"
-                  type="button"
-                  onClick={() => { setGoalEditing(true); setNewGoal(safetyCheck.suggestedGoal); }}
-                  className="btn btn-primary btn-sm"
-                  style={{ fontSize: '0.78rem', padding: '0.45rem 0.95rem', gap: '0.35rem', borderRadius: 'var(--radius-pill)', fontWeight: 700 }}
-                >
-                  <Edit2 size={13} />
-                  <span>Adjust Goal (Estimated ~{safetyCheck.suggestedGoal} ml)</span>
-                </button>
-
-                <button
-                  id="hydrate-keep-goal-btn"
-                  type="button"
-                  onClick={handleAcknowledgeWarning}
-                  className="btn btn-secondary btn-sm"
-                  style={{ fontSize: '0.78rem', padding: '0.45rem 0.9rem', color: 'var(--text-secondary)', borderRadius: 'var(--radius-pill)', fontWeight: 600 }}
-                  title="Keep your current goal without repeated reminders"
-                >
-                  Keep {goalMl} ml
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-          RAPID WATER INTAKE / PACING SAFETY WARNING
-          ========================================================================= */}
-      {pacingWarning && (
-        <div 
-          className="card-glass"
-          style={{
-            background: 'linear-gradient(135deg, rgba(58, 134, 200, 0.12) 0%, var(--bg-secondary) 100%)',
-            border: '1.5px solid rgba(58, 134, 200, 0.4)',
-            padding: '1rem 1.25rem',
-            borderRadius: 'var(--radius-md)',
-            animation: 'fadeIn 0.2s ease-out'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.8rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <Clock size={18} color="#3a86c8" />
-              <div>
-                <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)', display: 'block' }}>
-                  Take it slowly 💧
-                </strong>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
-                  You don't need to drink a large amount all at once. Spread your fluids throughout the day.
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => setPacingWarning('')}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 700 }}
-            >
-              Dismiss
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 1. MAIN HYDRATION STATUS & PROGRESS GAUGE */}
-      <div 
-        className="card-glass"
-        style={{
-          background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(58, 134, 200, 0.08) 100%)',
-          padding: '1.75rem',
-          border: '1px solid var(--border-glass)'
-        }}
-      >
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem' }}>
-          {/* Visual Water Wave Gauge */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <div 
+              boxShadow: '0 4px 14px rgba(58, 134, 200, 0.2)',
+              flexShrink: 0
+            }}
+          >
+            <div
               style={{
-                width: 104,
-                height: 104,
+                width: 68,
+                height: 68,
                 borderRadius: '50%',
-                background: `conic-gradient(#3a86c8 0deg ${percentage * 3.6}deg, var(--bg-tertiary) ${percentage * 3.6}deg 360deg)`,
+                background: 'var(--bg-secondary)',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 8px 24px rgba(58, 134, 200, 0.25)',
-                flexShrink: 0
+                justifyContent: 'center'
               }}
             >
-              <div 
-                style={{
-                  width: 82,
-                  height: 82,
-                  borderRadius: '50%',
-                  background: 'var(--bg-secondary)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <Droplet size={22} color="#3a86c8" style={{ marginBottom: 2 }} />
-                <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>
-                  {percentage}%
-                </span>
-                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  of goal
-                </span>
-              </div>
+              <Droplet size={18} color="#3a86c8" />
+              <span className="tabular-nums" style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>
+                {percentage}%
+              </span>
             </div>
+          </div>
 
-            <div>
-              {/* Goal & Cup Size Adjusters */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Today's Water Intake
-                </span>
-                <button
-                  onClick={() => { setGoalEditing(prev => !prev); setCupSizeEditing(false); }}
+          {/* Intake Text & Status */}
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', flexWrap: 'wrap' }}>
+              <span className="tabular-nums" style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                {formatNumber(currentIntake)}
+              </span>
+              <span className="tabular-nums" style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                / {formatNumber(adjustedGoal)} ml
+              </span>
+
+              {/* Activity adjustment note with Undo chip */}
+              {activityBonus > 0 && !isUndoApplied && (
+                <div
                   style={{
-                    background: 'var(--bg-tertiary)',
-                    border: '1px solid var(--border-subtle)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    background: 'rgba(58, 134, 200, 0.12)',
+                    padding: '0.15rem 0.45rem',
                     borderRadius: 'var(--radius-pill)',
-                    padding: '0.2rem 0.55rem',
-                    color: '#3a86c8',
-                    cursor: 'pointer',
                     fontSize: '0.72rem',
                     fontWeight: 700,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem'
+                    color: '#3a86c8'
                   }}
-                  title="Adjust your daily hydration goal"
                 >
-                  <Edit2 size={11} /> {goalEditing ? 'Cancel' : 'Adjust Goal'}
-                </button>
-                <button
-                  onClick={() => { setCupSizeEditing(prev => !prev); setGoalEditing(false); }}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    padding: '0.2rem 0.4rem',
-                    color: '#3a86c8',
-                    cursor: 'pointer',
-                    fontSize: '0.74rem',
-                    fontWeight: 700,
-                    textDecoration: 'underline'
-                  }}
-                  title="Set your default cup size"
-                >
-                  Adjust cup size ({cupSizeMl} ml)
-                </button>
-              </div>
-
-              {/* Goal Editing with Live Safety Feedback */}
-              {goalEditing && (
-                <div style={{ marginTop: '0.4rem', marginBottom: '0.6rem' }}>
-                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                    <input
-                      type="number"
-                      value={newGoal}
-                      onChange={e => setNewGoal(e.target.value)}
-                      style={{
-                        width: 130,
-                        padding: '0.35rem 0.6rem',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-glass)',
-                        fontSize: '0.84rem'
-                      }}
-                      placeholder="2250 ml"
-                    />
-                    <button
-                      onClick={handleSaveGoal}
-                      className="btn btn-primary btn-sm"
-                      style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
-                    >
-                      Save Goal
-                    </button>
-                  </div>
-
-                  {/* Live Safety Feedback while typing */}
-                  {editSafetyCheck.isLow && (
-                    <div style={{ fontSize: '0.74rem', color: '#d97736', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                      <AlertCircle size={12} />
-                      <span>Looks a little low for your usual day (~{editSafetyCheck.estimatedTarget} ml estimated).</span>
-                    </div>
-                  )}
-                  {editSafetyCheck.isHigh && (
-                    <div style={{ fontSize: '0.74rem', color: '#e63946', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                      <AlertCircle size={12} />
-                      <span>Looks quite high for one day. Consider a more moderate goal (~{editSafetyCheck.estimatedTarget} ml).</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {cupSizeEditing && (
-                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginTop: '0.4rem', marginBottom: '0.4rem' }}>
-                  <input
-                    type="number"
-                    value={newCupSize}
-                    onChange={e => setNewCupSize(e.target.value)}
-                    style={{
-                      width: 110,
-                      padding: '0.35rem 0.6rem',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border-glass)',
-                      fontSize: '0.84rem'
-                    }}
-                    placeholder="250 ml"
-                  />
-                  <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>ml per cup</span>
+                  <span>(+{activityBonus} for {adjustmentReasons[0] || 'activity'})</span>
                   <button
-                    onClick={handleSaveCupSize}
-                    className="btn btn-primary btn-sm"
-                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
+                    type="button"
+                    onClick={undoHydrationAdjustment}
+                    aria-label="Undo hydration goal adjustment"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      color: '#3a86c8',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                    title="Undo bonus"
                   >
-                    Save Cup Size
+                    <Undo2 size={11} />
                   </button>
                 </div>
               )}
-
-              {!goalEditing && !cupSizeEditing && (
-                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
-                  {hydrationMl.toLocaleString()} <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-muted)' }}>/ {goalMl.toLocaleString()} ml</span>
-                </div>
-              )}
-
-              <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                {remainingMl === 0 
-                  ? '🎉 Daily target reached! Sip gently as you feel thirsty.'
-                  : `${remainingMl} ml remaining (~${(remainingMl / cupSizeMl).toFixed(1)} cups).`}
-              </p>
-
-              {celebrationMessage && (
-                <div style={{ fontSize: '0.78rem', color: 'var(--accent-primary)', fontWeight: 800, marginTop: '0.4rem', animation: 'fadeIn 0.2s ease-out' }}>
-                  {celebrationMessage}
-                </div>
-              )}
             </div>
-          </div>
 
-          {/* Quick Logging Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {/* Primary 1-Cup Button */}
+            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+              {remainingMl === 0
+                ? '🎉 Daily target reached! Sip gently to thirst.'
+                : `${formatNumber(remainingMl)} ml left (~${remainingCups} ${remainingCups === 1 ? 'cup' : 'cups'})`}
+            </p>
+
+            {/* Same-style Adjustment Chips */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
               <button
-                onClick={() => handleQuickAdd(cupSizeMl)}
-                className="btn btn-primary"
+                type="button"
+                onClick={() => { setGoalEditing(prev => !prev); setCupSizeEditing(false); }}
                 style={{
-                  padding: '0.7rem 1.25rem',
-                  fontSize: '0.88rem',
-                  fontWeight: 800,
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.45rem',
-                  boxShadow: '0 4px 16px rgba(58, 134, 200, 0.3)'
+                  gap: '0.25rem',
+                  background: 'var(--bg-tertiary)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '0.25rem 0.6rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  minHeight: '32px'
                 }}
               >
-                <span>🥛</span>
-                <span>+ 1 Cup ({cupSizeMl} ml)</span>
+                <Edit2 size={11} color="var(--accent-primary)" />
+                <span>{goalEditing ? 'Cancel' : 'Adjust goal'}</span>
               </button>
 
-              {/* 500ml Bottle */}
               <button
-                onClick={() => handleQuickAdd(500)}
-                className="btn btn-secondary"
+                type="button"
+                onClick={() => { setCupSizeEditing(prev => !prev); setGoalEditing(false); }}
                 style={{
-                  padding: '0.7rem 1rem',
-                  fontSize: '0.84rem',
-                  fontWeight: 700,
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.4rem'
+                  gap: '0.25rem',
+                  background: 'var(--bg-tertiary)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '0.25rem 0.6rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  minHeight: '32px'
                 }}
               >
-                <span>🍶</span>
-                <span>+ 500 ml</span>
-              </button>
-
-              {/* 750ml Large Bottle */}
-              <button
-                onClick={() => handleQuickAdd(750)}
-                className="btn btn-secondary"
-                style={{
-                  padding: '0.7rem 1rem',
-                  fontSize: '0.84rem',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem'
-                }}
-                title="Log a 750ml bottle (pacing safety active)"
-              >
-                <span>🫗</span>
-                <span>+ 750 ml</span>
+                <span>Cup size: {cupSizeMl} ml</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Contextual Hydrate Pip */}
-        <ContextualPip context="hydrate" layout="subtle" size={32} style={{ marginTop: '1.25rem' }} />
+        {/* Goal Edit Inline Inputs */}
+        {goalEditing && (
+          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', paddingTop: '0.4rem', borderTop: '1px solid var(--border-subtle)' }}>
+            <input
+              type="number"
+              value={newGoal}
+              onChange={(e) => setNewGoal(e.target.value)}
+              style={{
+                width: 110,
+                padding: '0.35rem 0.6rem',
+                borderRadius: 'var(--radius-chip)',
+                border: '1px solid var(--border-glass)',
+                fontSize: '0.85rem'
+              }}
+              placeholder="2250"
+            />
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>ml base goal</span>
+            <button
+              type="button"
+              onClick={handleSaveGoal}
+              className="btn-soft"
+              style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer' }}
+            >
+              Save
+            </button>
+          </div>
+        )}
+
+        {/* Cup Size Edit Inline Inputs */}
+        {cupSizeEditing && (
+          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', paddingTop: '0.4rem', borderTop: '1px solid var(--border-subtle)' }}>
+            <input
+              type="number"
+              value={newCupSize}
+              onChange={(e) => setNewCupSize(e.target.value)}
+              style={{
+                width: 90,
+                padding: '0.35rem 0.6rem',
+                borderRadius: 'var(--radius-chip)',
+                border: '1px solid var(--border-glass)',
+                fontSize: '0.85rem'
+              }}
+              placeholder="250"
+            />
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>ml per cup</span>
+            <button
+              type="button"
+              onClick={handleSaveCupSize}
+              className="btn-soft"
+              style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer' }}
+            >
+              Save
+            </button>
+          </div>
+        )}
+
+        {celebrationMessage && (
+          <div style={{ fontSize: '0.78rem', color: 'var(--accent-primary)', fontWeight: 700 }}>
+            {celebrationMessage}
+          </div>
+        )}
+
+        {/* Quick Add Row: 3 Equal Buttons */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem', marginTop: '0.2rem' }}>
+          <button
+            type="button"
+            onClick={() => handleQuickAdd(cupSizeMl)}
+            className="btn-primary"
+            style={{
+              padding: '0.65rem 0.5rem',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              borderRadius: 'var(--radius-chip)',
+              minHeight: '44px',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.25rem'
+            }}
+          >
+            <span>🥛</span>
+            <span>+1 cup ({cupSizeMl} ml)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleQuickAdd(500)}
+            className="btn-secondary"
+            style={{
+              padding: '0.65rem 0.5rem',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              borderRadius: 'var(--radius-chip)',
+              minHeight: '44px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.25rem'
+            }}
+          >
+            <span>🍶</span>
+            <span>+500 ml</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleQuickAdd(750)}
+            className="btn-secondary"
+            style={{
+              padding: '0.65rem 0.5rem',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              borderRadius: 'var(--radius-chip)',
+              minHeight: '44px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.25rem'
+            }}
+          >
+            <span>🫗</span>
+            <span>+750 ml</span>
+          </button>
+        </div>
       </div>
 
-      {/* 2. PERSONAL WATER RECOMMENDATION & PACING CARD */}
-      <div 
-        className="card-glass"
+      {/* 2. RECOMMENDATION & PACING CARD (Section 6.4.3) */}
+      <div
+        className="card-compact"
         style={{
-          padding: '1.4rem',
-          background: 'linear-gradient(135deg, var(--bg-glass-card) 0%, rgba(64, 145, 108, 0.08) 100%)',
-          borderLeft: '4px solid var(--accent-primary)'
+          borderLeft: '3px solid var(--accent-primary)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.65rem'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <Sparkles size={16} color="var(--accent-primary)" />
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-            Personal Water Recommendation & Pacing
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Sparkles size={15} color="var(--accent-primary)" />
+          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+            Recommended Hydration & Pacing
           </h3>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', marginTop: '0.85rem', marginBottom: '0.85rem' }}>
-          <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Personal Target</div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)' }}>{waterRec.cupsTarget} cups</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>({waterRec.cupsTarget * cupSizeMl} ml)</div>
-          </div>
-
-          <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Cups Remaining</div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#3a86c8' }}>{waterRec.remainingCups} cups</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>({waterRec.currentCups} of {waterRec.cupsTarget} logged)</div>
-          </div>
-
-          <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Pacing Suggestion</div>
-            <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--accent-primary)', lineHeight: 1.35 }}>
-              {waterRec.pacingText}
+        {/* 3-Cell Stats Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
+          <div style={{ background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: 'var(--radius-chip)', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', fontWeight: 600 }}>Your Goal</div>
+            <div className="tabular-nums" style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+              {targetCups} cups
             </div>
+            <div className="tabular-nums" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+              ({formatNumber(adjustedGoal)} ml)
+            </div>
+          </div>
+
+          <div style={{ background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: 'var(--radius-chip)', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', fontWeight: 600 }}>Remaining</div>
+            <div className="tabular-nums" style={{ fontSize: '1.05rem', fontWeight: 800, color: '#3a86c8' }}>
+              {remainingCups} cups
+            </div>
+            <div className="tabular-nums" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+              ({formatNumber(remainingMl)} ml)
+            </div>
+          </div>
+
+          <div style={{ background: 'var(--bg-tertiary)', padding: '0.5rem', borderRadius: 'var(--radius-chip)', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', fontWeight: 600 }}>Pacing</div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-primary)', marginTop: '0.15rem' }}>
+              {remainingCups <= 0 ? 'Target Met' : '~1 cup / 2h'}
+            </div>
+            <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>before sleep</div>
           </div>
         </div>
 
-        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
-          Calculated dynamically from your daily rhythm, logged activity, and hydration target to ensure comfortable, sustained cellular flow without night waking.
-        </p>
-      </div>
+        {/* Highlight Banner */}
+        <div
+          style={{
+            background: 'var(--accent-primary-light)',
+            padding: '0.45rem 0.75rem',
+            borderRadius: 'var(--radius-chip)',
+            fontSize: '0.8rem',
+            color: 'var(--accent-primary)',
+            fontWeight: 600,
+            lineHeight: 1.35
+          }}
+        >
+          {remainingCups <= 0
+            ? 'Target met for today! Sip gently as comfortable.'
+            : `Try approximately 1 cup every 2 hours until your wind-down rhythm.`}
+        </div>
 
+        {/* Expander for detailed explanation */}
+        <Expander moreLabel="How this is calculated" lessLabel="Hide explanation">
+          <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+            Your hydration target dynamically reflects your base goal ({baseGoal} ml) plus adjustments for logged movement
+            {activityBonus > 0 ? ` (+${activityBonus} ml today)` : ''} and environmental weather. Pacing automatically stops before your scheduled sleep time so you can rest uninterrupted.
+          </p>
+        </Expander>
+      </div>
     </div>
   );
 }

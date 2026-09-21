@@ -160,8 +160,8 @@ export default function NutritionGaps() {
           </button>
         </div>
 
-        {/* Quick Summary of Key Vitamins & Nutrients with Estimated Percentages */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.55rem', marginTop: '0.65rem' }}>
+        {/* 3-Column Summary Grid (~88dp Tiles) with Explicit Basis Note */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.45rem', marginTop: '0.75rem' }}>
           {nutrientDiscoveries.slice(0, 6).map(item => {
             const pct = getEstimatedPercent(item);
             return (
@@ -170,18 +170,24 @@ export default function NutritionGaps() {
                 style={{
                   background: 'var(--bg-secondary)',
                   borderRadius: 'var(--radius-sm)',
-                  padding: '0.6rem 0.75rem',
+                  padding: '0.55rem 0.6rem',
                   border: '1px solid var(--border-subtle)',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'space-between'
+                  justifyContent: 'center',
+                  textAlign: 'center',
+                  minHeight: 76,
+                  boxSizing: 'border-box'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  <span>{item.icon}</span>
-                  <span>{item.name}</span>
+                <div style={{ fontSize: '1.2rem', marginBottom: '0.15rem' }}>
+                  {item.icon}
                 </div>
-                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--accent-primary)' }}>
+                <div style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                  {item.name}
+                </div>
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--accent-primary)', marginTop: '0.1rem' }}>
                   {pct}%
                 </span>
               </div>
@@ -189,9 +195,9 @@ export default function NutritionGaps() {
           })}
         </div>
 
-        {/* Non-Diagnostic Educational Notice */}
-        <div style={{ background: 'var(--bg-secondary)', padding: '0.65rem 0.95rem', borderRadius: 'var(--radius-sm)', fontSize: '0.78rem', color: 'var(--text-muted)', borderLeft: '3px solid var(--accent-primary)', lineHeight: 1.4, marginTop: '0.85rem' }}>
-          💡 <strong>Gentle Note:</strong> These observations highlight whole food opportunities based on your logged ingredients today. They are educational discoveries and not medical diagnostic evaluations.
+        {/* Explicit Daily Reference Basis Note & Non-Diagnostic Notice */}
+        <div style={{ background: 'var(--bg-secondary)', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem', color: 'var(--text-muted)', borderLeft: '3px solid var(--accent-primary)', lineHeight: 1.4, marginTop: '0.75rem' }}>
+          💡 <strong>Daily Reference Basis:</strong> Percentages reflect standard dietary reference intake guidelines for general wellness. These observations highlight whole food opportunities and are educational discoveries, not medical evaluations.
         </div>
       </div>
 

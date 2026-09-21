@@ -1,27 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { X, Sparkles, Plus, Minus, Check, Play, Pause, Grid, Clapperboard } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Sparkles, Check, Play, Pause, ChevronLeft, ChevronRight, Sliders, CheckCircle } from 'lucide-react';
 import PipStepIllustration from './ExerciseStoryboardPip';
 import ExerciseMiniAnimation from './ExerciseMiniAnimations';
 import { useWellness } from '../../context/WellnessContext';
-import { useAudio } from '../../context/AudioContext';
 import confetti from 'canvas-confetti';
 
 export const EXERCISE_BREAKDOWNS = {
   squat: {
     id: 'squat',
     title: 'Squat',
-    subtitle: 'Stronger legs, better balance, more energy.',
+    subtitle: 'Stronger legs, better balance, and core stability.',
     category: 'Legs & Balance',
     icon: '🌱',
-    focusPoint: 'Keep your chest up, knees in line with your toes, and engage your core.',
+    focusPoint: 'Keep your chest up, knees tracking over toes, and push hips back.',
     steps: [
-      { num: 1, text: 'Stand tall with your feet about hip-width apart.' },
+      { num: 1, text: 'Stand tall with feet about hip-width apart.' },
       { num: 2, text: 'Push your hips back and bend your knees.' },
-      { num: 3, text: 'Lower until your thighs are roughly parallel.' },
-      { num: 4, text: 'Pause for a moment.' },
-      { num: 5, text: 'Stand back up, squeezing your glutes.' },
-      { num: 6, text: "That's one rep!" },
-      { num: 7, text: 'Keep going at your own pace.' },
+      { num: 3, text: 'Lower until thighs are roughly parallel (90°).' },
+      { num: 4, text: 'Pause for a moment at the bottom.' },
+      { num: 5, text: 'Push through your heels to stand tall.' },
+      { num: 6, text: "That's one strong rep!" },
+      { num: 7, text: 'Keep going at your own comfortable pace.' },
       { num: 8, text: "You're doing great!" }
     ]
   },
@@ -31,15 +30,15 @@ export const EXERCISE_BREAKDOWNS = {
     subtitle: 'Gentle cardio, joint mobility, and quick energy.',
     category: 'Gentle Cardio',
     icon: '🚶',
-    focusPoint: 'Lift each knee to hip level and swing the opposite arm with natural rhythm.',
+    focusPoint: 'Lift each knee to hip level and swing the opposite arm.',
     steps: [
       { num: 1, text: 'Stand tall with arms relaxed at your sides.' },
-      { num: 2, text: 'Lift your left knee up to hip height.' },
+      { num: 2, text: 'Lift your left knee up toward hip height.' },
       { num: 3, text: 'Swing your opposite (right) arm forward.' },
       { num: 4, text: 'Pause briefly at the top of your march.' },
-      { num: 5, text: 'Lower smoothly and drive your right knee up.' },
+      { num: 5, text: 'Lower smoothly and lift your right knee.' },
       { num: 6, text: "That's one full marching rep!" },
-      { num: 7, text: 'Keep a smooth, rhythmic pace.' },
+      { num: 7, text: 'Maintain a smooth, rhythmic pace.' },
       { num: 8, text: "You're doing great!" }
     ]
   },
@@ -49,97 +48,25 @@ export const EXERCISE_BREAKDOWNS = {
     subtitle: 'Stronger ankles, calf strength, and steady balance.',
     category: 'Ankles & Lower Body',
     icon: '👟',
-    focusPoint: 'Push straight up onto the balls of your feet and lower down with control.',
+    focusPoint: 'Press onto the balls of your feet and lower with control.',
     steps: [
       { num: 1, text: 'Stand tall with feet flat, hands on hips.' },
       { num: 2, text: 'Press firmly into the balls of your feet.' },
       { num: 3, text: 'Lift both heels high off the floor.' },
       { num: 4, text: 'Pause at the top for 1–2 seconds.' },
-      { num: 5, text: 'Slowly lower your heels back to the floor.' },
+      { num: 5, text: 'Slowly lower heels back down.' },
       { num: 6, text: "That's one calf raise rep!" },
-      { num: 7, text: 'Keep ankles steady and controlled.' },
-      { num: 8, text: "You're doing great!" }
-    ]
-  },
-  arm_swing: {
-    id: 'arm_swing',
-    title: 'Gentle Arm Swings',
-    subtitle: 'Shoulder mobility, upper back relief, and easy circulation.',
-    category: 'Shoulders & Mobility',
-    icon: '🙆',
-    focusPoint: 'Keep your shoulders relaxed and let arms swing freely in a natural arc.',
-    steps: [
-      { num: 1, text: 'Stand tall with soft, relaxed knees.' },
-      { num: 2, text: 'Swing both arms smoothly forward.' },
-      { num: 3, text: 'Reach chest or shoulder height.' },
-      { num: 4, text: 'Pause for a fraction of a second.' },
-      { num: 5, text: 'Let arms swing naturally behind your hips.' },
-      { num: 6, text: "That's one smooth pendulum swing!" },
-      { num: 7, text: 'Breathe deeply and keep the rhythm.' },
-      { num: 8, text: "You're doing great!" }
-    ]
-  },
-  pushup: {
-    id: 'pushup',
-    title: 'Push-Up',
-    subtitle: 'Upper body power, arm strength, and core stability.',
-    category: 'Arms & Chest',
-    icon: '💪',
-    focusPoint: 'Keep body in a straight plank line and tuck elbows at a 45° angle.',
-    steps: [
-      { num: 1, text: 'Set hands flat, slightly wider than shoulders.' },
-      { num: 2, text: 'Keep a straight line from head to heels.' },
-      { num: 3, text: 'Bend elbows back at a 45° angle.' },
-      { num: 4, text: 'Hover chest 1–2 inches above surface.' },
-      { num: 5, text: 'Push firmly away back to starting plank.' },
-      { num: 6, text: "That's one strong push-up rep!" },
-      { num: 7, text: 'Maintain a tight, braced core throughout.' },
-      { num: 8, text: "You're doing great!" }
-    ]
-  },
-  lunge: {
-    id: 'lunge',
-    title: 'Step Lunge',
-    subtitle: 'Single-leg strength, hip mobility, and posture.',
-    category: 'Legs & Stability',
-    icon: '🚶',
-    focusPoint: 'Keep your torso upright and form 90° angles with both knees.',
-    steps: [
-      { num: 1, text: 'Stand tall with your hands on your hips.' },
-      { num: 2, text: 'Take a comfortable step forward.' },
-      { num: 3, text: 'Bend both knees toward 90° angles.' },
-      { num: 4, text: 'Pause with back knee hovering off the mat.' },
-      { num: 5, text: 'Push off your front heel to stand tall.' },
-      { num: 6, text: "That's one balanced lunge rep!" },
-      { num: 7, text: 'Switch legs and continue smoothly.' },
-      { num: 8, text: "You're doing great!" }
-    ]
-  },
-  plank: {
-    id: 'plank',
-    title: 'Forearm Plank Hold',
-    subtitle: 'Deep core endurance, posture support, and total body brace.',
-    category: 'Core & Stability',
-    icon: '🛡️',
-    focusPoint: 'Keep elbows under shoulders, neutral spine, and breathe steadily.',
-    steps: [
-      { num: 1, text: 'Rest forearms flat under shoulders.' },
-      { num: 2, text: 'Step feet back into a straight line.' },
-      { num: 3, text: 'Gently brace your tummy and glutes.' },
-      { num: 4, text: 'Keep neck neutral, looking at the mat.' },
-      { num: 5, text: 'Breathe slowly and steadily.' },
-      { num: 6, text: 'Hold strong for 10–20 seconds.' },
-      { num: 7, text: 'Gently lower your knees down to rest.' },
+      { num: 7, text: 'Keep ankles steady throughout.' },
       { num: 8, text: "You're doing great!" }
     ]
   },
   stretch: {
     id: 'stretch',
     title: 'Neck & Shoulder Reset',
-    subtitle: 'Relieve desk stiffness, tension release, and relaxed breathing.',
+    subtitle: 'Relieve desk stiffness, tension release, and easy breathing.',
     category: 'Postural Reset',
     icon: '🍃',
-    focusPoint: 'Move gently without forcing or straining; let shoulders drop away from ears.',
+    focusPoint: 'Move gently without forcing or straining; let shoulders drop away.',
     steps: [
       { num: 1, text: 'Sit or stand tall, relaxing shoulders down.' },
       { num: 2, text: 'Gently tilt right ear toward right shoulder.' },
@@ -148,538 +75,454 @@ export const EXERCISE_BREAKDOWNS = {
       { num: 5, text: 'Gently tilt left ear toward left shoulder.' },
       { num: 6, text: 'Hold softly and exhale tension away.' },
       { num: 7, text: 'Return center with a relaxed, tall spine.' },
-      { num: 8, text: "You're doing great!" }
+      { num: 8, text: "You're feeling more grounded!" }
     ]
   }
 };
 
-export default function ExerciseBreakdownModal({ isOpen, onClose, initialExercise = 'squat' }) {
-  const { logMicroMovement } = useWellness();
-  const { playChime } = useAudio();
+const EXERCISE_LIST = Object.values(EXERCISE_BREAKDOWNS);
 
-  const [selectedKey, setSelectedKey] = useState(initialExercise);
-  const [activeStep, setActiveStep] = useState(1);
-  const [viewMode, setViewMode] = useState('storyboard'); // 'storyboard' | 'live'
-  const [isPlayingSequence, setIsPlayingSequence] = useState(false);
+export default function ExerciseBreakdownModal({ isOpen, onClose, initialExerciseId = 'squat' }) {
+  const { addWellnessEvent } = useWellness();
+  const [activeExerciseId, setActiveExerciseId] = useState(initialExerciseId || 'squat');
+  const [viewMode, setViewMode] = useState('demo'); // 'demo' | 'storyboard'
+  const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [isSlowMode, setIsSlowMode] = useState(false);
-  const [repCount, setRepCount] = useState(0);
-  const [savedFeedback, setSavedFeedback] = useState('');
+  const [isPlayingSteps, setIsPlayingSteps] = useState(false);
+  const [loggedReps, setLoggedReps] = useState(10);
+  const [isPracticing, setIsPracticing] = useState(false);
+  const [justLogged, setJustLogged] = useState(false);
 
-  // Auto-play / sequencer timer
+  const chipsContainerRef = useRef(null);
+  const activeChipRef = useRef(null);
+
+  const exercise = EXERCISE_BREAKDOWNS[activeExerciseId] || EXERCISE_BREAKDOWNS.squat;
+  const totalSteps = exercise.steps.length;
+
+  useEffect(() => {
+    if (activeChipRef.current && chipsContainerRef.current) {
+      activeChipRef.current.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, [activeExerciseId]);
+
+  useEffect(() => {
+    setCurrentStepIdx(0);
+    setIsPlayingSteps(false);
+    setJustLogged(false);
+  }, [activeExerciseId, viewMode]);
+
+  // Auto-play steps when in Storyboard mode and Play is active
   useEffect(() => {
     let timer;
-    if (isPlayingSequence) {
-      const stepDuration = isSlowMode ? 1800 : 1000;
+    if (viewMode === 'storyboard' && isPlayingSteps) {
       timer = setInterval(() => {
-        setActiveStep(prev => (prev >= 8 ? 1 : prev + 1));
-      }, stepDuration);
+        setCurrentStepIdx((prev) => {
+          if (prev >= totalSteps - 1) {
+            setIsPlayingSteps(false);
+            return 0;
+          }
+          return prev + 1;
+        });
+      }, isSlowMode ? 3500 : 2000);
     }
     return () => clearInterval(timer);
-  }, [isPlayingSequence, isSlowMode]);
+  }, [viewMode, isPlayingSteps, totalSteps, isSlowMode]);
 
   if (!isOpen) return null;
 
-  const exercise = EXERCISE_BREAKDOWNS[selectedKey] || EXERCISE_BREAKDOWNS.squat;
-
-  const handleSelectExercise = (key) => {
-    setSelectedKey(key);
-    setActiveStep(1);
-    setIsPlayingSequence(false);
-    setRepCount(0);
-    setSavedFeedback('');
-  };
-
-  const togglePlaySequence = () => {
-    setIsPlayingSequence(prev => !prev);
-  };
-
-  const handleIncrement = () => {
-    setRepCount(prev => prev + 1);
-    setSavedFeedback('');
-  };
-
-  const handleDecrement = () => {
-    setRepCount(prev => Math.max(0, prev - 1));
-    setSavedFeedback('');
-  };
-
-  const handleSaveReps = () => {
-    if (repCount > 0) {
-      if (logMicroMovement) {
-        logMicroMovement(`${exercise.title} (${repCount} reps)`, 'completed');
-      }
-      try { playChime(660); } catch(e) {}
-      try { confetti({ particleCount: 35, spread: 60, origin: { y: 0.6 } }); } catch(e) {}
-      setSavedFeedback(`Saved ${repCount} ${repCount === 1 ? 'rep' : 'reps'}! Great job 🌱`);
-    } else {
-      setSavedFeedback('Practice noted! 🌱');
+  const handlePracticeAndLog = () => {
+    if (addWellnessEvent) {
+      addWellnessEvent({
+        type: 'activity',
+        activityType: 'break_it_down',
+        name: exercise.title,
+        durationMinutes: 5,
+        reps: loggedReps,
+        timestamp: new Date().toISOString()
+      });
     }
+    setJustLogged(true);
+    try {
+      confetti({ particleCount: 30, spread: 50, origin: { y: 0.8 } });
+    } catch (e) {}
+    setTimeout(() => {
+      setJustLogged(false);
+      setIsPracticing(false);
+    }, 2000);
   };
+
+  const currentStep = exercise.steps[currentStepIdx] || exercise.steps[0];
 
   return (
-    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 1100 }}>
-      <div 
-        className="modal-sheet" 
-        onClick={e => e.stopPropagation()} 
-        style={{ 
-          maxWidth: 960, 
-          width: '95vw',
-          maxHeight: '92vh', 
-          overflowY: 'auto',
-          borderRadius: '24px',
-          padding: '1.5rem',
-          background: 'var(--bg-card, #f4faf6)',
-          border: '1.5px solid rgba(45, 106, 79, 0.2)',
-          boxShadow: '0 25px 60px rgba(0,0,0,0.25)',
-          animation: 'scaleUp 0.2s ease-out'
+    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 250, alignItems: 'flex-end', padding: 0 }}>
+      <div
+        className="modal-sheet"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: 600,
+          maxHeight: '92vh',
+          borderRadius: '24px 24px 0 0',
+          padding: '1.25rem 1.25rem 1.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+          boxSizing: 'border-box'
         }}
       >
-        {/* =========================================================================
-            HEADER SECTION (MATCHING DESIGN REFERENCE)
-            ========================================================================= */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.8rem' }}>
-          
-          {/* Left Title Capsule */}
-          <div style={{ 
-            background: 'var(--bg-secondary, #eaf5ee)', 
-            padding: '0.55rem 1.15rem', 
-            borderRadius: '999px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.65rem',
-            border: '1px solid rgba(45, 106, 79, 0.15)'
-          }}>
-            <span style={{ fontSize: '1.4rem' }}>{exercise.icon}</span>
-            <div>
-              <h2 style={{ fontSize: '1.3rem', fontWeight: 800, margin: 0, color: 'var(--text-primary, #1b382b)', lineHeight: 1.1 }}>
-                {exercise.title}
-              </h2>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary, #40916c)', margin: 0, fontWeight: 600 }}>
-                {exercise.subtitle}
-              </p>
-            </div>
+        {/* Drag Handle */}
+        <div style={{ width: 36, height: 4, background: 'var(--border-subtle)', borderRadius: 2, margin: '0 auto -0.25rem' }} />
+
+        {/* 1. Header Row (~56dp, Section 6.2.3) */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+          <div style={{ minWidth: 0 }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span>{exercise.icon}</span>
+              <span>{exercise.title}</span>
+            </h3>
+            <p style={{ margin: '0.1rem 0 0 0', fontSize: '0.76rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {exercise.subtitle}
+            </p>
           </div>
 
-          {/* Right Mascot Badge & Avatar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{
-              background: 'var(--bg-secondary, #eaf5ee)',
-              border: '1.5px solid rgba(45, 106, 79, 0.25)',
-              borderRadius: '999px',
-              padding: '0.35rem 0.95rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              color: 'var(--accent-primary, #2d6a4f)',
-              fontSize: '0.84rem',
-              fontWeight: 800
-            }}>
-              <Sparkles size={14} fill="#f4a261" color="#f4a261" />
-              <span>Pip shows you how!</span>
-            </div>
-
-            {/* Mascot Avatar Circle with glow lines */}
-            <div style={{
-              width: 44,
-              height: 44,
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              width: 36,
+              height: 36,
               borderRadius: '50%',
-              background: '#74c69d',
+              background: 'var(--bg-tertiary)',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              position: 'relative',
-              boxShadow: '0 4px 12px rgba(45, 106, 79, 0.2)'
-            }}>
-              <svg width="34" height="34" viewBox="0 0 40 40">
-                <circle cx="20" cy="20" r="16" fill="#74c69d" />
-                {/* Sprout */}
-                <path d="M 20 6 Q 18 2, 14 0" stroke="#2d6a4f" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                <path d="M 14 0 C 10 -3, 8 1, 14 3 Z" fill="#40916c" />
-                {/* Face */}
-                <path d="M 13 18 Q 16 14, 19 18" stroke="#1b382b" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-                <path d="M 21 18 Q 24 14, 27 18" stroke="#1b382b" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-                <path d="M 18 23 Q 20 26, 22 23" stroke="#1b382b" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                <circle cx="12" cy="22" r="2.5" fill="#ff9ebb" opacity="0.85" />
-                <circle cx="28" cy="22" r="2.5" fill="#ff9ebb" opacity="0.85" />
-              </svg>
-            </div>
-
-            {/* Close Button */}
-            <button 
-              onClick={onClose} 
-              style={{ 
-                background: 'var(--bg-tertiary, #e2ece6)', 
-                border: 'none', 
-                borderRadius: '50%', 
-                width: 32, 
-                height: 32, 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                cursor: 'pointer', 
-                color: 'var(--text-muted, #555)',
-                marginLeft: '0.2rem'
-              }}
-              title="Close"
-            >
-              <X size={18} />
-            </button>
-          </div>
+              flexShrink: 0
+            }}
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        {/* Exercise Switching Chips & View Mode Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '1.2rem' }}>
-          {/* Exercise Chips */}
-          <div style={{ display: 'flex', gap: '0.45rem', overflowX: 'auto', paddingBottom: '0.2rem', scrollbarWidth: 'none', flex: 1, minWidth: 260 }}>
-            {Object.entries(EXERCISE_BREAKDOWNS).map(([key, ex]) => {
-              const isSelected = selectedKey === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleSelectExercise(key)}
-                  style={{
-                    padding: '0.4rem 0.85rem',
-                    borderRadius: '999px',
-                    border: isSelected ? '1.8px solid var(--accent-primary, #2d6a4f)' : '1px solid rgba(45, 106, 79, 0.15)',
-                    background: isSelected ? 'var(--accent-primary-light, #d8f3dc)' : 'var(--bg-secondary, #ffffff)',
-                    color: isSelected ? 'var(--accent-primary, #2d6a4f)' : 'var(--text-primary, #2d3748)',
-                    fontSize: '0.78rem',
-                    fontWeight: isSelected ? 800 : 600,
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  {ex.icon} {ex.title}
-                </button>
-              );
-            })}
-          </div>
+        {/* 2. Exercise Selection Chips (Horizontal Scrollable Row) */}
+        <div
+          ref={chipsContainerRef}
+          className="hide-scrollbar"
+          style={{
+            display: 'flex',
+            gap: '0.35rem',
+            overflowX: 'auto',
+            paddingBottom: '0.2rem'
+          }}
+        >
+          {EXERCISE_LIST.map((item) => {
+            const isSelected = item.id === activeExerciseId;
+            return (
+              <button
+                key={item.id}
+                ref={isSelected ? activeChipRef : null}
+                type="button"
+                onClick={() => setActiveExerciseId(item.id)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  padding: '0.35rem 0.75rem',
+                  minHeight: '36px',
+                  borderRadius: 'var(--radius-pill)',
+                  border: isSelected ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                  background: isSelected ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                  color: isSelected ? '#ffffff' : 'var(--text-primary)',
+                  fontSize: '0.78rem',
+                  fontWeight: isSelected ? 700 : 500,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+              >
+                <span>{item.icon}</span>
+                <span>{item.title}</span>
+              </button>
+            );
+          })}
+        </div>
 
-          {/* View Mode Toggle Switch (Storyboard vs Live Animation) */}
-          <div style={{ 
-            display: 'flex', 
-            background: 'var(--bg-secondary, #eaf5ee)', 
-            padding: '3px', 
-            borderRadius: '999px',
-            border: '1px solid rgba(45, 106, 79, 0.15)'
-          }}>
+        {/* 3. Mode Toggle (Storyboard | Live Demo) */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', background: 'var(--bg-tertiary)', padding: '2px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-subtle)' }}>
+            <button
+              type="button"
+              onClick={() => setViewMode('demo')}
+              style={{
+                padding: '0.3rem 0.85rem',
+                minHeight: '32px',
+                borderRadius: 'var(--radius-pill)',
+                border: 'none',
+                background: viewMode === 'demo' ? 'var(--bg-secondary)' : 'transparent',
+                color: viewMode === 'demo' ? 'var(--text-primary)' : 'var(--text-muted)',
+                fontSize: '0.78rem',
+                fontWeight: viewMode === 'demo' ? 700 : 500,
+                cursor: 'pointer',
+                boxShadow: viewMode === 'demo' ? 'var(--shadow-sm)' : 'none'
+              }}
+            >
+              Live Demo
+            </button>
             <button
               type="button"
               onClick={() => setViewMode('storyboard')}
               style={{
-                background: viewMode === 'storyboard' ? 'var(--accent-primary, #2d6a4f)' : 'transparent',
-                color: viewMode === 'storyboard' ? '#ffffff' : 'var(--text-secondary, #2d6a4f)',
+                padding: '0.3rem 0.85rem',
+                minHeight: '32px',
+                borderRadius: 'var(--radius-pill)',
                 border: 'none',
-                borderRadius: '999px',
-                padding: '0.35rem 0.75rem',
-                fontSize: '0.76rem',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
+                background: viewMode === 'storyboard' ? 'var(--bg-secondary)' : 'transparent',
+                color: viewMode === 'storyboard' ? 'var(--text-primary)' : 'var(--text-muted)',
+                fontSize: '0.78rem',
+                fontWeight: viewMode === 'storyboard' ? 700 : 500,
                 cursor: 'pointer',
-                transition: 'all 0.15s ease'
+                boxShadow: viewMode === 'storyboard' ? 'var(--shadow-sm)' : 'none'
               }}
             >
-              <Grid size={13} />
-              <span>8-Step Storyboard</span>
+              Storyboard
             </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('live')}
-              style={{
-                background: viewMode === 'live' ? 'var(--accent-primary, #2d6a4f)' : 'transparent',
-                color: viewMode === 'live' ? '#ffffff' : 'var(--text-secondary, #2d6a4f)',
-                border: 'none',
-                borderRadius: '999px',
-                padding: '0.35rem 0.75rem',
-                fontSize: '0.76rem',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <Clapperboard size={13} />
-              <span>Live Demonstration</span>
-            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsSlowMode(!isSlowMode)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              padding: '0.25rem 0.6rem',
+              minHeight: '32px',
+              borderRadius: 'var(--radius-pill)',
+              border: isSlowMode ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+              background: isSlowMode ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+              color: isSlowMode ? 'var(--accent-primary)' : 'var(--text-secondary)',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            <span>Slow 0.5x</span>
+            {isSlowMode && <Check size={11} />}
+          </button>
+        </div>
+
+        {/* 4. Stage (4:3, max ~260dp, Section 6.2.3) */}
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: 240,
+            borderRadius: 'var(--radius-card)',
+            overflow: 'hidden',
+            border: '1px solid var(--border-subtle)'
+          }}
+        >
+          {/* Small Pip Instructor Chip (Top-Left inside stage) */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 10,
+              left: 10,
+              zIndex: 10,
+              background: 'rgba(255, 255, 255, 0.88)',
+              backdropFilter: 'blur(8px)',
+              padding: '0.15rem 0.5rem',
+              borderRadius: 'var(--radius-pill)',
+              fontSize: '0.6875rem',
+              fontWeight: 700,
+              color: 'var(--accent-primary)',
+              border: '1px solid var(--border-glass)'
+            }}
+          >
+            🌱 Pip Instructor
+          </div>
+
+          {viewMode === 'demo' ? (
+            <ExerciseMiniAnimation exerciseId={activeExerciseId} isSlowMode={isSlowMode} />
+          ) : (
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)' }}>
+              <PipStepIllustration exerciseId={activeExerciseId} stepNumber={currentStep.num} isActive={true} />
+            </div>
+          )}
+
+          {/* Form Cue Caption Bar (Pinned Bottom inside Stage - never overlapped) */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: 'rgba(30, 45, 36, 0.85)',
+              backdropFilter: 'blur(8px)',
+              color: '#ffffff',
+              padding: '0.4rem 0.75rem',
+              fontSize: '0.76rem',
+              fontWeight: 600,
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            {viewMode === 'storyboard' ? `Step ${currentStep.num}: ${currentStep.text}` : exercise.focusPoint}
           </div>
         </div>
 
-        {/* =========================================================================
-            MAIN VIEW: LIVE ANIMATION PLAYER OR 8-STEP STORYBOARD GRID
-            ========================================================================= */}
-        {viewMode === 'live' ? (
-          <div style={{ marginBottom: '1.2rem' }}>
-            <ExerciseMiniAnimation exerciseId={selectedKey} isSlowMode={isSlowMode} />
-          </div>
-        ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '0.9rem',
-            marginBottom: '1.2rem'
-          }}>
-            {exercise.steps.map((step) => {
-              const isStepActive = activeStep === step.num;
-              return (
+        {/* 5. Controls Row (for Storyboard Pager) */}
+        {viewMode === 'storyboard' && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', padding: '0.2rem 0' }}>
+            <button
+              type="button"
+              onClick={() => setCurrentStepIdx((p) => Math.max(0, p - 1))}
+              disabled={currentStepIdx === 0}
+              aria-label="Previous step"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-subtle)',
+                color: currentStepIdx === 0 ? 'var(--text-muted)' : 'var(--text-primary)',
+                cursor: currentStepIdx === 0 ? 'default' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: currentStepIdx === 0 ? 0.5 : 1
+              }}
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            {/* Step Dots Indicator */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              {exercise.steps.map((s, idx) => (
                 <div
-                  key={step.num}
-                  onClick={() => setActiveStep(step.num)}
+                  key={s.num}
+                  onClick={() => setCurrentStepIdx(idx)}
                   style={{
-                    background: 'var(--bg-secondary, #eef7f2)',
-                    borderRadius: '16px',
-                    padding: '0.85rem 0.75rem',
-                    border: isStepActive 
-                      ? '2px solid var(--accent-primary, #2d6a4f)' 
-                      : '1px solid rgba(45, 106, 79, 0.12)',
-                    boxShadow: isStepActive 
-                      ? '0 6px 18px rgba(45, 106, 79, 0.18)' 
-                      : '0 2px 6px rgba(0,0,0,0.03)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
+                    width: idx === currentStepIdx ? 16 : 6,
+                    height: 6,
+                    borderRadius: 'var(--radius-pill)',
+                    background: idx === currentStepIdx ? 'var(--accent-primary)' : 'var(--border-subtle)',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    position: 'relative',
-                    transform: isStepActive ? 'translateY(-2px)' : 'none'
+                    transition: 'all 0.2s ease'
                   }}
-                >
-                  {/* Top Illustration Area */}
-                  <div style={{ width: '100%', height: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.5rem' }}>
-                    <PipStepIllustration 
-                      exerciseId={selectedKey} 
-                      stepNumber={step.num} 
-                      isActive={isStepActive} 
-                    />
-                  </div>
+                />
+              ))}
+            </div>
 
-                  {/* Bottom Step Number Badge & Instruction Text */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.55rem',
-                    width: '100%',
-                    marginTop: 'auto'
-                  }}>
-                    {/* Step Number Circle Badge */}
-                    <div style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: '50%',
-                      background: isStepActive ? 'var(--accent-primary, #2d6a4f)' : '#a3d9b8',
-                      color: isStepActive ? '#ffffff' : '#1b382b',
-                      fontSize: '0.8rem',
-                      fontWeight: 800,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                    }}>
-                      {step.num}
-                    </div>
-
-                    {/* Instruction Pill Container */}
-                    <div style={{
-                      background: 'var(--bg-card, #ffffff)',
-                      padding: '0.4rem 0.65rem',
-                      borderRadius: '999px',
-                      border: '1px solid rgba(45, 106, 79, 0.1)',
-                      flex: 1,
-                      fontSize: '0.74rem',
-                      fontWeight: 600,
-                      color: 'var(--text-primary, #1b382b)',
-                      lineHeight: 1.25
-                    }}>
-                      {step.text}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            <button
+              type="button"
+              onClick={() => setCurrentStepIdx((p) => Math.min(totalSteps - 1, p + 1))}
+              disabled={currentStepIdx === totalSteps - 1}
+              aria-label="Next step"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-subtle)',
+                color: currentStepIdx === totalSteps - 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                cursor: currentStepIdx === totalSteps - 1 ? 'default' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: currentStepIdx === totalSteps - 1 ? 0.5 : 1
+              }}
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
         )}
 
-        {/* =========================================================================
-            BOTTOM BAR (QUICK TIP + SLOW MODE / PLAY BUTTONS)
-            ========================================================================= */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '1rem',
-          flexWrap: 'wrap',
-          marginBottom: '1rem'
-        }}>
-          {/* Quick Tip Capsule */}
-          <div style={{
-            background: 'var(--bg-secondary, #eef7f2)',
-            padding: '0.65rem 1.15rem',
-            borderRadius: '999px',
-            border: '1px solid rgba(45, 106, 79, 0.15)',
+        {/* 6. Quick Tip Banner (Max 2 lines) */}
+        <div
+          style={{
+            background: 'var(--accent-primary-light)',
+            padding: '0.5rem 0.75rem',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '0.78rem',
+            color: 'var(--text-secondary)',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            flex: 1,
-            minWidth: 280
-          }}>
-            <span style={{ fontSize: '1.1rem' }}>💡</span>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-primary, #1b382b)', fontWeight: 600 }}>
-              <strong style={{ color: 'var(--accent-primary, #2d6a4f)' }}>Quick Tip:</strong> {exercise.focusPoint}
-            </span>
-          </div>
-
-          {/* Interactive Player Controls */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {/* Play/Pause Sequence Button */}
-            <button
-              type="button"
-              onClick={togglePlaySequence}
-              style={{
-                background: isPlayingSequence ? 'var(--accent-primary, #2d6a4f)' : 'var(--bg-secondary, #eef7f2)',
-                color: isPlayingSequence ? '#ffffff' : 'var(--accent-primary, #2d6a4f)',
-                border: '1.5px solid var(--accent-primary, #2d6a4f)',
-                borderRadius: '999px',
-                padding: '0.45rem 0.95rem',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {isPlayingSequence ? <Pause size={14} /> : <Play size={14} />}
-              <span>{isPlayingSequence ? 'Pause Steps' : 'Play Steps'}</span>
-            </button>
-
-            {/* Slow Mode Toggle */}
-            <button
-              type="button"
-              onClick={() => setIsSlowMode(!isSlowMode)}
-              style={{
-                background: isSlowMode ? 'var(--accent-primary-light, #d8f3dc)' : 'var(--bg-secondary, #eef7f2)',
-                color: isSlowMode ? 'var(--accent-primary, #2d6a4f)' : 'var(--text-secondary, #4a5568)',
-                border: isSlowMode ? '1.5px solid var(--accent-primary, #2d6a4f)' : '1px solid rgba(45, 106, 79, 0.2)',
-                borderRadius: '999px',
-                padding: '0.45rem 0.95rem',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <span>{isSlowMode ? '🐢 Slow Mode On' : '▶ Slow Mode'}</span>
-            </button>
-          </div>
+            gap: '0.4rem',
+            lineHeight: 1.35
+          }}
+        >
+          <Sparkles size={14} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+          <span><strong>Quick Tip:</strong> {exercise.focusPoint}</span>
         </div>
 
-        {/* =========================================================================
-            PRACTICE REP COUNTER & LOGGER
-            ========================================================================= */}
-        <div style={{
-          background: 'var(--bg-secondary, #ffffff)',
-          border: '1px solid rgba(45, 106, 79, 0.15)',
-          borderRadius: '16px',
-          padding: '0.85rem 1.15rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '0.8rem'
-        }}>
-          <div>
-            <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary, #1b382b)' }}>
-              Practice & Log {exercise.title}
-            </span>
-            <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary, #718096)', margin: 0 }}>
-              Try a few reps following Pip's form, then record your practice!
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-tertiary, #f0f4f1)', padding: '3px 6px', borderRadius: '999px' }}>
+        {/* 7. Sticky Practice & Log Footer */}
+        <div
+          style={{
+            marginTop: 'auto',
+            paddingTop: '0.5rem',
+            borderTop: '1px solid var(--border-subtle)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.5rem'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Reps:</span>
+            {[5, 10, 15].map((count) => (
               <button
+                key={count}
                 type="button"
-                onClick={handleDecrement}
+                onClick={() => setLoggedReps(count)}
                 style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  border: 'none',
-                  background: 'var(--bg-card, #ffffff)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                  padding: '0.2rem 0.5rem',
+                  minHeight: '32px',
+                  borderRadius: 'var(--radius-pill)',
+                  border: loggedReps === count ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                  background: loggedReps === count ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                  color: loggedReps === count ? '#ffffff' : 'var(--text-primary)',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
                 }}
               >
-                <Minus size={14} />
+                {count}
               </button>
-              <span style={{ minWidth: 28, textAlign: 'center', fontWeight: 800, fontSize: '0.9rem' }}>
-                {repCount}
-              </span>
-              <button
-                type="button"
-                onClick={handleIncrement}
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  border: 'none',
-                  background: 'var(--bg-card, #ffffff)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                }}
-              >
-                <Plus size={14} />
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleSaveReps}
-              style={{
-                background: 'var(--accent-primary, #2d6a4f)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '999px',
-                padding: '0.5rem 1.1rem',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: '0 2px 6px rgba(45, 106, 79, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem'
-              }}
-            >
-              <Check size={14} />
-              <span>Log Practice</span>
-            </button>
+            ))}
           </div>
 
-          {savedFeedback && (
-            <div style={{ width: '100%', fontSize: '0.78rem', color: 'var(--accent-primary, #2d6a4f)', fontWeight: 700, textAlign: 'right' }}>
-              {savedFeedback}
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={handlePracticeAndLog}
+            className="btn-primary"
+            style={{
+              padding: '0.55rem 1.25rem',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              borderRadius: 'var(--radius-pill)',
+              border: 'none',
+              cursor: 'pointer',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}
+          >
+            {justLogged ? (
+              <>
+                <CheckCircle size={15} />
+                <span>Logged! 🎉</span>
+              </>
+            ) : (
+              <span>Practice & Log Reps</span>
+            )}
+          </button>
         </div>
-
       </div>
     </div>
   );

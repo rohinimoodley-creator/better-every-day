@@ -255,25 +255,80 @@ export default function InsightsHub({ onNavigateTab, initialTab = 'summary' }) {
 
       {/* 4. Tab Views */}
       
-      {/* 4.1 SUMMARY */}
+      {/* 4.1 SUMMARY (5-Pillar Comparison + Narrative + Accomplishments) */}
       {activeTab === 'summary' && (
-        <div className="card-glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-            {report.summary?.headline || 'Weekly Wellness Narrative'}
-          </h3>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
-            {report.summary?.narrative || 'You have maintained steady rhythm throughout this week. Mindful breaks and water intake have been especially solid.'}
-          </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* 5-Pillar Horizontal Consistency Comparison */}
+          <div className="card-glass" style={{ padding: '1.35rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  5-Pillar Consistency Overview
+                </h3>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  Balanced, shame-free reflection of your daily rhythms
+                </span>
+              </div>
+              <span className="pill-badge primary" style={{ fontSize: '0.7rem' }}>
+                {dateRange.replace('_', ' ').toUpperCase()}
+              </span>
+            </div>
 
-          <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase' }}>
-              Key Accomplishments
-            </span>
-            <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.84rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
-              <li>Completed 5 consecutive morning water glasses.</li>
-              <li>Logged daily reflections on 6 out of 7 days.</li>
-              <li>Protected streak through 1 rest pause day.</li>
-            </ul>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {[
+                { name: 'Hydration', icon: '💧', pct: Math.min(100, Math.round((hydrationMl / 2250) * 100)), color: '#3a86c8', note: `${hydrationMl} ml logged` },
+                { name: 'Movement', icon: '🏃', pct: Math.min(100, Math.round((stepCount / 8000) * 100)), color: '#40916c', note: `${stepCount} steps • ${activeWorkoutMinutes}m active` },
+                { name: 'Nourishment', icon: '🥗', pct: Math.min(100, loggedMeals.length * 35), color: '#d97736', note: `${loggedMeals.length} meals logged` },
+                { name: 'Rest & Recovery', icon: '🌙', pct: 85, color: '#7b61ff', note: '7.5 hrs average sleep' },
+                { name: 'Mind & Presence', icon: '🌿', pct: Math.min(100, (journalEntries.length + discoveredGratitude.length) * 40 || 75), color: '#8b5cf6', note: `${journalEntries.length + discoveredGratitude.length} reflections saved` }
+              ].map(pillar => (
+                <div key={pillar.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                      <span>{pillar.icon}</span>
+                      <span>{pillar.name}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>{pillar.note}</span>
+                      <strong style={{ color: pillar.color, fontSize: '0.84rem' }}>{pillar.pct}%</strong>
+                    </div>
+                  </div>
+                  {/* Progress Track */}
+                  <div style={{ height: 6, background: 'var(--bg-tertiary)', borderRadius: 3, overflow: 'hidden' }}>
+                    <div 
+                      style={{ 
+                        height: '100%', 
+                        width: `${pillar.pct}%`, 
+                        background: pillar.color, 
+                        borderRadius: 3, 
+                        transition: 'width 0.6s ease' 
+                      }} 
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Weekly Narrative Card */}
+          <div className="card-glass" style={{ padding: '1.35rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              {report.summary?.headline || 'Weekly Wellness Narrative'}
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+              {report.summary?.narrative || 'You have maintained steady rhythm throughout this week. Mindful movement breaks and water intake have been especially solid.'}
+            </p>
+
+            <div style={{ background: 'var(--bg-secondary)', padding: '0.9rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+              <span style={{ fontSize: '0.76rem', fontWeight: 800, color: 'var(--accent-primary)', textTransform: 'uppercase' }}>
+                Key Accomplishments
+              </span>
+              <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                <li>Completed consistent daytime hydration pacing.</li>
+                <li>Logged daily reflections on 6 out of 7 days.</li>
+                <li>Protected streak count through intentional gentle pacing.</li>
+              </ul>
+            </div>
           </div>
         </div>
       )}
@@ -346,7 +401,7 @@ export default function InsightsHub({ onNavigateTab, initialTab = 'summary' }) {
             </div>
           )}
 
-          {/* Actionable Recommendations */}
+          {/* Actionable Recommendations with Explainable Why Pills */}
           <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
             Actionable Next Steps ({dateRange.replace('_', ' ')})
           </div>
@@ -405,6 +460,12 @@ export default function InsightsHub({ onNavigateTab, initialTab = 'summary' }) {
 
               <h4 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>{rec.title}</h4>
               <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0 }}>{rec.action}</p>
+
+              {/* Explainable Why Pill */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.3rem', fontSize: '0.74rem', color: 'var(--text-muted)', background: 'var(--bg-tertiary)', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-sm)' }}>
+                <Sparkles size={12} color="var(--accent-primary)" />
+                <span><strong>Why:</strong> {rec.reason || `Informed by your ${rec.pillar?.toLowerCase() || 'wellness'} pattern and daily rhythm.`}</span>
+              </div>
             </div>
           ))}
         </div>

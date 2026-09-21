@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
+    "test": "node src/engine/__tests__/wellnessLinkEngine.test.js",
     "cap:sync": "npm run build && npx cap sync android",
     "cap:open": "npx cap open android",
     "build:android": "npm run build && npx cap sync android"

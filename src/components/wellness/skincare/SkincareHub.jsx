@@ -37,6 +37,7 @@ import confetti from 'canvas-confetti';
 import AddEditProductModal from './AddEditProductModal';
 import EditRoutineStepModal from './EditRoutineStepModal';
 import { SKINCARE_CATEGORIES, AVAILABLE_SKIN_GOALS } from '../../../data/mockData';
+import { formatPlural } from '../../../utils/formatters.js';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -189,13 +190,13 @@ export default function SkincareHub() {
 
     // Core keys first
     if (skincareRoutines.morning) {
-      tabsList.push({ id: 'morning', label: '☀️ Morning', badge: `${(skincareRoutines.morning.steps || []).length} steps` });
+      tabsList.push({ id: 'morning', label: '☀️ Morning', badge: formatPlural((skincareRoutines.morning.steps || []).length, 'step') });
     }
     if (skincareRoutines.evening) {
-      tabsList.push({ id: 'evening', label: '🌙 Evening', badge: `${(skincareRoutines.evening.steps || []).length} steps` });
+      tabsList.push({ id: 'evening', label: '🌙 Evening', badge: formatPlural((skincareRoutines.evening.steps || []).length, 'step') });
     }
     if (skincareRoutines.weekly) {
-      tabsList.push({ id: 'weekly', label: '📅 Weekly & Rituals', badge: `${(skincareRoutines.weekly.steps || []).length} steps` });
+      tabsList.push({ id: 'weekly', label: '📅 Weekly & Rituals', badge: formatPlural((skincareRoutines.weekly.steps || []).length, 'step') });
     }
 
     // Additional / custom routines
@@ -205,7 +206,7 @@ export default function SkincareHub() {
         tabsList.push({
           id: key,
           label: `${r.icon || '✨'} ${r.name || key}`,
-          badge: `${(r.steps || []).length} steps`,
+          badge: formatPlural((r.steps || []).length, 'step'),
           isCustom: true
         });
       }

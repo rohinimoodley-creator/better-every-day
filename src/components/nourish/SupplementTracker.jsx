@@ -154,26 +154,34 @@ export default function SupplementTracker() {
                       </button>
                     </div>
 
-                    <h4 style={{ fontSize: '1rem', fontWeight: 800, margin: '0 0 0.2rem 0', color: 'var(--text-primary)' }}>
+                    <h4 style={{ fontSize: '0.98rem', fontWeight: 800, margin: '0 0 0.2rem 0', color: 'var(--text-primary)' }}>
                       {supp.name}
                     </h4>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      <strong>{supp.amountPerDose} {supp.unit}</strong> ({supp.pillsPerDose} {supp.pillsPerDose === 1 ? 'pill' : 'pills'} per dose)
+                      <strong>{supp.amountPerDose || 1} {supp.unit || 'mg'}</strong> ({supp.pillsPerDose || 1} {(supp.pillsPerDose || 1) === 1 ? 'pill' : 'pills'} per dose)
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid var(--border-subtle)' }}>
                     <span style={{ fontSize: '0.74rem', color: isDoneToday ? 'var(--accent-primary)' : 'var(--text-muted)', fontWeight: 600 }}>
-                      {isDoneToday ? '✓ Taken today' : 'Not logged today'}
+                      {isDoneToday ? '✓ Taken today' : 'Not taken yet'}
                     </span>
 
                     <button
                       type="button"
                       onClick={() => handleLogDose(supp)}
                       className={`btn btn-sm ${isDoneToday ? 'btn-secondary' : 'btn-primary'}`}
-                      style={{ padding: '0.35rem 0.85rem', fontSize: '0.78rem', gap: '0.3rem', fontWeight: 700 }}
+                      style={{
+                        padding: '0.38rem 0.85rem',
+                        fontSize: '0.78rem',
+                        gap: '0.3rem',
+                        fontWeight: 700,
+                        minHeight: 34,
+                        color: isDoneToday ? 'var(--accent-primary)' : undefined,
+                        borderColor: isDoneToday ? 'var(--accent-primary)' : undefined
+                      }}
                     >
-                      <Check size={13} /> {isDoneToday ? 'Log Again' : 'Taken Today ✓'}
+                      <Check size={13} /> {isDoneToday ? 'Taken ✓' : 'Mark taken'}
                     </button>
                   </div>
                 </div>

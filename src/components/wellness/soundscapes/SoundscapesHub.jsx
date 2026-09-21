@@ -293,7 +293,9 @@ export default function SoundscapesHub() {
                   Timer: <strong style={{ color: '#7b61ff' }}>{formatTimerDisplay(timerSecondsRemaining)} remaining</strong>
                 </>
               ) : (
-                'Timer: <strong>No Timer (Endless)</strong>'
+                <>
+                  Timer: <strong style={{ color: 'var(--text-primary)' }}>No Timer (Endless)</strong>
+                </>
               )}
             </span>
           </div>

@@ -5,106 +5,69 @@ import PetPlayHistoryModal from './PetPlayHistoryModal';
 import {
   X,
   Plus,
-  Clock,
-  Sparkles,
-  Flame,
-  CheckCircle,
   BookOpen,
   Settings,
-  ArrowRight,
-  ChevronLeft
+  ChevronLeft,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { formatUnit } from '../../utils/formatters';
 
 const SPECIES_ACTIVITY_SUGGESTIONS = {
   Dog: [
-    { name: 'Ball Fetch & Running', icon: '🎾', calPerMin: 5.5 },
-    { name: 'Gentle Walk', icon: '🦮', calPerMin: 4.0 },
-    { name: 'Tug of War', icon: '🪢', calPerMin: 5.0 },
-    { name: 'Park Romp & Agility', icon: '🌳', calPerMin: 6.0 },
-    { name: 'Sniff Walk & Exploration', icon: '👃', calPerMin: 3.5 },
-    { name: 'Backyard Agility', icon: '🏃‍♂️', calPerMin: 6.2 },
-    { name: 'Floor Play & Wrestling', icon: '🐾', calPerMin: 4.8 }
+    { name: 'Ball Fetch & Running', icon: '🎾' },
+    { name: 'Gentle Walk', icon: '🦮' },
+    { name: 'Tug of War', icon: '🪢' },
+    { name: 'Park Romp & Agility', icon: '🌳' },
+    { name: 'Sniff Walk & Exploration', icon: '👃' }
   ],
   Cat: [
-    { name: 'Laser Pointer Chase', icon: '🔴', calPerMin: 3.5 },
-    { name: 'Feather Wand & Jumping', icon: '🪶', calPerMin: 4.2 },
-    { name: 'Box & Tunnel Exploration', icon: '📦', calPerMin: 3.0 },
-    { name: 'Ribbon & String Agility', icon: '🧶', calPerMin: 3.8 },
-    { name: 'High-Pounce Play', icon: '🐾', calPerMin: 4.0 }
+    { name: 'Laser Pointer Chase', icon: '🔴' },
+    { name: 'Feather Wand & Jumping', icon: '🪶' },
+    { name: 'Box & Tunnel Exploration', icon: '📦' },
+    { name: 'Ribbon & String Agility', icon: '🧶' }
   ],
   Rabbit: [
-    { name: 'Hop Obstacle Course', icon: '🌿', calPerMin: 4.0 },
-    { name: 'Floor Play & Zoomies', icon: '🐰', calPerMin: 4.5 },
-    { name: 'Cardboard Tunnel Fun', icon: '📦', calPerMin: 3.2 }
-  ],
-  Bird: [
-    { name: 'Flying & Perch Training', icon: '🦜', calPerMin: 3.2 },
-    { name: 'Shoulder Pacing & Dance', icon: '🎶', calPerMin: 3.0 },
-    { name: 'Foraging Play', icon: '🌾', calPerMin: 2.8 }
-  ],
-  Horse: [
-    { name: 'Paddock Leading & Walking', icon: '🐴', calPerMin: 6.5 },
-    { name: 'Grooming & Active Care', icon: '🧽', calPerMin: 5.0 },
-    { name: 'Groundwork & Lunging', icon: '🌾', calPerMin: 7.0 }
+    { name: 'Hop Obstacle Course', icon: '🌿' },
+    { name: 'Floor Play & Zoomies', icon: '🐰' }
   ],
   Other: [
-    { name: 'Gentle Active Play', icon: '✨', calPerMin: 3.8 },
-    { name: 'Exploration & Pacing', icon: '🐾', calPerMin: 3.5 },
-    { name: 'Habit Care & Movement', icon: '🌱', calPerMin: 3.2 }
+    { name: 'Gentle Active Play', icon: '✨' },
+    { name: 'Exploration & Pacing', icon: '🐾' }
   ]
 };
 
-const DURATION_PRESETS = [10, 15, 20, 30, 45, 60];
+const DURATION_PRESETS = [10, 15, 20, 30, 45];
 
 export default function PetPlayFlowModal({ isOpen, onClose }) {
   const {
     petProfiles = [],
     logPetPlayActivity,
-    getPetPlayStats
+    getPetPlayStats,
+    addWellnessEvent
   } = useWellness();
 
-  // Multi-step Flow: 'select_pet' | 'activity_duration' | 'completed'
-  const [step, setStep] = useState('select_pet');
+  const [step, setStep] = useState('select_pet'); // 'select_pet' | 'activity_duration' | 'completed'
   const [selectedPetId, setSelectedPetId] = useState(petProfiles[0]?.id || '');
-  
-  // Activity Selection & Input
   const [activityType, setActivityType] = useState('');
-  const [customActivity, setCustomActivity] = useState('');
-  const [isManualInput, setIsManualInput] = useState(false);
-  
-  // Duration & Notes
-  const [durationMin, setDurationMin] = useState(20);
-  const [customDurationInput, setCustomDurationInput] = useState('20');
-  const [isCustomDuration, setIsCustomDuration] = useState(false);
+  const [durationMin, setDurationMin] = useState(15);
   const [notes, setNotes] = useState('');
 
-  // Submodals
   const [isManageProfilesOpen, setIsManageProfilesOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   if (!isOpen) return null;
 
-  const currentPet = petProfiles.find(p => p.id === selectedPetId) || petProfiles[0] || null;
+  const currentPet = petProfiles.find((p) => p.id === selectedPetId) || petProfiles[0] || null;
   const petSpecies = currentPet?.type || 'Dog';
-  const suggestions = SPECIES_ACTIVITY_SUGGESTIONS[petSpecies] || SPECIES_ACTIVITY_SUGGESTIONS['Other'];
-
-  const activeDuration = isCustomDuration ? (parseInt(customDurationInput, 10) || 15) : durationMin;
-  const effectiveActivityName = isManualInput ? customActivity : (activityType || suggestions[0]?.name || 'Active Play');
-
-  // Dynamic Calorie Range Estimation
-  const matchedSuggestion = suggestions.find(s => s.name === effectiveActivityName);
-  const baseRate = matchedSuggestion ? matchedSuggestion.calPerMin : 4.2;
-  const estLow = Math.round(activeDuration * (baseRate * 0.85));
-  const estHigh = Math.round(activeDuration * (baseRate * 1.15));
+  const suggestions = SPECIES_ACTIVITY_SUGGESTIONS[petSpecies] || SPECIES_ACTIVITY_SUGGESTIONS.Other;
 
   const handleSelectPet = (petId) => {
     setSelectedPetId(petId);
-    const pet = petProfiles.find(p => p.id === petId);
+    const pet = petProfiles.find((p) => p.id === petId);
     const defaultSugg = SPECIES_ACTIVITY_SUGGESTIONS[pet?.type || 'Dog']?.[0]?.name || 'Gentle Play';
     setActivityType(defaultSugg);
-    setIsManualInput(false);
-    setCustomActivity('');
     setStep('activity_duration');
   };
 
@@ -112,484 +75,332 @@ export default function PetPlayFlowModal({ isOpen, onClose }) {
     e.preventDefault();
     if (!currentPet) return;
 
-    const finalActivity = isManualInput ? (customActivity.trim() || 'Active Playtime') : (activityType || 'Active Playtime');
-    const finalDuration = Math.max(1, activeDuration);
+    if (logPetPlayActivity) {
+      logPetPlayActivity({
+        petId: currentPet.id,
+        activityType: activityType || 'Active Playtime',
+        durationMin,
+        notes: notes.trim()
+      });
+    }
 
-    logPetPlayActivity({
-      petId: currentPet.id,
-      activityType: finalActivity,
-      durationMin: finalDuration,
-      notes: notes.trim()
-    });
+    if (addWellnessEvent) {
+      addWellnessEvent({
+        type: 'pet_play',
+        petName: currentPet.name,
+        petType: currentPet.type,
+        activityType: activityType || 'Active Playtime',
+        durationMinutes: durationMin,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     try {
-      confetti({ particleCount: 45, spread: 65, origin: { y: 0.6 } });
-    } catch {}
+      confetti({ particleCount: 35, spread: 55, origin: { y: 0.7 } });
+    } catch (err) {}
 
     setStep('completed');
   };
 
   const resetFlow = () => {
     setStep('select_pet');
-    setCustomActivity('');
-    setIsManualInput(false);
     setNotes('');
-    setDurationMin(20);
-    setIsCustomDuration(false);
+    setDurationMin(15);
   };
 
+  const stats = getPetPlayStats ? getPetPlayStats() : { totalMinsThisWeek: 0 };
+  const weeklyTotalMins = (stats && typeof stats.totalMinsThisWeek === 'number') ? stats.totalMinsThisWeek : 0;
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 260, alignItems: 'flex-end', padding: 0 }}>
       <div
         className="modal-sheet"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: 540,
-          background: 'var(--bg-glass-card)',
-          backdropFilter: 'blur(20px)',
-          border: '1.5px solid var(--accent-primary)',
-          borderRadius: 'var(--radius-xl)',
-          padding: '1.4rem',
-          position: 'relative'
+          maxHeight: '85vh',
+          borderRadius: '24px 24px 0 0',
+          padding: '1.25rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+          boxSizing: 'border-box'
         }}
       >
-        {/* Top Header Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <div
+        {/* Drag handle */}
+        <div style={{ width: 36, height: 4, background: 'var(--border-subtle)', borderRadius: 2, margin: '0 auto -0.25rem' }} />
+
+        {/* 1. Header Row (~56dp, Section 6.2.5) */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minWidth: 0, flex: 1 }}>
+            <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>🐾</span>
+            <h3
               style={{
-                width: 38,
-                height: 38,
-                borderRadius: 'var(--radius-md)',
-                background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%)',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.25rem',
-                boxShadow: '0 4px 12px rgba(46, 125, 90, 0.25)'
+                fontSize: '1.05rem',
+                fontWeight: 800,
+                color: 'var(--text-primary)',
+                margin: 0,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
               }}
             >
-              🐾
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                🐾 Pet Play & Movement
-              </h3>
-              <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: '0.1rem 0 0 0' }}>
-                You were spending time with someone you love — and you moved together too.
-              </p>
-            </div>
+              Pet Play & Movement
+            </h3>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
             <button
               type="button"
               onClick={() => setIsHistoryOpen(true)}
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: '0.74rem', gap: '0.25rem', padding: '0.3rem 0.6rem' }}
-              title="Review history"
+              aria-label="Pet Play History"
+              className="touch-target-44"
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
+              title="History"
             >
-              <BookOpen size={12} /> History
+              <BookOpen size={18} />
             </button>
 
             <button
               type="button"
               onClick={() => setIsManageProfilesOpen(true)}
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: '0.74rem', gap: '0.25rem', padding: '0.3rem 0.6rem' }}
-              title="Manage pet profiles"
+              aria-label="Manage Pet Profiles"
+              className="touch-target-44"
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
+              title="Pets"
             >
-              <Settings size={12} /> Pets
+              <Settings size={18} />
             </button>
 
             <button
+              type="button"
               onClick={onClose}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', marginLeft: '0.2rem' }}
+              aria-label="Close"
+              className="touch-target-44"
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </div>
 
-        {/* ========================================================================= */}
-        {/* STEP 1: SELECT COMPANION PET                                              */}
-        {/* ========================================================================= */}
-        {step === 'select_pet' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', animation: 'fadeIn 0.2s ease-out' }}>
-            <div>
-              <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)', display: 'block', marginBottom: '0.3rem' }}>
-                Who were you moving with today? 🐶🐱
-              </strong>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
-                Select a pet companion or create a new profile.
-              </p>
-            </div>
+        {/* Subtitle */}
+        <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
+          Time spent moving with pets you love counts toward your daily active minutes.
+        </p>
 
-            {/* Pet Profiles Cards Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.65rem' }}>
-              {petProfiles.map(pet => (
-                <div
+        {/* STEP 1: SELECT PET */}
+        {step === 'select_pet' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, margin: '0.2rem 0 0 0', color: 'var(--text-primary)' }}>
+              Who were you moving with today? 🐶🐱
+            </h4>
+
+            {/* Horizontal Row of Compact Pet Chips */}
+            <div
+              className="hide-scrollbar"
+              style={{
+                display: 'flex',
+                gap: '0.5rem',
+                overflowX: 'auto',
+                paddingBottom: '0.2rem'
+              }}
+            >
+              {petProfiles.map((pet) => (
+                <button
                   key={pet.id}
+                  type="button"
                   onClick={() => handleSelectPet(pet.id)}
                   style={{
+                    width: 96,
+                    minHeight: 88,
+                    borderRadius: 'var(--radius-card)',
+                    border: selectedPetId === pet.id ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
                     background: 'var(--bg-secondary)',
-                    border: '1.5px solid var(--border-subtle)',
-                    borderRadius: 'var(--radius-lg)',
-                    padding: '1rem 0.85rem',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '0.35rem'
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = 'var(--accent-primary)';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                    e.currentTarget.style.transform = 'translateY(0)';
+                    justifyContent: 'center',
+                    gap: '0.2rem',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    padding: '0.5rem 0.25rem',
+                    boxShadow: 'var(--shadow-sm)'
                   }}
                 >
-                  <div style={{ fontSize: '2rem', marginBottom: '0.1rem' }}>
-                    {pet.avatar || '🐾'}
-                  </div>
-                  <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>
+                  <span style={{ fontSize: '1.6rem' }}>{pet.avatar || (pet.type === 'Cat' ? '🐱' : '🐶')}</span>
+                  <strong style={{ fontSize: '0.8rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '84px' }}>
                     {pet.name}
                   </strong>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    {pet.type}
-                  </span>
-                </div>
+                  <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>{pet.type}</span>
+                </button>
               ))}
 
-              {/* Add New Pet Button */}
-              <div
+              {/* + Add Pet Chip */}
+              <button
+                type="button"
                 onClick={() => setIsManageProfilesOpen(true)}
                 style={{
+                  width: 96,
+                  minHeight: 88,
+                  borderRadius: 'var(--radius-card)',
+                  border: '1px dashed var(--accent-primary)',
                   background: 'var(--bg-tertiary)',
-                  border: '1.5px dashed var(--accent-primary)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '1rem 0.85rem',
-                  textAlign: 'center',
-                  cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.35rem',
+                  gap: '0.25rem',
+                  cursor: 'pointer',
+                  flexShrink: 0,
                   color: 'var(--accent-primary)'
                 }}
               >
-                <Plus size={22} />
-                <span style={{ fontSize: '0.82rem', fontWeight: 700 }}>Add New Pet</span>
-              </div>
+                <Plus size={20} />
+                <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>+ Add</span>
+              </button>
             </div>
 
-            {/* Quick Weekly Activity Insight Badge */}
-            {(() => {
-              const stats = getPetPlayStats ? getPetPlayStats() : { totalMinsThisWeek: 0 };
-              return (
-                <div style={{ background: 'var(--bg-tertiary)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.82rem' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>
-                    🐾 Total Active Time with Pets This Week:
-                  </span>
-                  <span style={{ fontWeight: 800, color: 'var(--accent-primary)' }}>
-                    {stats.totalMinsThisWeek} mins
-                  </span>
-                </div>
-              );
-            })()}
+            {/* Weekly Total Row (Bug 4 Fix: null-safe formatUnit) */}
+            <div
+              style={{
+                background: 'var(--bg-tertiary)',
+                padding: '0.65rem 0.85rem',
+                borderRadius: 'var(--radius-md)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '0.8125rem'
+              }}
+            >
+              <span style={{ color: 'var(--text-secondary)' }}>This week with pets:</span>
+              <span className="tabular-nums" style={{ fontWeight: 800, color: 'var(--accent-primary)' }}>
+                {formatUnit(weeklyTotalMins, 'mins')}
+              </span>
+            </div>
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* STEP 2: LOG ACTIVITY & DURATION                                           */}
-        {/* ========================================================================= */}
+        {/* STEP 2: LOG PLAY DETAILS */}
         {step === 'activity_duration' && currentPet && (
-          <form onSubmit={handleSavePlay} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem', animation: 'fadeIn 0.2s ease-out' }}>
-            
-            {/* Selected Pet Banner with Back button */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--accent-primary-light)', padding: '0.65rem 0.95rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--accent-primary)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '1.4rem' }}>{currentPet.avatar || '🐾'}</span>
-                <div>
-                  <strong style={{ fontSize: '0.9rem', color: 'var(--accent-primary)' }}>
-                    Moving with {currentPet.name} ({currentPet.type})
-                  </strong>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-                    Tailored suggestions for {currentPet.type}s
-                  </div>
-                </div>
+          <form onSubmit={handleSavePlay} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--accent-primary-light)', padding: '0.45rem 0.75rem', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span style={{ fontSize: '1.2rem' }}>{currentPet.avatar || '🐾'}</span>
+                <strong style={{ fontSize: '0.85rem', color: 'var(--accent-primary)' }}>
+                  {currentPet.name} ({currentPet.type})
+                </strong>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setStep('select_pet')}
-                className="btn btn-secondary btn-sm"
-                style={{ fontSize: '0.72rem', gap: '0.25rem', padding: '0.25rem 0.55rem' }}
-              >
-                <ChevronLeft size={12} /> Switch Pet
-              </button>
-            </div>
-
-            {/* 1. Suggested Activities & Manual Entry */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
-                <label style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  ✨ What did you do together?
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setIsManualInput(!isManualInput)}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer' }}
-                >
-                  {isManualInput ? '✨ Show Suggestions' : '✍️ Add Manually'}
-                </button>
-              </div>
-
-              {!isManualInput ? (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                  {suggestions.map(s => {
-                    const isSelected = activityType === s.name;
-                    return (
-                      <button
-                        key={s.name}
-                        type="button"
-                        onClick={() => {
-                          setActivityType(s.name);
-                          setIsManualInput(false);
-                        }}
-                        style={{
-                          padding: '0.45rem 0.8rem',
-                          borderRadius: 'var(--radius-pill)',
-                          border: isSelected ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                          background: isSelected ? 'var(--accent-primary-light)' : 'var(--bg-tertiary)',
-                          color: isSelected ? 'var(--accent-primary)' : 'var(--text-primary)',
-                          fontSize: '0.8rem',
-                          fontWeight: isSelected ? 800 : 600,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.35rem',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <span>{s.icon}</span>
-                        <span>{s.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div>
-                  <input
-                    type="text"
-                    required
-                    placeholder={`e.g. Backyard zoomies with ${currentPet.name}, hallway fetch, obstacle fun...`}
-                    value={customActivity}
-                    onChange={e => setCustomActivity(e.target.value)}
-                    className="input-field"
-                    style={{ fontSize: '0.85rem' }}
-                    autoFocus
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* 2. Duration Selector */}
-            <div>
-              <label style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.45rem' }}>
-                <Clock size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
-                How long did you play? ({activeDuration} mins)
-              </label>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.35rem' }}>
-                {DURATION_PRESETS.map(d => {
-                  const isSelected = !isCustomDuration && durationMin === d;
-                  return (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => {
-                        setIsCustomDuration(false);
-                        setDurationMin(d);
-                      }}
-                      style={{
-                        padding: '0.45rem 0.2rem',
-                        borderRadius: 'var(--radius-md)',
-                        border: isSelected ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                        background: isSelected ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                        color: isSelected ? '#ffffff' : 'var(--text-primary)',
-                        fontSize: '0.78rem',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        textAlign: 'center'
-                      }}
-                    >
-                      {d}m
-                    </button>
-                  );
-                })}
-
-                {/* Custom Duration Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setIsCustomDuration(true)}
-                  style={{
-                    padding: '0.45rem 0.2rem',
-                    borderRadius: 'var(--radius-md)',
-                    border: isCustomDuration ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                    background: isCustomDuration ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
-                    color: isCustomDuration ? '#ffffff' : 'var(--text-primary)',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    textAlign: 'center'
-                  }}
-                >
-                  ⏱️
-                </button>
-              </div>
-
-              {isCustomDuration && (
-                <div style={{ marginTop: '0.55rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-tertiary)', padding: '0.45rem 0.75rem', borderRadius: 'var(--radius-sm)' }}>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Minutes:</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max="300"
-                    value={customDurationInput}
-                    onChange={e => setCustomDurationInput(e.target.value)}
-                    style={{
-                      width: 60,
-                      padding: '0.25rem 0.4rem',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1.5px solid var(--accent-primary)',
-                      background: 'var(--bg-primary)',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.84rem',
-                      fontWeight: 800,
-                      textAlign: 'center'
-                    }}
-                  />
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>minutes</span>
-                </div>
-              )}
-            </div>
-
-            {/* 3. Estimated Movement Calories (Clearly marked as optional estimate) */}
-            <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem 0.95rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                <Flame size={15} color="var(--accent-primary)" />
-                <div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                    Estimated movement calories:
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                    Approximate energy expenditure based on active playtime
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ fontSize: '0.95rem', fontWeight: 900, color: 'var(--accent-primary)' }}>
-                ~{estLow}–{estHigh} kcal
-              </div>
-            </div>
-
-            {/* Submit & Cancel */}
-            <div style={{ display: 'flex', gap: '0.65rem', marginTop: '0.35rem' }}>
-              <button
-                type="button"
-                onClick={() => setStep('select_pet')}
-                className="btn btn-secondary"
-                style={{ flex: 1, padding: '0.75rem' }}
-              >
-                Back
-              </button>
-
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ flex: 2, padding: '0.75rem', fontWeight: 800, gap: '0.4rem' }}
-              >
-                <CheckCircle size={15} /> Save Pet Playtime 🐾
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* ========================================================================= */}
-        {/* STEP 3: COMPLETION CELEBRATION                                            */}
-        {/* ========================================================================= */}
-        {step === 'completed' && currentPet && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '1rem 0', textAlign: 'center', animation: 'fadeIn 0.2s ease-out' }}>
-            <div
-              style={{
-                width: 68,
-                height: 68,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%)',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '2rem',
-                boxShadow: '0 8px 24px rgba(46, 125, 90, 0.3)'
-              }}
-            >
-              {currentPet.avatar || '🐾'}
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 900, margin: '0 0 0.25rem 0', color: 'var(--text-primary)' }}>
-                Joyful Playtime Recorded! 🐾
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-                You spent {activeDuration} active minutes together with {currentPet.name}.
-              </p>
-            </div>
-
-            <div style={{ background: 'var(--bg-tertiary)', padding: '0.85rem 1.25rem', borderRadius: 'var(--radius-md)', width: '100%', maxWidth: 340 }}>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Everyday Natural Movement
-              </div>
-              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--accent-primary)', marginTop: '0.15rem' }}>
-                +{activeDuration} mins of companionship & movement 🌱
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                Estimated movement calories: ~{estLow}–{estHigh} kcal
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.65rem', width: '100%', maxWidth: 340, marginTop: '0.5rem' }}>
               <button
                 type="button"
                 onClick={resetFlow}
-                className="btn btn-secondary"
-                style={{ flex: 1, padding: '0.7rem', fontSize: '0.84rem' }}
+                style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
               >
-                Log Another
-              </button>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="btn btn-primary"
-                style={{ flex: 1, padding: '0.7rem', fontSize: '0.84rem' }}
-              >
-                Done ✨
+                Change Pet
               </button>
             </div>
-          </div>
+
+            {/* Activity Presets */}
+            <div>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Activity:</span>
+              <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', padding: '0.25rem 0' }} className="hide-scrollbar">
+                {suggestions.map((s) => (
+                  <button
+                    key={s.name}
+                    type="button"
+                    onClick={() => setActivityType(s.name)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      padding: '0.3rem 0.65rem',
+                      minHeight: '34px',
+                      borderRadius: 'var(--radius-pill)',
+                      border: activityType === s.name ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                      background: activityType === s.name ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                      color: activityType === s.name ? '#ffffff' : 'var(--text-primary)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      flexShrink: 0
+                    }}
+                  >
+                    <span>{s.icon}</span>
+                    <span>{s.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Duration Presets */}
+            <div>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Duration:</span>
+              <div style={{ display: 'flex', gap: '0.35rem', padding: '0.25rem 0' }}>
+                {DURATION_PRESETS.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setDurationMin(m)}
+                    style={{
+                      flex: 1,
+                      padding: '0.35rem 0',
+                      minHeight: '34px',
+                      borderRadius: 'var(--radius-chip)',
+                      border: durationMin === m ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                      background: durationMin === m ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                      color: durationMin === m ? '#ffffff' : 'var(--text-primary)',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {m}m
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="btn-primary"
+              style={{
+                marginTop: '0.25rem',
+                padding: '0.65rem',
+                borderRadius: 'var(--radius-pill)',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 800,
+                fontSize: '0.88rem',
+                minHeight: '44px'
+              }}
+            >
+              Save Pet Movement ({durationMin}m)
+            </button>
+          </form>
         )}
 
+        {/* STEP 3: COMPLETED CONFIRMATION */}
+        {step === 'completed' && (
+          <div style={{ textAlign: 'center', padding: '1rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+            <CheckCircle size={36} color="var(--accent-primary)" />
+            <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
+              Pet Play Logged! 🎉
+            </strong>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              +{durationMin} mins added to your Move totals and Link Engine picture.
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-primary"
+              style={{ marginTop: '0.5rem', padding: '0.5rem 1.5rem', borderRadius: 'var(--radius-pill)', border: 'none', cursor: 'pointer' }}
+            >
+              Done
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Pet Profiles Manager Modal */}
       {isManageProfilesOpen && (
         <PetProfileModal
           isOpen={isManageProfilesOpen}
@@ -597,7 +408,6 @@ export default function PetPlayFlowModal({ isOpen, onClose }) {
         />
       )}
 
-      {/* Pet Play History Modal */}
       {isHistoryOpen && (
         <PetPlayHistoryModal
           isOpen={isHistoryOpen}

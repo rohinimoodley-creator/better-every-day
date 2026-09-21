@@ -305,74 +305,122 @@ export default function MealLogger() {
     };
   });
 
+  const [selectedSlotFilter, setSelectedSlotFilter] = useState('all'); // 'all' | 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'
+
+  const filteredMeals = useMemo(() => {
+    if (selectedSlotFilter === 'all') return loggedMeals;
+    return loggedMeals.filter(m => (m.mealType || '').toLowerCase() === selectedSlotFilter.toLowerCase());
+  }, [loggedMeals, selectedSlotFilter]);
+
   return (
-    <div className="card-glass" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+    <div className="card-glass" style={{ padding: '1.25rem', marginBottom: '1.25rem' }}>
       
-      {/* Header with ON/OFF Macro Toggle & Quick Actions */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.8rem', marginBottom: '1.25rem' }}>
+      {/* Header Row: Title + Primary Action & Macro Eye Toggle */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.65rem', marginBottom: '0.85rem' }}>
         <div>
-          <span className="pill-badge orange" style={{ marginBottom: '0.25rem' }}>
-            <Utensils size={12} /> Today's Nourishment
+          <span className="pill-badge orange" style={{ marginBottom: '0.2rem', fontSize: '0.7rem' }}>
+            <Utensils size={11} /> Today's Nourishment
           </span>
-          <h3 style={{ fontSize: '1.25rem', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            Meal Log & Macro Summary
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0.1rem 0 0 0', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
+            Meal Log
           </h3>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {/* Macro Summary ON/OFF Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+          {/* Macro Summary Eye Toggle */}
           <button
+            type="button"
             onClick={toggleMealSummary}
             className="btn btn-secondary btn-sm"
-            style={{ fontSize: '0.78rem', gap: '0.35rem', padding: '0.35rem 0.65rem' }}
-            title="Toggle visibility of the top macro summary strip"
+            style={{ fontSize: '0.74rem', gap: '0.3rem', padding: '0.35rem 0.6rem', minHeight: 36 }}
+            title="Toggle visibility of the macro summary strip"
           >
             {showMealSummary ? <Eye size={13} color="var(--accent-primary)" /> : <EyeOff size={13} color="var(--text-muted)" />}
-            <span>Macro Summary: <strong>{showMealSummary ? 'ON' : 'OFF'}</strong></span>
+            <span>Macros: <strong>{showMealSummary ? 'ON' : 'OFF'}</strong></span>
           </button>
 
-          {/* Use My Existing Meal */}
-          <button
-            onClick={() => setIsExistingMealModalOpen(true)}
-            className="btn btn-secondary btn-sm"
-            style={{ fontSize: '0.78rem', gap: '0.35rem', padding: '0.35rem 0.65rem' }}
-            title="Pick a saved recipe or previous custom meal"
-          >
-            <Bookmark size={13} /> Use My Existing Meal
-          </button>
-
-          {/* Add Online Recipe */}
-          <button
-            onClick={() => setIsOnlineRecipeModalOpen(true)}
-            className="btn btn-secondary btn-sm"
-            style={{ fontSize: '0.78rem', gap: '0.35rem', padding: '0.35rem 0.65rem' }}
-            title="Import an online recipe via photo or paste"
-          >
-            <Globe size={13} /> Add an Online Recipe
-          </button>
-
-          {/* Review My Meals Button */}
-          <button
-            onClick={() => setIsReviewOpen(true)}
-            className="btn btn-secondary btn-sm"
-            style={{ fontSize: '0.78rem', gap: '0.35rem', padding: '0.35rem 0.65rem' }}
-          >
-            <PieChart size={13} /> Review My Meals
-          </button>
-
-          {/* Quick Log Button */}
+          {/* Quick Log Button (Primary CTA) */}
           <button 
+            type="button"
             onClick={() => {
               if (isOpen) {
                 handleCancelForm();
               } else {
                 setEditingMealId(null);
+                setMealType(selectedSlotFilter !== 'all' ? selectedSlotFilter : 'Lunch');
                 setIsOpen(true);
               }
             }}
             className="btn btn-primary btn-sm"
+            style={{ fontSize: '0.8rem', gap: '0.3rem', padding: '0.4rem 0.85rem', fontWeight: 800, minHeight: 36 }}
           >
-            <Plus size={15} /> Quick Log Meal
+            <Plus size={14} /> Quick Log Meal
+          </button>
+        </div>
+      </div>
+
+      {/* Row 2: 4 Meal Slot Pills + Secondary Action Chips */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border-subtle)' }}>
+        {/* 4 Meal Slot Pills */}
+        <div style={{ display: 'flex', gap: '0.3rem', background: 'var(--bg-tertiary)', padding: '0.2rem', borderRadius: 'var(--radius-pill)', flexWrap: 'wrap' }}>
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'Breakfast', label: '🍳 Breakfast' },
+            { id: 'Lunch', label: '🥗 Lunch' },
+            { id: 'Dinner', label: '🍲 Dinner' },
+            { id: 'Snack', label: '🍎 Snack' }
+          ].map(slot => (
+            <button
+              key={slot.id}
+              type="button"
+              onClick={() => setSelectedSlotFilter(slot.id)}
+              style={{
+                padding: '0.3rem 0.65rem',
+                borderRadius: 'var(--radius-pill)',
+                border: 'none',
+                background: selectedSlotFilter === slot.id ? 'var(--bg-secondary)' : 'transparent',
+                color: selectedSlotFilter === slot.id ? 'var(--accent-secondary)' : 'var(--text-muted)',
+                fontSize: '0.75rem',
+                fontWeight: selectedSlotFilter === slot.id ? 800 : 600,
+                cursor: 'pointer',
+                boxShadow: selectedSlotFilter === slot.id ? 'var(--shadow-sm)' : 'none',
+                minHeight: 28
+              }}
+            >
+              {slot.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Secondary Action Chips */}
+        <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setIsExistingMealModalOpen(true)}
+            className="btn btn-secondary btn-sm"
+            style={{ fontSize: '0.72rem', gap: '0.25rem', padding: '0.3rem 0.55rem', minHeight: 28 }}
+            title="Pick a saved recipe or previous custom meal"
+          >
+            <Bookmark size={12} /> Saved
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsOnlineRecipeModalOpen(true)}
+            className="btn btn-secondary btn-sm"
+            style={{ fontSize: '0.72rem', gap: '0.25rem', padding: '0.3rem 0.55rem', minHeight: 28 }}
+            title="Import an online recipe via photo or paste"
+          >
+            <Globe size={12} /> Online Recipe
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsReviewOpen(true)}
+            className="btn btn-secondary btn-sm"
+            style={{ fontSize: '0.72rem', gap: '0.25rem', padding: '0.3rem 0.55rem', minHeight: 28 }}
+          >
+            <PieChart size={12} /> Review ({loggedMeals.length})
           </button>
         </div>
       </div>
@@ -413,13 +461,15 @@ export default function MealLogger() {
             </span>
           </div>
 
-          {loggedMeals.length === 0 ? (
+          {filteredMeals.length === 0 ? (
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '0.3rem 0' }}>
-              No meals logged today yet. Tap "Quick Log Meal" to get started!
+              {selectedSlotFilter === 'all' 
+                ? 'No meals logged today yet. Tap "Quick Log Meal" to get started!' 
+                : `No ${selectedSlotFilter.toLowerCase()} logged today yet.`}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-              {loggedMeals.slice(0, 3).map(meal => (
+              {filteredMeals.slice(0, 4).map(meal => (
                 <div 
                   key={meal.id}
                   style={{
@@ -444,6 +494,7 @@ export default function MealLogger() {
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                     <button
+                      type="button"
                       onClick={() => handleStartEdit(meal)}
                       className="btn btn-secondary btn-sm"
                       style={{ padding: '0.2rem 0.45rem', fontSize: '0.72rem', gap: '0.2rem' }}
@@ -452,6 +503,7 @@ export default function MealLogger() {
                       <Edit2 size={11} /> Edit
                     </button>
                     <button
+                      type="button"
                       onClick={() => setMealToDelete(meal)}
                       className="btn btn-secondary btn-sm"
                       style={{ padding: '0.2rem 0.45rem', fontSize: '0.72rem', color: 'var(--accent-rose)', gap: '0.2rem' }}
@@ -552,10 +604,10 @@ export default function MealLogger() {
         </form>
       )}
 
-      {/* Logged Meals List (Today's Standard View when Macro Summary is ON) */}
+      {/* Logged Meals List (When Macro Summary is ON) */}
       {showMealSummary && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {loggedMeals.slice(0, 3).map(meal => (
+          {filteredMeals.slice(0, 3).map(meal => (
             <div 
               key={meal.id}
               style={{
@@ -589,6 +641,7 @@ export default function MealLogger() {
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => handleStartEdit(meal)}
                   className="btn btn-secondary btn-sm"
                   style={{ padding: '0.2rem 0.4rem', fontSize: '0.72rem' }}
@@ -597,6 +650,7 @@ export default function MealLogger() {
                   <Edit2 size={11} />
                 </button>
                 <button
+                  type="button"
                   onClick={() => setMealToDelete(meal)}
                   className="btn btn-secondary btn-sm"
                   style={{ padding: '0.2rem 0.4rem', fontSize: '0.72rem', color: 'var(--accent-rose)' }}
@@ -608,8 +662,9 @@ export default function MealLogger() {
             </div>
           ))}
 
-          {loggedMeals.length > 3 && (
+          {filteredMeals.length > 3 && (
             <button
+              type="button"
               onClick={() => setIsReviewOpen(true)}
               style={{
                 background: 'transparent',
@@ -622,7 +677,7 @@ export default function MealLogger() {
                 textAlign: 'center'
               }}
             >
-              + {loggedMeals.length - 3} more meals — Tap to Review All
+              + {filteredMeals.length - 3} more meals — Tap to Review All
             </button>
           )}
         </div>

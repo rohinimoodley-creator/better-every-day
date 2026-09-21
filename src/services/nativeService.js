@@ -10,21 +10,42 @@ export const isNative = Capacitor.isNativePlatform();
  * Trigger subtle haptic feedback for user interactions
  */
 export async function triggerHaptic(type = 'light') {
-  if (!isNative) return;
-  try {
-    if (type === 'success') {
-      await Haptics.notification({ type: NotificationType.Success });
-    } else if (type === 'warning') {
-      await Haptics.notification({ type: NotificationType.Warning });
-    } else if (type === 'medium') {
-      await Haptics.impact({ style: ImpactStyle.Medium });
-    } else if (type === 'heavy') {
-      await Haptics.impact({ style: ImpactStyle.Heavy });
-    } else {
-      await Haptics.impact({ style: ImpactStyle.Light });
+  if (isNative) {
+    try {
+      if (type === 'success') {
+        await Haptics.notification({ type: NotificationType.Success });
+      } else if (type === 'warning') {
+        await Haptics.notification({ type: NotificationType.Warning });
+      } else if (type === 'medium') {
+        await Haptics.impact({ style: ImpactStyle.Medium });
+      } else if (type === 'heavy') {
+        await Haptics.impact({ style: ImpactStyle.Heavy });
+      } else {
+        await Haptics.impact({ style: ImpactStyle.Light });
+      }
+      return;
+    } catch (err) {
+      // Haptics unavailable
     }
-  } catch (err) {
-    // Haptics unavailable on this device
+  }
+  
+  // Web Vibration API fallback for mobile browser / PWA
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      if (type === 'success') {
+        navigator.vibrate([10, 30, 15]);
+      } else if (type === 'warning') {
+        navigator.vibrate([30, 50, 30]);
+      } else if (type === 'heavy') {
+        navigator.vibrate(25);
+      } else if (type === 'medium') {
+        navigator.vibrate(15);
+      } else {
+        navigator.vibrate(8);
+      }
+    } catch (e) {
+      // Vibration not permitted or supported
+    }
   }
 }
 

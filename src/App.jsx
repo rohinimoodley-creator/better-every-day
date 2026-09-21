@@ -11,7 +11,6 @@ import InsightsHub from './components/insights/InsightsHub';
 import ProfileSettings from './components/profile/ProfileSettings';
 import TogetherHub from './components/together/TogetherHub';
 
-import FloatingVoiceButton from './components/voice/FloatingVoiceButton';
 import WhatCanITrackDrawer from './components/navigation/WhatCanITrackDrawer';
 import BodySignalsModal from './components/body/BodySignalsModal';
 import DuplicateDataAlertModal from './components/trust/DuplicateDataAlertModal';
@@ -26,6 +25,19 @@ function AppContent() {
   const [youSection, setYouSection] = useState('how_i_thrive');
   const [isWhatCanITrackOpen, setIsWhatCanITrackOpen] = useState(false);
   const [isBodySignalsOpen, setIsBodySignalsOpen] = useState(false);
+
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -136,6 +148,13 @@ function AppContent() {
         onNavigateTab={handleNavigate} 
         onOpenWhatCanITrack={() => setIsWhatCanITrackOpen(true)}
       />
+
+      {isOffline && (
+        <aside className="offline-banner" role="status" aria-live="polite">
+          <span>📡</span>
+          <span>Offline mode • All wellness logs and reflections are safely preserved on your device.</span>
+        </aside>
+      )}
       
       <main className="main-content">
         {activeTab === 'HOME' && <HomeScreen onNavigateTab={handleNavigate} />}
@@ -174,7 +193,6 @@ function AppContent() {
       {/* Duplicate Data Pop-Up Notification (Hidden for now) */}
       {/* <DuplicateDataAlertModal onNavigateTab={handleNavigate} /> */}
 
-      <FloatingVoiceButton />
       <Navbar activeTab={activeTab} onSelectTab={handleNavigate} />
     </div>
   );

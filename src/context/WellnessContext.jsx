@@ -40,6 +40,8 @@ import {
 } from '../data/mockData';
 import { getPersonalizedRecommendations } from '../engine/personalization';
 import { calculateBetterEveryDayScore } from '../engine/scoreEngine';
+import { linkEngine } from '../engine/wellnessLinkEngine.js';
+import { getDayKey } from '../utils/dayKey.js';
 
 const WellnessContext = createContext(null);
 
@@ -231,6 +233,105 @@ export function WellnessProvider({ children }) {
     const saved = localStorage.getItem('bed_hydration_ml');
     return saved ? Number(saved) : 1250;
   });
+
+  const [isHotWeather, setIsHotWeather] = useState(() => {
+    try {
+      return localStorage.getItem('bed_is_hot_weather') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const toggleHotWeather = () => {
+    setIsHotWeather(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('bed_is_hot_weather', String(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  // 5b. Unified Event Store & Smart Link Engine
+  const [wellnessEvents, setWellnessEvents] = useState(() => {
+    const saved = localStorage.getItem('bed_wellness_events');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    const todayStr = new Date().toISOString().split('T')[0];
+    return [
+      { id: 'evt_init_1', type: 'activity', durationMinutes: 40, name: 'Mindful Walk', isOutdoor: true, dayKey: todayStr, timestamp: new Date().toISOString() },
+      { id: 'evt_init_2', type: 'water', amountMl: 1250, dayKey: todayStr, timestamp: new Date().toISOString() },
+      { id: 'evt_init_3', type: 'skincare_step', routine: 'morning', dayKey: todayStr, timestamp: new Date().toISOString() },
+      { id: 'evt_init_4', type: 'pet_play', durationMinutes: 15, petName: 'Mochi', dayKey: todayStr, timestamp: new Date().toISOString() }
+    ];
+  });
+
+  const [dismissedSuggestions, setDismissedSuggestions] = useState(() => {
+    const saved = localStorage.getItem('bed_dismissed_suggestions');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [manualHydrationUndo, setManualHydrationUndo] = useState(false);
+
+  const addWellnessEvent = (event) => {
+    const rhythm = userProfile?.howIThrive?.dailyRhythm || { dayStarts: '07:00', dayEnds: '23:00' };
+    const timestamp = event.timestamp || new Date().toISOString();
+    const eventDayKey = event.dayKey || getDayKey(timestamp, rhythm);
+    const newEvent = {
+      id: event.id || `evt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      ...event,
+      timestamp,
+      dayKey: eventDayKey
+    };
+    setWellnessEvents(prev => {
+      const updated = [newEvent, ...prev];
+      localStorage.setItem('bed_wellness_events', JSON.stringify(updated.slice(0, 500)));
+      return updated;
+    });
+    return newEvent;
+  };
+
+  const dismissSuggestion = (suggestionId) => {
+    setDismissedSuggestions(prev => {
+      const updated = [...prev, suggestionId];
+      localStorage.setItem('bed_dismissed_suggestions', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const undoHydrationAdjustment = () => {
+    setManualHydrationUndo(true);
+  };
+
+  const currentDayKey = getDayKey(new Date(), userProfile?.howIThrive?.dailyRhythm);
+
+  const linkEngineOutput = React.useMemo(() => {
+    return linkEngine(wellnessEvents, {
+      wellnessHubVisibility,
+      topicFilters: userProfile?.wellnessIntelligenceSettings?.topicFilters || {},
+      communicationTone: userProfile?.howIThrive?.communicationTone || 'gentle',
+      rhythm: userProfile?.howIThrive?.dailyRhythm || { dayStarts: '07:00', dayEnds: '23:00' },
+      hydrationGoalMl: userProfile?.hydrationGoalMl || 2250,
+      stepGoal: userProfile?.stepGoal || 8000,
+      isHotWeather,
+      cycleSyncEnabled: userProfile?.cycleTrackingEnabled && userProfile?.syncCycleRecommendations,
+      trackStreakCounter: userProfile?.trackStreakCounter !== false,
+      isStreakPaused: userProfile?.howIThrive?.flexibleStreaks?.isPaused,
+      streakCount: smallStepState?.streakCount || 6,
+      dismissedSuggestions,
+      manualHydrationUndo
+    }, currentDayKey);
+  }, [
+    wellnessEvents,
+    wellnessHubVisibility,
+    userProfile,
+    isHotWeather,
+    smallStepState,
+    dismissedSuggestions,
+    manualHydrationUndo,
+    currentDayKey
+  ]);
 
   // 6. Steps & Activity Tracking
   const [stepCount, setStepCount] = useState(() => {
@@ -1089,14 +1190,7 @@ export function WellnessProvider({ children }) {
     setHydrationMl(prev => Math.min(5000, prev + amountMl));
   };
 
-  const logMeal = (meal) => {
-    const newMeal = {
-      id: 'meal_' + Date.now(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      ...meal
-    };
-    setLoggedMeals(prev => [newMeal, ...prev]);
-  };
+
 
   const logCraving = (entry) => {
     const newLog = {
@@ -2164,25 +2258,6 @@ export function WellnessProvider({ children }) {
     };
   };
 
-  // Environmental / Hot Weather Context for Hydration
-  const [isHotWeather, setIsHotWeather] = useState(() => {
-    try {
-      return localStorage.getItem('bed_is_hot_weather') === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
-
-  const toggleHotWeather = () => {
-    setIsHotWeather(prev => {
-      const next = !prev;
-      try {
-        localStorage.setItem('bed_is_hot_weather', String(next));
-      } catch (e) {}
-      return next;
-    });
-  };
-
   /**
    * Contextual Water Goal Safety Check:
    * Evaluates if a selected daily water goal is unusually low or unusually high
@@ -2402,6 +2477,30 @@ export function WellnessProvider({ children }) {
     ];
   });
 
+  const logMeal = (mealData) => {
+    const newMeal = {
+      id: 'm_' + Date.now(),
+      title: mealData.title || 'Meal',
+      mealType: mealData.mealType || 'Lunch',
+      calories: Number(mealData.calories) || 400,
+      protein: Number(mealData.protein) || 20,
+      carbs: Number(mealData.carbs) || 45,
+      fat: Number(mealData.fat) || 12,
+      fiber: Number(mealData.fiber) || 6,
+      isEstimated: !!mealData.isEstimated,
+      createdAt: mealData.createdAt || new Date().toISOString()
+    };
+    setLoggedMeals(prev => [newMeal, ...prev]);
+    addWellnessEvent({
+      type: 'meal',
+      mealType: newMeal.mealType,
+      title: newMeal.title,
+      calories: newMeal.calories,
+      timestamp: newMeal.createdAt
+    });
+    return newMeal;
+  };
+
   const editMeal = (mealId, updatedData) => {
     setLoggedMeals(prev => prev.map(m => m.id === mealId ? { ...m, ...updatedData } : m));
   };
@@ -2528,6 +2627,13 @@ export function WellnessProvider({ children }) {
     };
 
     setSupplementLogs(prev => [newLog, ...prev]);
+    addWellnessEvent({
+      type: 'supplement',
+      name: supp.name,
+      amountPerDose: supp.amountPerDose,
+      unit: supp.unit,
+      timestamp: new Date().toISOString()
+    });
     return newLog;
   };
 
@@ -2628,6 +2734,13 @@ export function WellnessProvider({ children }) {
     };
 
     setSleepLogs(prev => [newLog, ...prev.filter(l => l.date !== todayStr)]);
+    addWellnessEvent({
+      type: 'sleep',
+      durationHours: diffHours,
+      quality,
+      source: 'manual',
+      timestamp: new Date().toISOString()
+    });
     return newLog;
   };
 
@@ -2642,13 +2755,22 @@ export function WellnessProvider({ children }) {
       quality: 'Optimal Recovery',
       source: 'synced',
       deviceName: 'Smartwatch (Apple Health / Garmin)',
-      deepSleep: '1h 50m',
-      remSleep: '2h 15m',
-      lightSleep: '4h 05m'
+      deepSleep: '1h 55m',
+      remSleep: '2h 20m',
+      lightSleep: '3h 55m'
     };
+
     setSleepLogs(prev => [syncedLog, ...prev.filter(l => l.date !== todayStr)]);
+    addWellnessEvent({
+      type: 'sleep',
+      durationHours: syncedLog.durationHours,
+      quality: syncedLog.quality,
+      source: 'synced',
+      timestamp: new Date().toISOString()
+    });
     return syncedLog;
   };
+
 
   // 30. Skincare Routine & Product Shelf State
   const [skincareProducts, setSkincareProducts] = useState(() => {
@@ -2875,6 +2997,10 @@ export function WellnessProvider({ children }) {
   };
 
   // Persist new state to local storage
+  useEffect(() => {
+    localStorage.setItem('bed_logged_meals', JSON.stringify(loggedMeals));
+  }, [loggedMeals]);
+
   useEffect(() => {
     localStorage.setItem('bed_saved_custom_meals', JSON.stringify(savedCustomMeals));
   }, [savedCustomMeals]);
@@ -3207,7 +3333,14 @@ export function WellnessProvider({ children }) {
       addSkincareRoutine,
       deleteSkincareRoutine,
       updateSkincareGoals,
-      updateSkincareSettings
+      updateSkincareSettings,
+      wellnessEvents,
+      addWellnessEvent,
+      linkEngineOutput,
+      currentDayKey,
+      dismissSuggestion,
+      undoHydrationAdjustment,
+      adjustedHydrationGoal: linkEngineOutput?.adjustments?.adjustedHydrationGoal || userProfile?.hydrationGoalMl || 2250
     }}>
       {children}
     </WellnessContext.Provider>

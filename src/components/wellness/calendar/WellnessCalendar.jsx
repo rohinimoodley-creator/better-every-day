@@ -304,18 +304,18 @@ export default function WellnessCalendar({ onNavigateTab }) {
 
       {/* 4. Calendar Grid (Month View) */}
       {activeViewMode === 'month' && (
-        <div className="card-glass" style={{ padding: '1.25rem' }}>
+        <div className="card-glass" style={{ padding: '0.9rem' }}>
           {/* Day Headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', textAlign: 'center', marginBottom: '0.5rem', fontWeight: 700, fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', textAlign: 'center', marginBottom: '0.4rem', fontWeight: 700, fontSize: '0.72rem', color: 'var(--text-muted)' }}>
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-              <div key={d} style={{ padding: '0.25rem 0' }}>{d}</div>
+              <div key={d} style={{ padding: '0.2rem 0' }}>{d}</div>
             ))}
           </div>
 
-          {/* Day Cells */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.35rem' }}>
+          {/* Day Cells (7 Equal Columns, minmax(0, 1fr) preventing blowouts) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '0.25rem' }}>
             {Array.from({ length: firstDayIndex }).map((_, i) => (
-              <div key={`empty-${i}`} style={{ minHeight: 68, opacity: 0.3 }} />
+              <div key={`empty-${i}`} style={{ minHeight: 54, opacity: 0.2 }} />
             ))}
 
             {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -335,8 +335,8 @@ export default function WellnessCalendar({ onNavigateTab }) {
                   key={dateStr}
                   onClick={() => setSelectedDate(dateStr)}
                   style={{
-                    minHeight: 68,
-                    padding: '0.35rem',
+                    minHeight: 54,
+                    padding: '0.3rem 0.25rem',
                     borderRadius: 'var(--radius-sm)',
                     background: isSelected ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
                     border: `1.5px solid ${isSelected ? 'var(--accent-primary)' : isToday ? 'var(--accent-gold)' : 'var(--border-subtle)'}`,
@@ -344,63 +344,50 @@ export default function WellnessCalendar({ onNavigateTab }) {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
                     transition: 'background 0.15s ease'
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: isToday ? 800 : 600, color: isToday ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <span style={{ fontSize: '0.76rem', fontWeight: isToday ? 800 : 600, color: isToday ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
                       {dayNum}
                     </span>
                     {dayEvents.length > 0 && (
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-primary)' }} />
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent-primary)', flexShrink: 0 }} />
                     )}
                   </div>
 
-                  {/* Cycle Phase Badge (Subtle Context) */}
+                  {/* Compact Cycle Indicator Dot/Bar */}
                   {dayPhase && (
                     <div 
                       style={{
-                        fontSize: '0.58rem',
-                        fontWeight: 700,
-                        padding: '1px 3px',
-                        borderRadius: '3px',
-                        background: dayPhase.bg,
-                        color: dayPhase.color,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '2px',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        marginTop: '2px'
+                        width: '100%',
+                        height: 3,
+                        borderRadius: 2,
+                        background: dayPhase.color,
+                        margin: '2px 0'
                       }}
-                      title={dayPhase.label}
-                    >
-                      <span style={{ fontSize: '0.62rem' }}>{dayPhase.icon}</span>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{dayPhase.shortLabel}</span>
-                    </div>
+                      title={`${dayPhase.label} (Cycle Day ${dayPhase.cycleDay})`}
+                    />
                   )}
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden', marginTop: '2px' }}>
+                  {/* Event Dots / Micro Titles */}
+                  <div style={{ display: 'flex', gap: '2px', overflow: 'hidden', flexWrap: 'wrap' }}>
                     {dayEvents.slice(0, 2).map(ev => {
                       const badge = getCategoryBadge(ev.category);
                       return (
-                        <div
+                        <span
                           key={ev.id}
                           style={{
-                            fontSize: '0.62rem',
-                            fontWeight: 700,
-                            padding: '1px 3px',
-                            borderRadius: '3px',
-                            background: badge.bg,
-                            color: badge.color,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
+                            display: 'inline-block',
+                            width: 4,
+                            height: 4,
+                            borderRadius: '50%',
+                            background: badge.color
                           }}
-                        >
-                          {ev.title}
-                        </div>
+                          title={ev.title}
+                        />
                       );
                     })}
                   </div>
@@ -408,6 +395,16 @@ export default function WellnessCalendar({ onNavigateTab }) {
               );
             })}
           </div>
+
+          {/* Optional Cycle Phase Legend underneath the 7-column grid */}
+          {isCycleEnabled && cycleInfo && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginTop: '0.65rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-subtle)', flexWrap: 'wrap', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#d64062' }} /> Menstrual</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#52b788' }} /> Follicular</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f4a261' }} /> Ovulation</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#7b61ff' }} /> Luteal</span>
+            </div>
+          )}
         </div>
       )}
 

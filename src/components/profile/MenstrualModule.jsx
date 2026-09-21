@@ -129,14 +129,25 @@ export default function MenstrualModule() {
             </p>
 
             {syncCycleRecommendations && (
-              <div style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: '0.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: '0.25rem', width: '100%' }}>
                 <button
                   type="button"
                   onClick={() => setIsDemoModalOpen(true)}
                   className="btn btn-secondary btn-sm"
-                  style={{ fontSize: '0.76rem', gap: '0.35rem', borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)', padding: '0.35rem 0.8rem' }}
+                  style={{
+                    fontSize: '0.76rem',
+                    gap: '0.35rem',
+                    borderColor: 'var(--accent-rose)',
+                    color: 'var(--accent-rose)',
+                    padding: '0.4rem 0.8rem',
+                    maxWidth: '100%',
+                    boxSizing: 'border-box',
+                    textAlign: 'left',
+                    whiteSpace: 'normal',
+                    lineHeight: 1.3
+                  }}
                 >
-                  <Sparkles size={13} />
+                  <Sparkles size={13} style={{ flexShrink: 0 }} />
                   <span>Preview Suggestion Layer in Move & Nourish</span>
                 </button>
               </div>
@@ -151,27 +162,37 @@ export default function MenstrualModule() {
                 border: '1px solid rgba(214, 64, 98, 0.25)',
                 borderRadius: 'var(--radius-lg)',
                 padding: '1.25rem',
-                marginBottom: '1.5rem'
+                marginBottom: '1.5rem',
+                boxSizing: 'border-box',
+                overflow: 'hidden'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <span style={{ fontSize: '2rem' }}>{cycleInfo.icon}</span>
-                  <div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: cycleInfo.color }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0, flex: 1 }}>
+                  <span style={{ fontSize: '2rem', flexShrink: 0 }}>{cycleInfo.icon}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: cycleInfo.color, display: 'block' }}>
                       Day {cycleInfo.day} of {cycleInfo.totalDays} • Estimated {cycleInfo.phase} Phase
                     </span>
-                    <h4 style={{ fontSize: '1.15rem', margin: '0.1rem 0 0 0' }}>{cycleInfo.headline}</h4>
+                    <h4 style={{ fontSize: '1.15rem', margin: '0.1rem 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cycleInfo.headline}</h4>
                   </div>
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => setIsDemoModalOpen(true)}
                   className="btn btn-secondary btn-sm"
-                  style={{ fontSize: '0.75rem', gap: '0.35rem', borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)' }}
+                  style={{
+                    fontSize: '0.75rem',
+                    gap: '0.35rem',
+                    borderColor: 'var(--accent-rose)',
+                    color: 'var(--accent-rose)',
+                    boxSizing: 'border-box',
+                    maxWidth: '100%'
+                  }}
                 >
-                  <Sparkles size={13} />
-                  <span>Preview Suggestion Layer</span>
+                  <Sparkles size={13} style={{ flexShrink: 0 }} />
+                  <span>Preview Suggestions</span>
                 </button>
               </div>
 

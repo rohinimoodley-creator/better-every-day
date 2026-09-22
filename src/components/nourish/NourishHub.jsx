@@ -1,271 +1,640 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MealLogger from './MealLogger';
 import RecipeBrowser from './RecipeBrowser';
 import BodyTranslator from './BodyTranslator';
 import NutritionGaps from './NutritionGaps';
 import SupplementTracker from './SupplementTracker';
 import CommunityRecipeQueue from './CommunityRecipeQueue';
+import HydrateHub from '../hydrate/HydrateHub';
 import { useWellness } from '../../context/WellnessContext';
 import { getCyclePhaseInfo } from '../../engine/cycleEngine';
-import { Utensils, Sparkles, BookOpen, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
+import { 
+  Utensils, 
+  Sparkles, 
+  Compass, 
+  Pill, 
+  Droplet, 
+  X, 
+  BookOpen, 
+  ShieldCheck, 
+  ChevronDown, 
+  ChevronUp 
+} from 'lucide-react';
 
-export default function NourishHub() {
-  const { userProfile, isCycleSyncActive, mealLogs = [] } = useWellness();
-  const [activeSubTab, setActiveSubTab] = useState('logger'); // 'logger' | 'translator' | 'insights' | 'supplements'
-  const [isRecipesExpanded, setIsRecipesExpanded] = useState(false); // Collapsed by default
+export default function NourishHub({ initialSubModal = null }) {
+  const { userProfile, isCycleSyncActive, mealLogs = [], hydrationMl = 0, linkEngineOutput } = useWellness();
+
+  // Launcher Pop-up States (5 buttons)
+  const [isLogMealsOpen, setIsLogMealsOpen] = useState(false);
+  const [isCravingsOpen, setIsCravingsOpen] = useState(false);
+  const [isSupplementsOpen, setIsSupplementsOpen] = useState(false);
+  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+  const [isHydrateOpen, setIsHydrateOpen] = useState(false);
+
+  // Sub-modal states
+  const [isRecipesExpanded, setIsRecipesExpanded] = useState(false);
   const [isCommunityModalOpen, setIsCommunityModalOpen] = useState(false);
   const [isCyclePreviewOpen, setIsCyclePreviewOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialSubModal === 'hydrate') {
+      setIsHydrateOpen(true);
+    } else if (initialSubModal === 'meals' || initialSubModal === 'logger') {
+      setIsLogMealsOpen(true);
+    } else if (initialSubModal === 'cravings' || initialSubModal === 'translator') {
+      setIsCravingsOpen(true);
+    } else if (initialSubModal === 'supplements') {
+      setIsSupplementsOpen(true);
+    } else if (initialSubModal === 'insights') {
+      setIsInsightsOpen(true);
+    }
+  }, [initialSubModal]);
 
   const cycleInfo = isCycleSyncActive && userProfile?.lastPeriodStart
     ? getCyclePhaseInfo(userProfile.lastPeriodStart, userProfile.cycleLength || 28)
     : null;
 
   const todayMealsCount = mealLogs ? mealLogs.length : 0;
+  const targetHydration = linkEngineOutput?.adjustments?.adjustedHydrationGoal || userProfile?.hydrationGoalMl || 2250;
+  const hydrationPct = Math.min(100, Math.round((hydrationMl / targetHydration) * 100));
 
   return (
-    <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
+    <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '3.5rem' }}>
       
-      {/* Header */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-            <span className="pill-badge orange" style={{ fontSize: '0.72rem' }}>
-              <Utensils size={12} /> Nutrition & Fuel
-            </span>
-          </div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-            Nourish & Decode 🥗
-          </h2>
-          <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
-            Nourish with joy, log meals simply, explore cravings, and track your daily vitality.
-          </p>
+      {/* 1. Clean Compact Header */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.15rem' }}>
+          <span className="pill-badge orange" style={{ fontSize: '0.7rem' }}>
+            <Utensils size={11} /> Nutrition & Hydration
+          </span>
         </div>
-
-        {/* 4 Sub-Tabs */}
-        <div style={{ display: 'flex', gap: '0.35rem', background: 'var(--bg-tertiary)', padding: '0.25rem', borderRadius: 'var(--radius-pill)', flexWrap: 'wrap' }}>
-          <button
-            onClick={() => setActiveSubTab('logger')}
-            style={{
-              padding: '0.4rem 0.8rem',
-              borderRadius: 'var(--radius-pill)',
-              border: 'none',
-              background: activeSubTab === 'logger' ? 'var(--bg-secondary)' : 'transparent',
-              color: activeSubTab === 'logger' ? 'var(--accent-secondary)' : 'var(--text-muted)',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: activeSubTab === 'logger' ? 'var(--shadow-sm)' : 'none'
-            }}
-          >
-            🍽️ Log Meals & Fuel
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('translator')}
-            style={{
-              padding: '0.4rem 0.8rem',
-              borderRadius: 'var(--radius-pill)',
-              border: 'none',
-              background: activeSubTab === 'translator' ? 'var(--bg-secondary)' : 'transparent',
-              color: activeSubTab === 'translator' ? 'var(--accent-secondary)' : 'var(--text-muted)',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: activeSubTab === 'translator' ? 'var(--shadow-sm)' : 'none'
-            }}
-          >
-            🧭 Body Translator
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('insights')}
-            style={{
-              padding: '0.4rem 0.8rem',
-              borderRadius: 'var(--radius-pill)',
-              border: 'none',
-              background: activeSubTab === 'insights' ? 'var(--bg-secondary)' : 'transparent',
-              color: activeSubTab === 'insights' ? 'var(--accent-secondary)' : 'var(--text-muted)',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: activeSubTab === 'insights' ? 'var(--shadow-sm)' : 'none'
-            }}
-          >
-            ✨ Nutritional Insight
-          </button>
-
-          <button
-            onClick={() => setActiveSubTab('supplements')}
-            style={{
-              padding: '0.4rem 0.8rem',
-              borderRadius: 'var(--radius-pill)',
-              border: 'none',
-              background: activeSubTab === 'supplements' ? 'var(--bg-secondary)' : 'transparent',
-              color: activeSubTab === 'supplements' ? 'var(--accent-secondary)' : 'var(--text-muted)',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: activeSubTab === 'supplements' ? 'var(--shadow-sm)' : 'none'
-            }}
-          >
-            💊 Vitamins & Supplements
-          </button>
-        </div>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 900, margin: 0, color: 'var(--text-primary)' }}>
+          Nourish & Hydrate 🥗💧
+        </h2>
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0 0' }}>
+          Choose an option below to log fuel, translate cravings, track supplements, or hydrate.
+        </p>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 🌸 OPTIONAL PREVIEW SUGGESTION LAYER (Only when Cycle Sync is ON)         */}
-      {/* ========================================================================= */}
-      {isCycleSyncActive && cycleInfo && (
-        <div 
-          className="card-glass" 
+      {/* 2. Sleek Launcher Grid (5 buttons) */}
+      <div 
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(2, 1fr)', 
+          gap: '0.75rem' 
+        }}
+      >
+        {/* 1. Log Meals */}
+        <button
+          type="button"
+          onClick={() => setIsLogMealsOpen(true)}
+          className="card-glass card-interactive"
           style={{
-            padding: '1.1rem 1.35rem',
-            background: 'linear-gradient(135deg, rgba(214, 64, 98, 0.06) 0%, rgba(217, 119, 54, 0.06) 100%)',
-            border: '1.5px solid rgba(214, 64, 98, 0.28)',
-            borderRadius: 'var(--radius-lg)',
-            transition: 'all 0.2s ease'
+            background: 'linear-gradient(135deg, rgba(217, 119, 54, 0.12) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(217, 119, 54, 0.22)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
           }}
         >
           <div 
-            onClick={() => setIsCyclePreviewOpen(!isCyclePreviewOpen)}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              cursor: 'pointer',
-              userSelect: 'none'
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: 'var(--accent-secondary)', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(217, 119, 54, 0.25)'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div 
+            <Utensils size={22} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Log Meals
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              {todayMealsCount} logged today • Recipes
+            </span>
+          </div>
+        </button>
+
+        {/* 2. Explore Cravings (renamed from Body Translator) */}
+        <button
+          type="button"
+          onClick={() => setIsCravingsOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            background: 'linear-gradient(135deg, rgba(224, 159, 62, 0.12) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(224, 159, 62, 0.22)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: '#e09f3e', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(224, 159, 62, 0.25)'
+            }}
+          >
+            <Compass size={22} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Explore Cravings
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              Decode body signals
+            </span>
+          </div>
+        </button>
+
+        {/* 3. Vitamins & Supplements */}
+        <button
+          type="button"
+          onClick={() => setIsSupplementsOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            background: 'linear-gradient(135deg, rgba(64, 145, 108, 0.12) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(64, 145, 108, 0.22)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: 'var(--accent-calm)', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(64, 145, 108, 0.25)'
+            }}
+          >
+            <Pill size={22} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Vitamins & Supplements
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              Daily stacks & timing
+            </span>
+          </div>
+        </button>
+
+        {/* 4. Nutritional Insight */}
+        <button
+          type="button"
+          onClick={() => setIsInsightsOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            background: 'linear-gradient(135deg, rgba(123, 97, 255, 0.12) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(123, 97, 255, 0.22)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: 'var(--accent-purple)', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(123, 97, 255, 0.25)'
+            }}
+          >
+            <Sparkles size={22} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Nutritional Insight
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              Micronutrient balance
+            </span>
+          </div>
+        </button>
+
+        {/* 5. Hydrate (Full hydration feature moved here, spanning 2 columns) */}
+        <button
+          type="button"
+          onClick={() => setIsHydrateOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            gridColumn: 'span 2',
+            background: 'linear-gradient(135deg, rgba(58, 134, 200, 0.15) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(58, 134, 200, 0.28)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            textAlign: 'left',
+            gap: '1rem',
+            cursor: 'pointer',
+            minHeight: '80px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div 
+              style={{ 
+                width: 44, 
+                height: 44, 
+                borderRadius: '50%', 
+                background: '#3a86c8', 
+                color: '#ffffff',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(58, 134, 200, 0.25)',
+                flexShrink: 0
+              }}
+            >
+              <Droplet size={22} />
+            </div>
+            <div>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                Hydrate 💧
+              </h4>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                {hydrationMl} / {targetHydration} ml logged ({hydrationPct}%)
+              </span>
+            </div>
+          </div>
+
+          <div style={{ 
+            background: 'rgba(58, 134, 200, 0.12)', 
+            padding: '0.35rem 0.75rem', 
+            borderRadius: 'var(--radius-pill)',
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            color: '#3a86c8'
+          }}>
+            Quick Log →
+          </div>
+        </button>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 5 POP-UP MODAL SHEETS                                                     */}
+      {/* ========================================================================= */}
+
+      {/* 1. Log Meals Modal */}
+      {isLogMealsOpen && (
+        <div className="modal-backdrop" onClick={() => setIsLogMealsOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 580, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Utensils size={18} color="var(--accent-secondary)" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Log Meals & Fuel
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsLogMealsOpen(false)}
                 style={{ 
-                  width: 38, 
-                  height: 38, 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
                   borderRadius: '50%', 
-                  background: 'rgba(214, 64, 98, 0.15)', 
+                  width: 32, 
+                  height: 32, 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center', 
-                  fontSize: '1.2rem',
-                  flexShrink: 0
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <MealLogger />
+
+            {/* Collapsible Recipes Inside Modal */}
+            <div className="card-glass" style={{ padding: '1rem' }}>
+              <div 
+                onClick={() => setIsRecipesExpanded(!isRecipesExpanded)}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  userSelect: 'none'
                 }}
               >
-                {cycleInfo.icon}
-              </div>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.1rem' }}>
-                  <span className="pill-badge rose" style={{ fontSize: '0.66rem', padding: '1px 6px', fontWeight: 800 }}>
-                    🌸 Preview Suggestion Layer
-                  </span>
-                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                    {cycleInfo.phase} Phase • Day {cycleInfo.day} of {cycleInfo.totalDays}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <BookOpen size={16} color="var(--accent-secondary)" />
+                  <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    Browse Recipe Inspiration
                   </span>
                 </div>
-                <h4 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                  Preview Cycle-Aware Suggestions
-                </h4>
+                {isRecipesExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </div>
-            </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--accent-rose)' }}>
-                {isCyclePreviewOpen ? 'Hide Preview' : 'View Preview'}
-              </span>
-              {isCyclePreviewOpen ? <ChevronUp size={16} color="var(--accent-rose)" /> : <ChevronDown size={16} color="var(--accent-rose)" />}
+              {isRecipesExpanded && (
+                <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
+                  <RecipeBrowser onOpenSubmitCommunity={() => setIsCommunityModalOpen(true)} />
+                </div>
+              )}
             </div>
           </div>
-
-          {isCyclePreviewOpen && (
-            <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(214, 64, 98, 0.18)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.85rem', animation: 'fadeIn 0.2s ease-out' }}>
-              
-              {/* Current Plan vs Cycle-Aware Preview Side-by-Side */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem' }}>
-                <div style={{ background: 'var(--bg-secondary)', padding: '0.9rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
-                    Current Nutrition Plan
-                  </div>
-                  <p style={{ fontSize: '0.84rem', color: 'var(--text-primary)', margin: 0, fontWeight: 700 }}>
-                    Your usual meal logging remains unchanged.
-                  </p>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block', lineHeight: 1.35 }}>
-                    {todayMealsCount > 0 ? `You have logged ${todayMealsCount} meal${todayMealsCount > 1 ? 's' : ''} today. Calorie and macronutrient goals are never modified.` : 'Log meals freely without restrictions or mandatory targets.'}
-                  </span>
-                </div>
-
-                <div style={{ background: 'rgba(214, 64, 98, 0.08)', padding: '0.9rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(214, 64, 98, 0.3)' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-rose)', textTransform: 'uppercase', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <Sparkles size={12} /> 🌸 Cycle-Aware Suggestion
-                  </div>
-                  <p style={{ fontSize: '0.84rem', color: 'var(--text-primary)', margin: 0, fontWeight: 700 }}>
-                    Informed by your {cycleInfo.phase} phase:
-                  </p>
-                  <p style={{ fontSize: '0.79rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0', lineHeight: 1.45 }}>
-                    {cycleInfo.nutritionGuidance}
-                  </p>
-                </div>
-              </div>
-
-              {/* Informational & Non-Medical Note */}
-              <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.45rem', lineHeight: 1.4 }}>
-                <ShieldCheck size={15} color="var(--accent-secondary)" style={{ flexShrink: 0 }} />
-                <span>
-                  <strong>Informational preview only.</strong> This does not diagnose nutrient deficiencies or prescribe supplements. You decide what meals and foods feel right for you.
-                </span>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
-      {/* Main Sub-Tab View Rendering */}
-      {activeSubTab === 'logger' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
-          {/* Always Visible: Meal Logger, Top 3 Meals, Macro Summary & Online Recipe Tools */}
-          <MealLogger />
-
-          {/* Progressive Disclosure: Collapsible Recipe Collection */}
-          <div className="card-glass" style={{ padding: '1.25rem' }}>
-            <div 
-              onClick={() => setIsRecipesExpanded(!isRecipesExpanded)}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                cursor: 'pointer',
-                userSelect: 'none'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <BookOpen size={17} color="var(--accent-secondary)" />
-                <div>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                    Explore Nourishing Recipes & Community Favorites
-                  </h3>
-                  <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                    {isRecipesExpanded ? 'Showing full recipe catalog' : 'Tap to reveal quick recipes and community inspirations'}
-                  </span>
-                </div>
+      {/* 2. Explore Cravings Modal */}
+      {isCravingsOpen && (
+        <div className="modal-backdrop" onClick={() => setIsCravingsOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 580, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Compass size={18} color="#e09f3e" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Explore Cravings & Decode Signals
+                </h3>
               </div>
-
-              <div style={{ color: 'var(--text-muted)' }}>
-                {isRecipesExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-              </div>
+              <button 
+                type="button"
+                onClick={() => setIsCravingsOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            {/* Revealed Recipes Catalog */}
-            {isRecipesExpanded && (
-              <div style={{ marginTop: '1.25rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
-                <RecipeBrowser onOpenSubmitCommunity={() => setIsCommunityModalOpen(true)} />
+            <BodyTranslator />
+          </div>
+        </div>
+      )}
+
+      {/* 3. Vitamins & Supplements Modal */}
+      {isSupplementsOpen && (
+        <div className="modal-backdrop" onClick={() => setIsSupplementsOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 580, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Pill size={18} color="var(--accent-calm)" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Vitamins & Daily Supplements
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsSupplementsOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <SupplementTracker />
+          </div>
+        </div>
+      )}
+
+      {/* 4. Nutritional Insight Modal */}
+      {isInsightsOpen && (
+        <div className="modal-backdrop" onClick={() => setIsInsightsOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 580, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Sparkles size={18} color="var(--accent-purple)" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Nutritional Insight & Micro Balance
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsInsightsOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Cycle Preview if active */}
+            {isCycleSyncActive && cycleInfo && (
+              <div 
+                className="card-glass" 
+                style={{
+                  padding: '0.9rem',
+                  background: 'linear-gradient(135deg, rgba(214, 64, 98, 0.08) 0%, rgba(217, 119, 54, 0.08) 100%)',
+                  border: '1.5px solid rgba(214, 64, 98, 0.28)',
+                  borderRadius: 'var(--radius-md)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                  <span className="pill-badge rose" style={{ fontSize: '0.65rem' }}>
+                    🌸 Cycle-Aware Suggestion
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {cycleInfo.phase} Phase (Day {cycleInfo.day})
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-primary)', margin: 0, lineHeight: 1.4 }}>
+                  {cycleInfo.nutritionGuidance}
+                </p>
               </div>
             )}
+
+            <NutritionGaps />
           </div>
         </div>
       )}
 
-      {activeSubTab === 'translator' && <BodyTranslator />}
-      {activeSubTab === 'insights' && <NutritionGaps />}
-      {activeSubTab === 'supplements' && <SupplementTracker />}
+      {/* 5. Hydrate Modal */}
+      {isHydrateOpen && (
+        <div className="modal-backdrop" onClick={() => setIsHydrateOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 580, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Droplet size={18} color="#3a86c8" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Hydration Tracker
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsHydrateOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <HydrateHub />
+          </div>
+        </div>
+      )}
 
       {/* Community Recipe Queue Modal */}
       {isCommunityModalOpen && (
@@ -278,4 +647,3 @@ export default function NourishHub() {
     </div>
   );
 }
-

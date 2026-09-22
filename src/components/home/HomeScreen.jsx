@@ -95,107 +95,79 @@ export default function HomeScreen({ onNavigateTab }) {
     ? Math.min(100, Math.round((todayRoutineLogs.length / currentRoutineSteps.length) * 100))
     : 100;
 
-  // Overview Pillars Config
+  // Overview Pillars Config for clean 3x2 grid
   const allPillarConfigs = {
-    hydrate: {
-      id: 'hydrate',
-      label: 'Hydrate',
-      icon: Droplet,
-      color: '#3a86c8',
-      activeDays: [0, 1, 2, 3, 4],
-      pct: hydrationPercent,
-      dailyVal: `${formatNumber(currentHydration)} ml`,
-      dailyPct: hydrationPercent
-    },
     move: {
       id: 'move',
       label: 'Move',
       icon: Footprints,
       color: '#3a86c8',
-      activeDays: [0, 2, 3, 5],
       pct: stepsPercent,
       dailyVal: `${formatNumber(currentSteps)} steps`,
       dailyPct: stepsPercent
     },
     nourish: {
       id: 'nourish',
-      label: 'Nourish',
+      label: 'Nourish & Hydrate',
       icon: Utensils,
       color: '#d97736',
-      activeDays: [0, 1, 2, 3, 4, 5],
-      pct: 85,
-      dailyVal: `${mealsCount} meals`,
-      dailyPct: Math.min(100, mealsCount * 33)
+      pct: hydrationPercent,
+      dailyVal: `${mealsCount} meals • ${formatNumber(currentHydration)}ml (${hydrationPercent}%)`,
+      dailyPct: hydrationPercent
     },
     rest: {
       id: 'rest',
-      label: 'Rest',
+      label: 'Rest & Sound',
       icon: Moon,
       color: '#7b61ff',
-      activeDays: [0, 1, 3, 4, 5],
-      pct: 75,
-      dailyVal: '8h 05m',
-      dailyPct: 85
-    },
-    skincare: {
-      id: 'skincare',
-      label: 'Skincare',
-      icon: Sparkles,
-      color: '#e7a93b',
-      activeDays: [0, 1, 2, 3, 4, 5, 6],
-      pct: skincarePercent,
-      dailyVal: `${todayRoutineLogs.length}/${currentRoutineSteps.length || 4} steps`,
-      dailyPct: skincarePercent
+      pct: 80,
+      dailyVal: '8h 05m • Rested',
+      dailyPct: 80
     },
     mind: {
       id: 'mind',
       label: 'Mind',
       icon: Sparkles,
       color: '#8b5cf6',
-      activeDays: [1, 2, 4],
-      pct: 60,
-      dailyVal: '2 moments',
-      dailyPct: 65
+      pct: 75,
+      dailyVal: 'Mindful & Present',
+      dailyPct: 75
     },
-    breathwork: {
-      id: 'breathwork',
-      label: 'Breathwork',
-      icon: Wind,
-      color: '#40916c',
-      activeDays: [0, 2, 4, 5],
-      pct: 70,
-      dailyVal: '1 session',
-      dailyPct: 80
+    skincare: {
+      id: 'skincare',
+      label: 'Skincare',
+      icon: Sparkles,
+      color: '#e7a93b',
+      pct: skincarePercent,
+      dailyVal: `${todayRoutineLogs.length}/${currentRoutineSteps.length || 4} steps`,
+      dailyPct: skincarePercent
     },
     cycle: {
       id: 'cycle',
       label: 'Cycle',
       icon: Heart,
       color: '#d64062',
-      activeDays: [0, 1, 2, 3, 4, 5, 6],
       pct: 90,
-      dailyVal: 'Follicular',
-      dailyPct: 100
-    },
-    steps: {
-      id: 'steps',
-      label: 'Steps',
-      icon: Activity,
-      color: '#2d6a4f',
-      activeDays: [0, 1, 2, 3, 4, 5],
-      pct: stepsPercent,
-      dailyVal: `${formatNumber(currentSteps)} steps`,
-      dailyPct: stepsPercent
+      dailyVal: 'Hormone Sync',
+      dailyPct: 90
     }
   };
 
-  const activePillarsList = (overviewPillars || ['hydrate', 'move', 'nourish', 'rest', 'mind'])
-    .filter((id) => {
-      if (id === 'steps') return wellnessHubVisibility?.move !== false;
-      return wellnessHubVisibility?.[id] !== false;
+  // Map default 6-pillar 3x2 grid
+  const DEFAULT_OVERVIEW_ORDER = ['move', 'nourish', 'rest', 'mind', 'skincare', 'cycle'];
+
+  const activePillarsList = (overviewPillars && overviewPillars.length > 0 ? overviewPillars : DEFAULT_OVERVIEW_ORDER)
+    .map(id => {
+      if (id === 'hydrate') return 'nourish';
+      if (id === 'soundscapes') return 'rest';
+      if (id === 'steps') return 'move';
+      return id;
     })
-    .map((id) => allPillarConfigs[id])
-    .filter(Boolean);
+    .filter((id, idx, arr) => arr.indexOf(id) === idx) // Unique
+    .filter(id => wellnessHubVisibility?.[id] !== false)
+    .map(id => allPillarConfigs[id])
+    .filter(Boolean)
+    .slice(0, 6);
 
   const navigateToWellness = (category) => {
     if (onNavigateTab) {
@@ -477,8 +449,8 @@ export default function HomeScreen({ onNavigateTab }) {
           </div>
         </div>
 
-        {/* 3-Column Metrics Grid of ~88dp Tiles */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.45rem' }}>
+        {/* 3x2 Metrics Grid (Nourish & Hydrate, Rest & Soundscape, Mind, Cycle, Skincare, Move) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem', width: '100%', boxSizing: 'border-box' }}>
           {activePillarsList.map((p) => {
             const Icon = p.icon;
             return (
@@ -488,35 +460,36 @@ export default function HomeScreen({ onNavigateTab }) {
                 className="card-interactive"
                 style={{
                   background: 'var(--bg-secondary)',
-                  padding: '0.55rem',
+                  padding: '0.45rem 0.5rem',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-subtle)',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  minHeight: '74px',
-                  boxSizing: 'border-box'
+                  minHeight: '68px',
+                  boxSizing: 'border-box',
+                  overflow: 'hidden'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <Icon size={13} color={p.color} />
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', minWidth: 0, overflow: 'hidden' }}>
+                    <Icon size={12} color={p.color} style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {p.label}
                     </span>
                   </div>
-                  <span className="tabular-nums" style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                  <span className="tabular-nums" style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', flexShrink: 0 }}>
                     {p.pct}%
                   </span>
                 </div>
 
-                <div className="tabular-nums" style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.15rem 0' }}>
+                <div className="tabular-nums" style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.1rem 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {p.dailyVal}
                 </div>
 
                 {/* Thin Progress Bar */}
-                <div style={{ height: 3.5, background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-pill)', overflow: 'hidden' }}>
+                <div style={{ height: 3, background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-pill)', overflow: 'hidden' }}>
                   <div
                     style={{
                       width: `${p.dailyPct}%`,

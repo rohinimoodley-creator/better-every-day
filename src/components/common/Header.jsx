@@ -10,7 +10,7 @@ export default function Header({ onNavigateTab, onOpenWhatCanITrack }) {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   const isActuallyConnected = connectedDevices?.some(d => d.status === 'connected');
-  const isStreakEnabled = userProfile?.trackStreakCounter !== false;
+  const isStreakEnabled = userProfile?.trackStreakCounter !== false && userProfile?.streakTracking !== false;
 
   const toggleTheme = () => {
     setTheme(theme === 'twilight' ? 'sage' : 'twilight');

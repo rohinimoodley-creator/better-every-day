@@ -45,13 +45,19 @@ export default function WellnessHub({ initialCategory = 'move', onNavigateTab })
       {/* Active Category Content */}
       <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
         {activeCategory === 'move' && <MoveHub />}
-        {activeCategory === 'nourish' && <NourishHub />}
-        {activeCategory === 'hydrate' && <HydrateHub />}
-        {activeCategory === 'rest' && <RestHub onNavigateTab={(cat) => setActiveCategory(cat.toLowerCase())} />}
+        {(activeCategory === 'nourish' || activeCategory === 'hydrate') && (
+          <NourishHub initialSubModal={activeCategory === 'hydrate' ? 'hydrate' : null} />
+        )}
+        {(activeCategory === 'rest' || activeCategory === 'soundscapes') && (
+          <RestHub 
+            initialSubModal={activeCategory === 'soundscapes' ? 'soundscape' : null} 
+            onNavigateTab={(cat) => setActiveCategory(cat.toLowerCase())} 
+          />
+        )}
         {activeCategory === 'skincare' && <SkincareHub />}
-        {activeCategory === 'soundscapes' && <SoundscapesHub />}
-        {activeCategory === 'mind' && <MindHub />}
-        {activeCategory === 'breathwork' && <BreathworkHub onNavigateTab={onNavigateTab} />}
+        {(activeCategory === 'mind' || activeCategory === 'breathwork') && (
+          <MindHub initialSubModal={activeCategory === 'breathwork' ? 'breathwork' : null} />
+        )}
         {activeCategory === 'cycle' && <CycleHub onNavigateTab={onNavigateTab} />}
         {activeCategory === 'calendar' && <WellnessCalendar onNavigateTab={onNavigateTab} />}
       </div>

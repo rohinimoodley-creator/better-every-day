@@ -14,13 +14,10 @@ import { useWellness } from '../../context/WellnessContext';
 
 export const ALL_WELLNESS_CATEGORIES = [
   { id: 'move', label: 'Move', icon: Footprints, emoji: '🏃' },
-  { id: 'nourish', label: 'Nourish', icon: Utensils, emoji: '🥗' },
-  { id: 'hydrate', label: 'Hydrate', icon: Droplet, emoji: '💧' },
-  { id: 'rest', label: 'Rest', icon: Moon, emoji: '🌙' },
-  { id: 'skincare', label: 'Skincare', icon: Sparkles, emoji: '✨' },
+  { id: 'nourish', label: 'Nourish & Hydrate', icon: Utensils, emoji: '🥗' },
+  { id: 'rest', label: 'Rest & Soundscape', icon: Moon, emoji: '🌙' },
   { id: 'mind', label: 'Mind', icon: Sparkles, emoji: '🧘' },
-  { id: 'breathwork', label: 'Breathwork', icon: Wind, emoji: '🌬️' },
-  { id: 'soundscapes', label: 'Soundscapes', icon: Music, emoji: '🎵' },
+  { id: 'skincare', label: 'Skincare', icon: Sparkles, emoji: '✨' },
   { id: 'cycle', label: 'Cycle', icon: Heart, emoji: '🌸' },
   { id: 'calendar', label: 'Calendar', icon: CalendarIcon, emoji: '📅' }
 ];

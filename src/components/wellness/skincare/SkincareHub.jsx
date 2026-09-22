@@ -60,24 +60,25 @@ export default function SkincareHub() {
     addSkincareRoutine,
     deleteSkincareRoutine,
     updateSkincareGoals,
-    updateSkincareSettings,
     dailyRhythm = { dayStartTime: '07:00', sleepTime: '23:00' }
   } = useWellness();
 
-  // Smart initial routine selection based on current time of day
-  const currentHour = new Date().getHours();
-  const initialTab = currentHour < 15 ? 'morning' : 'evening';
-  const [activeTab, setActiveTab] = useState(initialTab); // 'morning' | 'evening' | 'weekly' | custom routine id | 'shelf' | 'goals'
+  // Launcher Pop-up States (5 buttons)
+  const [isMorningOpen, setIsMorningOpen] = useState(false);
+  const [isEveningOpen, setIsEveningOpen] = useState(false);
+  const [isWeeklyOpen, setIsWeeklyOpen] = useState(false);
+  const [isShelfOpen, setIsShelfOpen] = useState(false);
+  const [isGoalsOpen, setIsGoalsOpen] = useState(false);
 
-  // Modals state
+  // Sub-modals state
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingStepInfo, setEditingStepInfo] = useState(null); // { routineKey, step }
   const [isAddStepPickerOpen, setIsAddStepPickerOpen] = useState(false);
+  const [activeRoutineForAddStep, setActiveRoutineForAddStep] = useState('morning');
   const [isCreateRoutineOpen, setIsCreateRoutineOpen] = useState(false);
   const [newRoutineName, setNewRoutineName] = useState('');
   const [newRoutineIcon, setNewRoutineIcon] = useState('✨');
-  const [customGoalText, setCustomGoalText] = useState('');
 
   // Shelf Search & Filter
   const [shelfSearch, setShelfSearch] = useState('');
@@ -89,31 +90,35 @@ export default function SkincareHub() {
   const todayStr = new Date().toISOString().split('T')[0];
   const todayDayName = DAYS_OF_WEEK[new Date().getDay()]; // 'Mon', 'Tue', etc.
 
-  // Current active routine
-  const currentRoutine = skincareRoutines[activeTab] || { steps: [] };
-  const currentRoutineLogs = (skincareLogs[todayStr] && skincareLogs[todayStr][activeTab]) || { completedSteps: [] };
-  const completedStepIds = currentRoutineLogs.completedSteps || [];
+  // Routine Step Calculations
+  const getRoutineStats = (routineKey) => {
+    const routine = skincareRoutines[routineKey] || { steps: [] };
+    const logs = (skincareLogs[todayStr] && skincareLogs[todayStr][routineKey]) || { completedSteps: [] };
+    const completedStepIds = logs.completedSteps || [];
+    const steps = routine.steps || [];
+    const displayed = showOnlyTodaySteps
+      ? steps.filter(s => !s.scheduleDays || s.scheduleDays.length === 0 || s.scheduleDays.includes(todayDayName))
+      : steps;
+    const completed = displayed.filter(s => completedStepIds.includes(s.id)).length;
+    return {
+      total: displayed.length,
+      completed,
+      isDone: displayed.length > 0 && completed === displayed.length,
+      steps: displayed,
+      completedStepIds
+    };
+  };
 
-  // Filter steps if "Today's Steps" is active
-  const displayedSteps = useMemo(() => {
-    const steps = currentRoutine.steps || [];
-    if (!showOnlyTodaySteps) return steps;
-
-    return steps.filter(step => {
-      if (!step.scheduleDays || step.scheduleDays.length === 0) return true;
-      return step.scheduleDays.includes(todayDayName);
-    });
-  }, [currentRoutine.steps, showOnlyTodaySteps, todayDayName]);
-
-  const totalStepsCount = displayedSteps.length;
-  const completedCount = displayedSteps.filter(s => completedStepIds.includes(s.id)).length;
-  const isAllCompleted = totalStepsCount > 0 && completedCount === totalStepsCount;
+  const morningStats = getRoutineStats('morning');
+  const eveningStats = getRoutineStats('evening');
+  const weeklyStats = getRoutineStats('weekly');
 
   // Handle Step Toggle
-  const handleToggleStep = (stepId) => {
-    toggleSkincareStepComplete(activeTab, stepId, todayStr);
-    const wasAlreadyDone = completedStepIds.includes(stepId);
-    if (!wasAlreadyDone && completedCount + 1 === totalStepsCount) {
+  const handleToggleStep = (routineKey, stepId) => {
+    toggleSkincareStepComplete(routineKey, stepId, todayStr);
+    const stats = getRoutineStats(routineKey);
+    const wasAlreadyDone = stats.completedStepIds.includes(stepId);
+    if (!wasAlreadyDone && stats.completed + 1 === stats.total) {
       try {
         confetti({ particleCount: 35, spread: 50, origin: { y: 0.6 } });
       } catch(e) {}
@@ -121,8 +126,9 @@ export default function SkincareHub() {
   };
 
   // Reorder steps
-  const handleMoveStep = (index, direction) => {
-    const steps = [...(currentRoutine.steps || [])];
+  const handleMoveStep = (routineKey, index, direction) => {
+    const routine = skincareRoutines[routineKey] || { steps: [] };
+    const steps = [...(routine.steps || [])];
     const targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= steps.length) return;
 
@@ -130,16 +136,16 @@ export default function SkincareHub() {
     steps[index] = steps[targetIndex];
     steps[targetIndex] = temp;
 
-    // update order
     const updated = steps.map((s, i) => ({ ...s, order: i + 1 }));
-    reorderSkincareRoutineSteps(activeTab, updated);
+    reorderSkincareRoutineSteps(routineKey, updated);
   };
 
   // Complete entire routine at once
-  const handleCompleteAllRoutine = () => {
-    displayedSteps.forEach(step => {
-      if (!completedStepIds.includes(step.id)) {
-        toggleSkincareStepComplete(activeTab, step.id, todayStr);
+  const handleCompleteAllRoutine = (routineKey) => {
+    const stats = getRoutineStats(routineKey);
+    stats.steps.forEach(step => {
+      if (!stats.completedStepIds.includes(step.id)) {
+        toggleSkincareStepComplete(routineKey, step.id, todayStr);
       }
     });
     try {
@@ -166,57 +172,6 @@ export default function SkincareHub() {
     updateSkincareGoals(updated);
   };
 
-  // Create Custom Routine
-  const handleCreateCustomRoutine = (e) => {
-    e.preventDefault();
-    if (!newRoutineName.trim()) return;
-    const routineKey = 'custom_' + Date.now();
-    addSkincareRoutine(routineKey, {
-      name: newRoutineName.trim(),
-      shortTitle: newRoutineName.trim(),
-      icon: newRoutineIcon,
-      targetTime: 'As Needed',
-      reminderText: `Your ${newRoutineName.trim()} skincare ritual is ready.`
-    });
-    setNewRoutineName('');
-    setIsCreateRoutineOpen(false);
-    setActiveTab(routineKey);
-  };
-
-  // Routine list for tabs
-  const routineTabs = useMemo(() => {
-    const defaultKeys = ['morning', 'evening', 'weekly'];
-    const tabsList = [];
-
-    // Core keys first
-    if (skincareRoutines.morning) {
-      tabsList.push({ id: 'morning', label: '☀️ Morning', badge: formatPlural((skincareRoutines.morning.steps || []).length, 'step') });
-    }
-    if (skincareRoutines.evening) {
-      tabsList.push({ id: 'evening', label: '🌙 Evening', badge: formatPlural((skincareRoutines.evening.steps || []).length, 'step') });
-    }
-    if (skincareRoutines.weekly) {
-      tabsList.push({ id: 'weekly', label: '📅 Weekly & Rituals', badge: formatPlural((skincareRoutines.weekly.steps || []).length, 'step') });
-    }
-
-    // Additional / custom routines
-    Object.keys(skincareRoutines).forEach(key => {
-      if (!defaultKeys.includes(key)) {
-        const r = skincareRoutines[key];
-        tabsList.push({
-          id: key,
-          label: `${r.icon || '✨'} ${r.name || key}`,
-          badge: formatPlural((r.steps || []).length, 'step'),
-          isCustom: true
-        });
-      }
-    });
-
-    return tabsList;
-  }, [skincareRoutines]);
-
-  const isCurrentTabRoutine = Boolean(skincareRoutines[activeTab]);
-
   // Gentle Organizational Insights data
   const hydrationProducts = useMemo(() => {
     return skincareProducts.filter(p => 
@@ -232,762 +187,908 @@ export default function SkincareHub() {
     });
   }, [skincareRoutines.morning, skincareProducts]);
 
-  const exfoliantSteps = useMemo(() => {
-    return Object.values(skincareRoutines).flatMap(r => r.steps || []).filter(s => {
-      const prod = skincareProducts.find(p => p.id === s.productId);
-      return prod?.category === 'exfoliant' || s.customName?.toLowerCase().includes('exfoli') || s.customName?.toLowerCase().includes('bha') || s.customName?.toLowerCase().includes('aha');
-    });
-  }, [skincareRoutines, skincareProducts]);
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
-      
-      {/* 1. Header Banner */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-            <span className="pill-badge primary" style={{ fontSize: '0.72rem' }}>
-              🧴 Skincare & Self-Care
+  // Helper to render routine steps checklist inside modal
+  const renderRoutineContent = (routineKey, title, icon, colorTheme, stats, onClose) => {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {/* Progress Card */}
+        <div 
+          style={{
+            background: colorTheme === 'yellow' ? 'rgba(231, 169, 59, 0.08)' : colorTheme === 'purple' ? 'rgba(123, 97, 255, 0.08)' : 'rgba(64, 145, 108, 0.08)',
+            border: `1.5px solid ${colorTheme === 'yellow' ? 'rgba(231, 169, 59, 0.3)' : colorTheme === 'purple' ? 'rgba(123, 97, 255, 0.3)' : 'rgba(64, 145, 108, 0.3)'}`,
+            padding: '1rem',
+            borderRadius: 'var(--radius-md)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <span style={{ fontSize: '0.84rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+              {stats.isDone ? '🎉 Routine Completed Today!' : `${stats.completed} of ${stats.total} steps completed`}
             </span>
             <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-              (Today: {todayDayName})
+              {stats.total > 0 ? `${Math.round((stats.completed / stats.total) * 100)}%` : '0%'}
             </span>
           </div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0, color: 'var(--text-primary)' }}>
-            Skin Care Routine 🧴✨
-          </h2>
-          <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
-            Build and maintain a calm, flexible routine without pressure or complicated lists.
-          </p>
+
+          <div style={{ height: 6, background: 'var(--bg-tertiary)', borderRadius: 3, overflow: 'hidden' }}>
+            <div 
+              style={{
+                height: '100%',
+                width: `${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%`,
+                background: 'linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-calm) 100%)',
+                borderRadius: 3,
+                transition: 'width 0.3s ease'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
+            <button
+              type="button"
+              onClick={() => handleCompleteAllRoutine(routineKey)}
+              disabled={stats.isDone || stats.total === 0}
+              className="btn btn-primary btn-sm"
+              style={{ fontSize: '0.76rem', padding: '0.35rem 0.75rem', gap: '0.3rem', fontWeight: 800 }}
+            >
+              <Check size={13} />
+              <span>{stats.isDone ? '✓ Completed' : 'Mark All Done'}</span>
+            </button>
+
+            {stats.completed > 0 && (
+              <button
+                type="button"
+                onClick={() => resetSkincareRoutineDay(routineKey, todayStr)}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem', color: 'var(--text-muted)' }}
+              >
+                <RotateCcw size={11} style={{ marginRight: 3 }} /> Reset
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveRoutineForAddStep(routineKey);
+                setIsAddStepPickerOpen(true);
+              }}
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: '0.74rem', padding: '0.35rem 0.65rem', gap: '0.25rem', fontWeight: 700 }}
+            >
+              <Plus size={13} /> Add Step
+            </button>
+          </div>
         </div>
 
-        {/* Header Action Buttons */}
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={() => setIsCreateRoutineOpen(true)}
-            className="btn btn-secondary btn-sm"
-            style={{ gap: '0.35rem', padding: '0.5rem 0.85rem', fontWeight: 700 }}
-          >
-            <Plus size={14} />
-            <span>New Routine</span>
-          </button>
+        {/* Steps List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+          {stats.steps.length === 0 ? (
+            <div style={{ padding: '1.5rem', textAlign: 'center', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+              <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem 0' }}>
+                No steps added to this routine yet.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveRoutineForAddStep(routineKey);
+                  setIsAddStepPickerOpen(true);
+                }}
+                className="btn btn-primary btn-sm"
+                style={{ gap: '0.35rem' }}
+              >
+                <Plus size={14} /> Add Product
+              </button>
+            </div>
+          ) : (
+            stats.steps.map((step, index) => {
+              const product = skincareProducts.find(p => p.id === step.productId);
+              const isCompleted = stats.completedStepIds.includes(step.id);
 
-          <button
-            type="button"
-            onClick={() => { setEditingProduct(null); setIsAddProductOpen(true); }}
-            className="btn btn-primary btn-sm"
-            style={{ gap: '0.35rem', padding: '0.5rem 0.95rem', fontWeight: 800 }}
-          >
-            <Plus size={15} />
-            <span>Add Product</span>
-          </button>
+              return (
+                <div
+                  key={step.id}
+                  style={{
+                    padding: '0.85rem 1rem',
+                    borderRadius: 'var(--radius-md)',
+                    background: isCompleted ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                    border: isCompleted ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.65rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStep(routineKey, step.id)}
+                      style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: '50%',
+                        border: isCompleted ? 'none' : '2px solid var(--border-glass)',
+                        background: isCompleted ? 'var(--accent-primary)' : 'var(--bg-card, #fff)',
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        flexShrink: 0
+                      }}
+                    >
+                      {isCompleted ? <Check size={16} /> : null}
+                    </button>
+
+                    <div 
+                      style={{ 
+                        width: 34, 
+                        height: 34, 
+                        borderRadius: 'var(--radius-sm)', 
+                        background: 'var(--bg-tertiary)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        fontSize: '1.1rem',
+                        flexShrink: 0,
+                        overflow: 'hidden'
+                      }}
+                    >
+                      {product?.photo ? (
+                        <img src={product.photo} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        product?.icon || '🧴'
+                      )}
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>
+                          {index + 1}.
+                        </span>
+                        <span 
+                          style={{ 
+                            fontSize: '0.88rem', 
+                            fontWeight: 800, 
+                            color: 'var(--text-primary)',
+                            textDecoration: isCompleted ? 'line-through' : 'none',
+                            opacity: isCompleted ? 0.75 : 1
+                          }}
+                        >
+                          {step.customName || product?.name}
+                        </span>
+                        {product?.brand && (
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                            • {product.brand}
+                          </span>
+                        )}
+                      </div>
+                      {(step.notes || product?.notes) && (
+                        <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', margin: '0.1rem 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {step.notes || product?.notes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      disabled={index === 0}
+                      onClick={() => handleMoveStep(routineKey, index, -1)}
+                      className="btn btn-secondary btn-sm"
+                      style={{ padding: '0.2rem 0.35rem', opacity: index === 0 ? 0.3 : 1 }}
+                    >
+                      <ArrowUp size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === stats.steps.length - 1}
+                      onClick={() => handleMoveStep(routineKey, index, 1)}
+                      className="btn btn-secondary btn-sm"
+                      style={{ padding: '0.2rem 0.35rem', opacity: index === stats.steps.length - 1 ? 0.3 : 1 }}
+                    >
+                      <ArrowDown size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingStepInfo({ routineKey, step })}
+                      className="btn btn-secondary btn-sm"
+                      style={{ padding: '0.2rem 0.4rem' }}
+                    >
+                      <Edit2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
+    );
+  };
 
-      {/* 2. Top Navigation Tabs */}
+  return (
+    <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '3.5rem' }}>
+      
+      {/* 1. Clean Compact Header */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.15rem' }}>
+          <span className="pill-badge primary" style={{ fontSize: '0.7rem' }}>
+            🧴 Skincare & Self-Care
+          </span>
+        </div>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 900, margin: 0, color: 'var(--text-primary)' }}>
+          Skincare Hub 🧴✨
+        </h2>
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0 0' }}>
+          Choose an option below to manage routines, browse shelf products, or review skin goals.
+        </p>
+      </div>
+
+      {/* 2. Sleek Launcher Grid (5 buttons) */}
       <div 
-        className="card-glass"
-        style={{
-          display: 'flex',
-          gap: '0.35rem',
-          padding: '0.5rem 0.75rem',
-          overflowX: 'auto',
-          scrollbarWidth: 'none'
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(2, 1fr)', 
+          gap: '0.75rem' 
         }}
       >
-        {routineTabs.map(tab => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                padding: '0.5rem 0.85rem',
-                borderRadius: 'var(--radius-pill)',
-                border: 'none',
-                background: isActive ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                color: isActive ? '#ffffff' : 'var(--text-primary)',
-                fontWeight: isActive ? 800 : 600,
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <span>{tab.label}</span>
-              <span 
-                style={{
-                  fontSize: '0.68rem',
-                  padding: '1px 6px',
-                  borderRadius: '10px',
-                  background: isActive ? 'rgba(255, 255, 255, 0.25)' : 'var(--bg-tertiary)',
-                  color: isActive ? '#ffffff' : 'var(--text-muted)'
-                }}
-              >
-                {tab.badge}
-              </span>
-            </button>
-          );
-        })}
-
-        {/* Shelf & Goals Fixed Tabs */}
-        {[
-          { id: 'shelf', label: '🧴 My Product Shelf', badge: `${skincareProducts.length} items` },
-          { id: 'goals', label: '🎯 Skin Goals & Insights', badge: `${skincareGoals.length} goals` }
-        ].map(tab => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                padding: '0.5rem 0.85rem',
-                borderRadius: 'var(--radius-pill)',
-                border: 'none',
-                background: isActive ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                color: isActive ? '#ffffff' : 'var(--text-primary)',
-                fontWeight: isActive ? 800 : 600,
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <span>{tab.label}</span>
-              <span 
-                style={{
-                  fontSize: '0.68rem',
-                  padding: '1px 6px',
-                  borderRadius: '10px',
-                  background: isActive ? 'rgba(255, 255, 255, 0.25)' : 'var(--bg-tertiary)',
-                  color: isActive ? '#ffffff' : 'var(--text-muted)'
-                }}
-              >
-                {tab.badge}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 3. ACTIVE ROUTINE VIEW (Morning, Evening, Weekly, Custom)                  */}
-      {/* ========================================================================= */}
-      {isCurrentTabRoutine && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', animation: 'fadeIn 0.2s ease-out' }}>
-          
-          {/* Routine Status & Progress Card */}
+        {/* 1. Morning Routine */}
+        <button
+          type="button"
+          onClick={() => setIsMorningOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            background: 'linear-gradient(135deg, rgba(231, 169, 59, 0.12) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(231, 169, 59, 0.22)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
           <div 
-            className="card-glass" 
-            style={{
-              padding: '1.35rem',
-              borderRadius: 'var(--radius-lg)',
-              background: activeTab === 'morning' 
-                ? 'linear-gradient(135deg, rgba(231, 169, 59, 0.08) 0%, var(--bg-glass-card) 100%)' 
-                : activeTab === 'evening'
-                  ? 'linear-gradient(135deg, rgba(123, 97, 255, 0.08) 0%, var(--bg-glass-card) 100%)'
-                  : 'linear-gradient(135deg, rgba(64, 145, 108, 0.08) 0%, var(--bg-glass-card) 100%)',
-              border: activeTab === 'morning' 
-                ? '1.5px solid rgba(231, 169, 59, 0.3)' 
-                : activeTab === 'evening'
-                  ? '1.5px solid rgba(123, 97, 255, 0.3)'
-                  : '1.5px solid rgba(64, 145, 108, 0.3)'
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: '#e7a93b', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(231, 169, 59, 0.25)'
             }}
           >
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.15rem' }}>
-                  <span className="pill-badge primary" style={{ fontSize: '0.68rem', fontWeight: 800 }}>
-                    {activeTab === 'morning' ? '☀️ MORNING' : activeTab === 'evening' ? '🌙 EVENING' : activeTab === 'weekly' ? '📅 WEEKLY RITUAL' : `${currentRoutine.icon || '✨'} CUSTOM ROUTINE`}
-                  </span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    {activeTab === 'morning' 
-                      ? `Suggested time: ~${dailyRhythm.dayStartTime || '07:00'} (Day Start)` 
-                      : activeTab === 'evening'
-                        ? `Suggested time: ~${dailyRhythm.sleepTime ? 'Before ' + dailyRhythm.sleepTime : '22:30'} (Wind-Down)` 
-                        : 'Flexible Self-Care'}
-                  </span>
-                </div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, margin: 0, color: 'var(--text-primary)' }}>
-                  {currentRoutine.name}
-                </h3>
-              </div>
+            <Sun size={22} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Morning Routine
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              {morningStats.completed}/{morningStats.total} steps done
+            </span>
+          </div>
+        </button>
 
-              {/* Action Buttons: Add Step, Filter, Delete Custom */}
-              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowOnlyTodaySteps(!showOnlyTodaySteps)}
-                  className={`btn ${showOnlyTodaySteps ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-                  style={{ fontSize: '0.74rem', padding: '0.35rem 0.7rem', gap: '0.3rem' }}
-                  title="Toggle between today's scheduled steps and all steps"
-                >
-                  <Filter size={13} />
-                  <span>{showOnlyTodaySteps ? `Today (${todayDayName}) Only` : 'Show All Days'}</span>
-                </button>
+        {/* 2. Evening Routine */}
+        <button
+          type="button"
+          onClick={() => setIsEveningOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            background: 'linear-gradient(135deg, rgba(123, 97, 255, 0.12) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(123, 97, 255, 0.22)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: '#7b61ff', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(123, 97, 255, 0.25)'
+            }}
+          >
+            <Moon size={22} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Evening Routine
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              {eveningStats.completed}/{eveningStats.total} steps done
+            </span>
+          </div>
+        </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsAddStepPickerOpen(true)}
-                  className="btn btn-secondary btn-sm"
-                  style={{ fontSize: '0.74rem', padding: '0.35rem 0.7rem', gap: '0.3rem', fontWeight: 700 }}
-                >
-                  <Plus size={13} />
-                  <span>Add Step to Routine</span>
-                </button>
+        {/* 3. Weekly Rituals */}
+        <button
+          type="button"
+          onClick={() => setIsWeeklyOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            background: 'linear-gradient(135deg, rgba(64, 145, 108, 0.12) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(64, 145, 108, 0.22)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: 'var(--accent-calm)', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(64, 145, 108, 0.25)'
+            }}
+          >
+            <Calendar size={22} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Weekly Rituals
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              Masks & exfoliants
+            </span>
+          </div>
+        </button>
 
-                {currentRoutine.isCustom && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      deleteSkincareRoutine(activeTab);
-                      setActiveTab('morning');
-                    }}
-                    className="btn btn-secondary btn-sm"
-                    style={{ fontSize: '0.74rem', padding: '0.35rem 0.55rem', color: '#ef4444' }}
-                    title="Delete custom routine"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                )}
-              </div>
+        {/* 4. My Product Shelf */}
+        <button
+          type="button"
+          onClick={() => setIsShelfOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            background: 'linear-gradient(135deg, rgba(45, 106, 79, 0.12) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(45, 106, 79, 0.22)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            minHeight: '120px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <div 
+            style={{ 
+              width: 44, 
+              height: 44, 
+              borderRadius: '50%', 
+              background: 'var(--accent-primary)', 
+              color: '#ffffff',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(45, 106, 79, 0.25)'
+            }}
+          >
+            <Layers size={22} />
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              My Product Shelf
+            </h4>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              {skincareProducts.length} items cataloged
+            </span>
+          </div>
+        </button>
+
+        {/* 5. Skin Goals & Insights (Spanning 2 columns) */}
+        <button
+          type="button"
+          onClick={() => setIsGoalsOpen(true)}
+          className="card-glass card-interactive"
+          style={{
+            gridColumn: 'span 2',
+            background: 'linear-gradient(135deg, rgba(214, 64, 98, 0.12) 0%, var(--bg-glass-card) 100%)',
+            border: '1.5px solid rgba(214, 64, 98, 0.22)',
+            borderRadius: 'var(--radius-card)',
+            padding: '1.1rem 1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            textAlign: 'left',
+            gap: '1rem',
+            cursor: 'pointer',
+            minHeight: '80px',
+            boxShadow: 'var(--shadow-subtle)',
+            transition: 'all var(--transition-fast)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div 
+              style={{ 
+                width: 44, 
+                height: 44, 
+                borderRadius: '50%', 
+                background: 'var(--accent-rose)', 
+                color: '#ffffff',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(214, 64, 98, 0.25)',
+                flexShrink: 0
+              }}
+            >
+              <Target size={22} />
             </div>
-
-            {/* Completion Progress Bar */}
-            <div style={{ background: 'var(--bg-secondary)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                  {isAllCompleted 
-                    ? '🎉 Routine Complete! Skin feeling fresh & cared for.' 
-                    : `${completedCount} of ${totalStepsCount} steps completed today`}
-                </span>
-                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                  {totalStepsCount > 0 ? `${Math.round((completedCount / totalStepsCount) * 100)}%` : '0%'}
-                </span>
-              </div>
-
-              <div style={{ height: 8, background: 'var(--bg-tertiary)', borderRadius: 4, overflow: 'hidden' }}>
-                <div 
-                  style={{
-                    height: '100%',
-                    width: `${totalStepsCount > 0 ? (completedCount / totalStepsCount) * 100 : 0}%`,
-                    background: 'linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-calm) 100%)',
-                    borderRadius: 4,
-                    transition: 'width 0.3s ease'
-                  }}
-                />
-              </div>
-
-              {/* Quick Completion Button */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
-                <button
-                  type="button"
-                  onClick={handleCompleteAllRoutine}
-                  disabled={isAllCompleted || totalStepsCount === 0}
-                  className="btn btn-primary btn-sm"
-                  style={{ fontSize: '0.76rem', padding: '0.35rem 0.85rem', gap: '0.3rem', fontWeight: 800 }}
-                >
-                  <Check size={13} />
-                  <span>{isAllCompleted ? '✓ Completed Today' : 'Mark All Completed'}</span>
-                </button>
-
-                {completedCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => resetSkincareRoutineDay(activeTab, todayStr)}
-                    className="btn btn-secondary btn-sm"
-                    style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem', color: 'var(--text-muted)' }}
-                  >
-                    <RotateCcw size={11} style={{ marginRight: 3 }} /> Reset Today's Checkmarks
-                  </button>
-                )}
-              </div>
+            <div>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                Skin Goals & Insights
+              </h4>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                {skincareGoals.length} intentions selected • Rhythm reminders
+              </span>
             </div>
           </div>
 
-          {/* Routine Steps List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-            {displayedSteps.length === 0 ? (
-              <div className="card-glass" style={{ padding: '2rem', textAlign: 'center' }}>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: '0 0 0.85rem 0' }}>
-                  {showOnlyTodaySteps 
-                    ? `No steps scheduled for ${todayDayName}. Switch filter to view all routine steps.` 
-                    : 'No steps added to this routine yet.'}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setIsAddStepPickerOpen(true)}
-                  className="btn btn-primary btn-sm"
-                  style={{ gap: '0.35rem' }}
-                >
-                  <Plus size={14} /> Add First Product
-                </button>
+          <div style={{ 
+            background: 'rgba(214, 64, 98, 0.12)', 
+            padding: '0.35rem 0.75rem', 
+            borderRadius: 'var(--radius-pill)',
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            color: 'var(--accent-rose)'
+          }}>
+            Explore →
+          </div>
+        </button>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 5 FEATURE POP-UP SHEETS / MODALS                                          */}
+      {/* ========================================================================= */}
+
+      {/* 1. Morning Routine Modal */}
+      {isMorningOpen && (
+        <div className="modal-backdrop" onClick={() => setIsMorningOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 580, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Sun size={18} color="#e7a93b" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Morning Routine
+                </h3>
               </div>
-            ) : (
-              displayedSteps.map((step, index) => {
-                const product = skincareProducts.find(p => p.id === step.productId);
-                const isCompleted = completedStepIds.includes(step.id);
-                const isScheduledToday = !step.scheduleDays || step.scheduleDays.includes(todayDayName);
+              <button 
+                type="button"
+                onClick={() => setIsMorningOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-                return (
-                  <div
-                    key={step.id}
-                    className="card-glass"
-                    style={{
-                      padding: '0.95rem 1.15rem',
-                      borderRadius: 'var(--radius-md)',
-                      background: isCompleted ? 'var(--accent-primary-light)' : 'var(--bg-glass-card)',
-                      border: isCompleted ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '0.75rem',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    {/* Left Checkbox & Step Info */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: 1, minWidth: 0 }}>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleStep(step.id)}
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: '50%',
-                          border: isCompleted ? 'none' : '2px solid var(--border-glass)',
-                          background: isCompleted ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                          color: '#ffffff',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          flexShrink: 0,
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        {isCompleted ? <Check size={18} /> : null}
-                      </button>
-
-                      {/* Icon or Product Photo */}
-                      <div 
-                        style={{ 
-                          width: 38, 
-                          height: 38, 
-                          borderRadius: 'var(--radius-sm)', 
-                          background: 'var(--bg-tertiary)', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          fontSize: '1.2rem',
-                          flexShrink: 0,
-                          overflow: 'hidden'
-                        }}
-                      >
-                        {product?.photo ? (
-                          <img src={product.photo} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          product?.icon || '🧴'
-                        )}
-                      </div>
-
-                      {/* Title & Notes */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)' }}>
-                            Step {index + 1}.
-                          </span>
-                          <span 
-                            style={{ 
-                              fontSize: '0.92rem', 
-                              fontWeight: 800, 
-                              color: 'var(--text-primary)',
-                              textDecoration: isCompleted ? 'line-through' : 'none',
-                              opacity: isCompleted ? 0.75 : 1
-                            }}
-                          >
-                            {step.customName || product?.name}
-                          </span>
-                          {product?.brand && (
-                            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                              • {product.brand}
-                            </span>
-                          )}
-                          {step.scheduleDays && step.scheduleDays.length < 7 && (
-                            <span className="pill-badge" style={{ fontSize: '0.64rem', padding: '1px 6px' }}>
-                              📅 {step.scheduleDays.join('/')}
-                            </span>
-                          )}
-                        </div>
-
-                        {(step.notes || product?.notes) && (
-                          <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {step.notes || product?.notes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Step Actions: Up / Down / Edit */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
-                      <button
-                        type="button"
-                        disabled={index === 0}
-                        onClick={() => handleMoveStep(index, -1)}
-                        className="btn btn-secondary btn-sm"
-                        style={{ padding: '0.25rem 0.4rem', opacity: index === 0 ? 0.3 : 1 }}
-                        title="Move step up"
-                      >
-                        <ArrowUp size={13} />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={index === displayedSteps.length - 1}
-                        onClick={() => handleMoveStep(index, 1)}
-                        className="btn btn-secondary btn-sm"
-                        style={{ padding: '0.25rem 0.4rem', opacity: index === displayedSteps.length - 1 ? 0.3 : 1 }}
-                        title="Move step down"
-                      >
-                        <ArrowDown size={13} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditingStepInfo({ routineKey: activeTab, step })}
-                        className="btn btn-secondary btn-sm"
-                        style={{ padding: '0.25rem 0.45rem' }}
-                        title="Edit step"
-                      >
-                        <Edit2 size={13} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
+            {renderRoutineContent('morning', 'Morning Routine', '☀️', 'yellow', morningStats, () => setIsMorningOpen(false))}
           </div>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 4. PRODUCT SHELF VIEW                                                     */}
-      {/* ========================================================================= */}
-      {activeTab === 'shelf' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem', animation: 'fadeIn 0.2s ease-out' }}>
-          
-          {/* Search & Category Filter Bar */}
-          <div className="card-glass" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
-                <Search size={15} style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      {/* 2. Evening Routine Modal */}
+      {isEveningOpen && (
+        <div className="modal-backdrop" onClick={() => setIsEveningOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 580, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Moon size={18} color="#7b61ff" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Evening Routine
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsEveningOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {renderRoutineContent('evening', 'Evening Routine', '🌙', 'purple', eveningStats, () => setIsEveningOpen(false))}
+          </div>
+        </div>
+      )}
+
+      {/* 3. Weekly Rituals Modal */}
+      {isWeeklyOpen && (
+        <div className="modal-backdrop" onClick={() => setIsWeeklyOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 580, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Calendar size={18} color="var(--accent-calm)" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Weekly Rituals & Masks
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsWeeklyOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {renderRoutineContent('weekly', 'Weekly Rituals', '📅', 'green', weeklyStats, () => setIsWeeklyOpen(false))}
+          </div>
+        </div>
+      )}
+
+      {/* 4. Product Shelf Modal */}
+      {isShelfOpen && (
+        <div className="modal-backdrop" onClick={() => setIsShelfOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 580, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Layers size={18} color="var(--accent-primary)" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  My Product Shelf ({skincareProducts.length})
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsShelfOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Shelf Actions & Search */}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: 180, position: 'relative' }}>
+                <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
                   type="text"
-                  placeholder="Search products by name, brand, or ingredient..."
+                  placeholder="Search products or ingredients..."
                   value={shelfSearch}
                   onChange={e => setShelfSearch(e.target.value)}
                   className="input-field"
-                  style={{ paddingLeft: '2.2rem', fontSize: '0.84rem' }}
+                  style={{ paddingLeft: '2.1rem', fontSize: '0.82rem' }}
                 />
               </div>
 
-              <select
-                value={shelfCategoryFilter}
-                onChange={e => setShelfCategoryFilter(e.target.value)}
-                className="select-field"
-                style={{ width: 'auto', minWidth: 150, fontSize: '0.84rem' }}
+              <button
+                type="button"
+                onClick={() => { setEditingProduct(null); setIsAddProductOpen(true); }}
+                className="btn btn-primary btn-sm"
+                style={{ gap: '0.35rem', fontWeight: 800 }}
               >
-                <option value="all">All Categories 🧴</option>
-                {SKINCARE_CATEGORIES.map(cat => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.icon} {cat.label}
-                  </option>
-                ))}
-              </select>
+                <Plus size={14} /> Add Product
+              </button>
             </div>
-          </div>
 
-          {/* Product Cards Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.85rem' }}>
-            {filteredProducts.length === 0 ? (
-              <div className="card-glass" style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1' }}>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: '0 0 0.85rem 0' }}>
-                  No products matched your search.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => { setShelfSearch(''); setShelfCategoryFilter('all'); }}
-                  className="btn btn-secondary btn-sm"
-                >
-                  Clear Filters
-                </button>
-              </div>
-            ) : (
-              filteredProducts.map(product => {
-                const catObj = SKINCARE_CATEGORIES.find(c => c.id === product.category) || { label: product.category, icon: '🧴' };
-                return (
-                  <div
-                    key={product.id}
-                    className="card-glass"
-                    style={{
-                      padding: '1.15rem',
-                      borderRadius: 'var(--radius-md)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      gap: '0.75rem',
-                      border: '1px solid var(--border-subtle)'
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                          {product.photo ? (
-                            <img 
-                              src={product.photo} 
-                              alt={product.name} 
-                              style={{ width: 38, height: 38, borderRadius: 'var(--radius-sm)', objectFit: 'cover', border: '1.5px solid var(--border-glass)' }} 
-                            />
-                          ) : (
-                            <span style={{ fontSize: '1.35rem' }}>{product.icon || catObj.icon}</span>
-                          )}
-                          <div>
-                            <span className="pill-badge" style={{ fontSize: '0.64rem', padding: '1px 6px' }}>
-                              {catObj.label}
-                            </span>
-                          </div>
-                        </div>
-
-                        {product.isFavorite && (
-                          <Star size={14} color="var(--accent-secondary)" fill="var(--accent-secondary)" />
-                        )}
-                      </div>
-
-                      <h4 style={{ fontSize: '0.98rem', fontWeight: 800, margin: '0.2rem 0 0.1rem 0', color: 'var(--text-primary)' }}>
-                        {product.name}
-                      </h4>
-                      {product.brand && (
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                          {product.brand}
-                        </div>
-                      )}
-
-                      {/* When used & frequency */}
-                      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginTop: '0.45rem' }}>
-                        <span style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
-                          {product.whenUsed === 'morning' ? '☀️ Morning' : product.whenUsed === 'evening' ? '🌙 Evening' : product.whenUsed === 'both' ? '☀️🌙 AM & PM' : '📅 Weekly'}
-                        </span>
-                        {product.frequency === 'specific_days' && product.scheduleDays && (
-                          <span style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
-                            {product.scheduleDays.join('/')}
+            {/* Products Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '0.75rem' }}>
+              {filteredProducts.length === 0 ? (
+                <div style={{ padding: '1.5rem', textAlign: 'center', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', gridColumn: '1 / -1' }}>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    No products found.
+                  </p>
+                </div>
+              ) : (
+                filteredProducts.map(product => {
+                  const catObj = SKINCARE_CATEGORIES.find(c => c.id === product.category) || { label: product.category, icon: '🧴' };
+                  return (
+                    <div
+                      key={product.id}
+                      style={{
+                        padding: '0.9rem',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-subtle)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: '0.65rem'
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.25rem' }}>
+                          <span className="pill-badge" style={{ fontSize: '0.62rem', padding: '1px 6px' }}>
+                            {catObj.icon} {catObj.label}
                           </span>
+                          {product.isFavorite && (
+                            <Star size={13} color="var(--accent-secondary)" fill="var(--accent-secondary)" />
+                          )}
+                        </div>
+
+                        <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: '0.15rem 0 0.05rem 0', color: 'var(--text-primary)' }}>
+                          {product.name}
+                        </h4>
+                        {product.brand && (
+                          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                            {product.brand}
+                          </div>
+                        )}
+                        {product.keyIngredients && product.keyIngredients.length > 0 && (
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+                            Key: {product.keyIngredients.slice(0, 3).join(', ')}
+                          </div>
                         )}
                       </div>
 
-                      {/* Ingredients */}
-                      {product.keyIngredients && product.keyIngredients.length > 0 && (
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem', lineHeight: 1.35 }}>
-                          <strong>Key:</strong> {product.keyIngredients.slice(0, 3).join(', ')}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Card Actions */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.65rem', marginTop: '0.35rem' }}>
-                      <button
-                        type="button"
-                        onClick={() => { setEditingProduct(product); setIsAddProductOpen(true); }}
-                        className="btn btn-secondary btn-sm"
-                        style={{ fontSize: '0.72rem', padding: '0.25rem 0.55rem', gap: '0.25rem' }}
-                      >
-                        <Edit2 size={12} /> Edit
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => deleteSkincareProduct(product.id)}
-                        className="btn btn-secondary btn-sm"
-                        style={{ fontSize: '0.72rem', padding: '0.25rem 0.45rem', color: '#ef4444' }}
-                        title="Delete product"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* 5. SKIN GOALS & GENTLE ORGANIZATIONAL INSIGHTS                             */}
-      {/* ========================================================================= */}
-      {activeTab === 'goals' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', animation: 'fadeIn 0.2s ease-out' }}>
-          
-          {/* Skin Goals Selection Card */}
-          <div className="card-glass" style={{ padding: '1.35rem' }}>
-            <div style={{ marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 900, margin: '0 0 0.2rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
-                <Target size={18} color="var(--accent-primary)" /> Personal Skincare Intentions & Goals
-              </h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
-                Select what feels right for you. These personalize your routine organization and gentle suggestions without medical promises.
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.65rem' }}>
-              {AVAILABLE_SKIN_GOALS.map(goal => {
-                const isSelected = skincareGoals.includes(goal.id);
-                return (
-                  <div
-                    key={goal.id}
-                    onClick={() => handleToggleGoal(goal.id)}
-                    style={{
-                      background: isSelected ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
-                      border: isSelected ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                      borderRadius: 'var(--radius-md)',
-                      padding: '0.85rem 1rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '0.65rem',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <span style={{ fontSize: '1.3rem' }}>{goal.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                          {goal.label}
-                        </span>
-                        {isSelected && <Check size={14} color="var(--accent-primary)" />}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.5rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => { setEditingProduct(product); setIsAddProductOpen(true); }}
+                          className="btn btn-secondary btn-sm"
+                          style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', gap: '0.2rem' }}
+                        >
+                          <Edit2 size={11} /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteSkincareProduct(product.id)}
+                          className="btn btn-secondary btn-sm"
+                          style={{ fontSize: '0.7rem', padding: '0.2rem 0.4rem', color: '#ef4444' }}
+                        >
+                          <Trash2 size={11} />
+                        </button>
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.15rem' }}>
-                        {goal.desc}
-                      </span>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Smart Reminders Connected to My Daily Rhythm */}
-          <div className="card-glass" style={{ padding: '1.35rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-              <div>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 800, margin: '0 0 0.15rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
-                  <Bell size={16} color="var(--accent-primary)" /> Smart Rhythm Reminders
-                </h4>
-                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0 }}>
-                  Reminders seamlessly use your existing <strong>My Daily Rhythm</strong> schedule.
-                </p>
+      {/* 5. Skin Goals & Insights Modal */}
+      {isGoalsOpen && (
+        <div className="modal-backdrop" onClick={() => setIsGoalsOpen(false)} style={{ zIndex: 1100 }}>
+          <div 
+            className="modal-sheet" 
+            onClick={e => e.stopPropagation()}
+            style={{ 
+              maxWidth: 580, 
+              maxHeight: '90vh', 
+              overflowY: 'auto', 
+              padding: '1.25rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Target size={18} color="var(--accent-rose)" />
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Skin Goals & Insights
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setIsGoalsOpen(false)}
+                style={{ 
+                  background: 'var(--bg-tertiary)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: 32, 
+                  height: 32, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: 'var(--text-muted)' 
+                }}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Intentions Grid */}
+            <div>
+              <h4 style={{ fontSize: '0.94rem', fontWeight: 800, margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>
+                Personal Skincare Intentions
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.55rem' }}>
+                {AVAILABLE_SKIN_GOALS.map(goal => {
+                  const isSelected = skincareGoals.includes(goal.id);
+                  return (
+                    <div
+                      key={goal.id}
+                      onClick={() => handleToggleGoal(goal.id)}
+                      style={{
+                        background: isSelected ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
+                        border: isSelected ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: '0.75rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '0.55rem'
+                      }}
+                    >
+                      <span style={{ fontSize: '1.2rem' }}>{goal.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.84rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                            {goal.label}
+                          </span>
+                          {isSelected && <Check size={13} color="var(--accent-primary)" />}
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.1rem' }}>
+                          {goal.desc}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem' }}>
-              <div style={{ background: 'var(--bg-secondary)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
-                  ☀️ Morning Skincare Nudge
-                </span>
-                <div style={{ fontSize: '0.98rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.2rem' }}>
-                  Ready at {dailyRhythm.dayStartTime || '07:00'} (Day Start)
-                </div>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.2rem', display: 'block' }}>
-                  "It's a good time for your fresh morning skincare routine."
-                </span>
-              </div>
-
-              <div style={{ background: 'var(--bg-secondary)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
-                  🌙 Evening Skincare Wind-Down
-                </span>
-                <div style={{ fontSize: '0.98rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.2rem' }}>
-                  Ready at {dailyRhythm.sleepTime ? 'Before ' + dailyRhythm.sleepTime : '22:30'} (Wind-Down)
-                </div>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.2rem', display: 'block' }}>
-                  "Your evening skincare routine is ready."
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Gentle Routine Insights & Organization */}
-          <div className="card-glass" style={{ padding: '1.35rem' }}>
-            <h4 style={{ fontSize: '1rem', fontWeight: 800, margin: '0 0 0.75rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
-              <Sparkles size={16} color="var(--accent-calm)" /> Gentle Organizational Insights
-            </h4>
-
-            {/* Dynamic Insight Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.65rem', marginBottom: '1rem' }}>
-              <div style={{ background: 'var(--bg-secondary)', padding: '0.9rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-                  <Sparkles size={15} color="var(--accent-primary)" />
-                  <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--text-primary)' }}>Evening Consistency</span>
-                </div>
-                <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
-                  ✨ You've been keeping up with your evening routine consistently before bed.
-                </p>
-              </div>
-
-              <div style={{ background: 'var(--bg-secondary)', padding: '0.9rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-                  <Droplet size={15} color="#3a86c8" />
-                  <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--text-primary)' }}>Hydration Focus</span>
-                </div>
-                <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
-                  💧 You have {hydrationProducts.length} hydration-focused products supporting your skin comfort.
-                </p>
-              </div>
-
+            {/* Smart Rhythm Reminders */}
+            <div style={{ background: 'var(--bg-secondary)', padding: '0.9rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+              <h4 style={{ fontSize: '0.9rem', fontWeight: 800, margin: '0 0 0.4rem 0', display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--text-primary)' }}>
+                <Bell size={14} color="var(--accent-primary)" /> Daily Rhythm Reminders
+              </h4>
+              <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: '0 0 0.65rem 0' }}>
+                Morning ready at ~{dailyRhythm.dayStartTime || '07:00'} • Evening wind-down at ~{dailyRhythm.sleepTime || '22:30'}
+              </p>
               {morningHasSpf && (
-                <div style={{ background: 'var(--bg-secondary)', padding: '0.9rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-                    <Sun size={15} color="#e7a93b" />
-                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--text-primary)' }}>Sun Protection</span>
-                  </div>
-                  <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
-                    ☀️ Daytime SPF protection is active in your morning routine.
-                  </p>
-                </div>
-              )}
-
-              {exfoliantSteps.length > 0 && (
-                <div style={{ background: 'var(--bg-secondary)', padding: '0.9rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
-                    <Sparkle size={15} color="#8b5cf6" />
-                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--text-primary)' }}>Balanced Pacing</span>
-                  </div>
-                  <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
-                    🌿 Active exfoliants are thoughtfully spaced across select days.
-                  </p>
+                <div style={{ fontSize: '0.74rem', color: '#e7a93b', fontWeight: 700 }}>
+                  ☀️ Daytime SPF protection is active in your morning routine.
                 </div>
               )}
             </div>
 
-            {/* Non-Medical Disclaimer Guarantee */}
-            <div style={{ background: 'var(--bg-tertiary)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent-primary)', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.45 }}>
-              🛡️ <strong>Wellness & Routine Companion:</strong> Better Every Day is a wellness and routine-management tool, not a dermatology diagnostic system. It does not diagnose skin conditions, prescribe medications or treatments, or make curative claims about acne, pigmentation, or eczema. If you experience persistent skin discomfort or concerns, we warmly encourage seeking qualified dermatological advice.
+            {/* Gentle Organizational Notice */}
+            <div style={{ background: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent-primary)', fontSize: '0.73rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+              🛡️ <strong>Wellness Companion:</strong> Routine and self-care tracking to help you feel refreshed. If you experience persistent skin discomfort, seek qualified dermatological advice.
             </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 6. MODALS                                                                 */}
+      {/* SECONDARY MODALS (Add/Edit Product, Add Step, Edit Step)                  */}
       {/* ========================================================================= */}
-      
+
       {/* Add / Edit Product Modal */}
       {isAddProductOpen && (
         <AddEditProductModal
@@ -1017,164 +1118,43 @@ export default function SkincareHub() {
         />
       )}
 
-      {/* Create Custom Routine Modal */}
-      {isCreateRoutineOpen && (
-        <div 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 2200,
-            background: 'rgba(15, 23, 42, 0.75)',
-            backdropFilter: 'blur(6px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem',
-            animation: 'fadeIn 0.2s ease-out'
-          }}
-          onClick={() => setIsCreateRoutineOpen(false)}
-        >
-          <div 
-            className="card-glass" 
-            style={{
-              width: '100%',
-              maxWidth: 460,
-              padding: '1.5rem',
-              borderRadius: 'var(--radius-lg)',
-              background: 'var(--bg-glass-card, #ffffff)',
-              border: '1.5px solid var(--border-subtle)'
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>
-                Create Custom Skincare Routine
-              </h3>
-              <button 
-                type="button" 
-                onClick={() => setIsCreateRoutineOpen(false)}
-                className="btn btn-secondary btn-sm"
-                style={{ padding: '0.4rem', borderRadius: '50%' }}
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-              Add an extra routine such as <em>Weekly Pamper</em>, <em>Post-Workout Refresh</em>, or <em>Travel Routine</em>.
-            </p>
-
-            <form onSubmit={handleCreateCustomRoutine} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.3rem' }}>
-                  Routine Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Weekend Pamper, Workout Cleanse"
-                  value={newRoutineName}
-                  onChange={e => setNewRoutineName(e.target.value)}
-                  className="input-field"
-                  style={{ fontSize: '0.88rem' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: '0.3rem' }}>
-                  Choose Icon
-                </label>
-                <div style={{ display: 'flex', gap: '0.3rem' }}>
-                  {['✨', '🧖‍♀️', '🌿', '🏊‍♀️', '✈️', '🌸', '🍵', '💧'].map(ic => (
-                    <button
-                      key={ic}
-                      type="button"
-                      onClick={() => setNewRoutineIcon(ic)}
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 'var(--radius-sm)',
-                        border: newRoutineIcon === ic ? '2px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                        background: newRoutineIcon === ic ? 'var(--accent-primary-light)' : 'var(--bg-secondary)',
-                        fontSize: '1.1rem',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {ic}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <button type="button" onClick={() => setIsCreateRoutineOpen(false)} className="btn btn-secondary" style={{ flex: 1 }}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1.5, fontWeight: 800 }}>
-                  Create Routine
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* Add Step From Shelf Picker Modal */}
       {isAddStepPickerOpen && (
         <div 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 2200,
-            background: 'rgba(15, 23, 42, 0.75)',
-            backdropFilter: 'blur(6px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem',
-            animation: 'fadeIn 0.2s ease-out'
-          }}
+          className="modal-backdrop"
           onClick={() => setIsAddStepPickerOpen(false)}
+          style={{ zIndex: 1200 }}
         >
           <div 
-            className="card-glass" 
+            className="modal-sheet" 
             style={{
-              width: '100%',
               maxWidth: 500,
               maxHeight: '80vh',
               overflowY: 'auto',
-              padding: '1.5rem',
-              borderRadius: 'var(--radius-lg)',
-              background: 'var(--bg-glass-card, #ffffff)',
-              border: '1.5px solid var(--border-subtle)'
+              padding: '1.25rem'
             }}
             onClick={e => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>
-                Add Product to {currentRoutine.name || 'Routine'}
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
+                Add Product to Routine
               </h3>
               <button 
                 type="button" 
                 onClick={() => setIsAddStepPickerOpen(false)}
-                className="btn btn-secondary btn-sm"
-                style={{ padding: '0.4rem', borderRadius: '50%' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
               >
-                <X size={15} />
+                <X size={16} />
               </button>
             </div>
 
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-              Choose an existing product from your shelf, or create a new one.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', marginBottom: '1rem' }}>
               {skincareProducts.map(prod => (
                 <button
                   key={prod.id}
                   type="button"
                   onClick={() => {
-                    addSkincareStepToRoutine(activeTab, {
+                    addSkincareStepToRoutine(activeRoutineForAddStep, {
                       productId: prod.id,
                       customName: prod.name,
                       notes: prod.notes,
@@ -1186,7 +1166,7 @@ export default function SkincareHub() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '0.75rem 0.9rem',
+                    padding: '0.65rem 0.8rem',
                     borderRadius: 'var(--radius-md)',
                     border: '1px solid var(--border-subtle)',
                     background: 'var(--bg-secondary)',
@@ -1194,18 +1174,14 @@ export default function SkincareHub() {
                     textAlign: 'left'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                    {prod.photo ? (
-                      <img src={prod.photo} alt={prod.name} style={{ width: 34, height: 34, borderRadius: 'var(--radius-sm)', objectFit: 'cover' }} />
-                    ) : (
-                      <span style={{ fontSize: '1.2rem' }}>{prod.icon || '🧴'}</span>
-                    )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1.1rem' }}>{prod.icon || '🧴'}</span>
                     <div>
-                      <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>{prod.name}</div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{prod.brand || prod.category}</div>
+                      <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)' }}>{prod.name}</div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{prod.brand || prod.category}</div>
                     </div>
                   </div>
-                  <Plus size={15} color="var(--accent-primary)" />
+                  <Plus size={14} color="var(--accent-primary)" />
                 </button>
               ))}
             </div>
@@ -1218,7 +1194,7 @@ export default function SkincareHub() {
                 setIsAddProductOpen(true);
               }}
               className="btn btn-secondary"
-              style={{ width: '100%', gap: '0.35rem', fontSize: '0.82rem' }}
+              style={{ width: '100%', gap: '0.35rem', fontSize: '0.8rem' }}
             >
               <Plus size={14} /> Create New Product for Shelf
             </button>

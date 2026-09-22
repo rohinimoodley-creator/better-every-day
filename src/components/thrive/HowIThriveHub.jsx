@@ -145,13 +145,16 @@ export default function HowIThriveHub() {
         </p>
       </div>
 
-      {/* Navigation Sub-Tabs as Small Launcher Buttons (Scaled down Move style) */}
+      {/* Navigation Sub-Tabs */}
       <div 
+        className="card-glass"
         style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(4, 1fr)', 
-          gap: '0.45rem', 
-          marginBottom: '1.25rem'
+          display: 'flex', 
+          gap: '0.35rem', 
+          overflowX: 'auto', 
+          padding: '0.5rem 0.75rem', 
+          marginBottom: '1.25rem',
+          scrollbarWidth: 'none'
         }}
       >
         {tabs.map(tab => {
@@ -162,29 +165,20 @@ export default function HowIThriveHub() {
               type="button"
               onClick={() => setActiveTab(tab.id)}
               style={{
-                padding: '0.65rem 0.4rem',
-                borderRadius: 'var(--radius-md)',
-                border: isActive ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                padding: '0.45rem 0.85rem',
+                borderRadius: 'var(--radius-pill)',
+                border: 'none',
                 background: isActive ? 'var(--accent-primary)' : 'var(--bg-secondary)',
                 color: isActive ? '#ffffff' : 'var(--text-primary)',
-                fontSize: '0.74rem',
+                fontSize: '0.78rem',
                 fontWeight: isActive ? 800 : 600,
                 cursor: 'pointer',
-                textAlign: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.2rem',
-                minHeight: '56px',
-                boxShadow: isActive ? '0 3px 10px rgba(45, 106, 79, 0.25)' : 'var(--shadow-subtle)',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
                 transition: 'all 0.15s ease'
               }}
             >
-              <span style={{ fontSize: '1rem', lineHeight: 1 }}>{tab.label.split(' ')[0]}</span>
-              <span style={{ fontSize: '0.68rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
-                {tab.label.split(' ').slice(1).join(' ')}
-              </span>
+              {tab.label}
             </button>
           );
         })}
@@ -201,107 +195,117 @@ export default function HowIThriveHub() {
           TAB 3: FLEXIBLE STREAKS & SHAME-FREE PAUSES
           ========================================================================= */}
       {activeTab === 'streaks' && (
-        <div className="card-glass" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 0.2rem 0', color: 'var(--text-primary)' }}>
-              Flexible Streaks & Pauses 🎯
-            </h3>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
-              Streaks should encourage consistency, never shame. Pause your streak anytime to keep your count safe.
-            </p>
-          </div>
+        <div className="card-glass" style={{ padding: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
+            Flexible Streaks & Shame-Free Pauses 🎯
+          </h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+            Streaks must never punish you for being human. Pause your streak anytime to protect your consistency progress.
+          </p>
 
           {/* Streak Status Box */}
           <div 
             style={{
               background: howIThrive.streakPaused ? 'rgba(123, 97, 255, 0.1)' : 'var(--accent-secondary-light)',
               border: `1px solid ${howIThrive.streakPaused ? 'var(--accent-purple)' : 'var(--accent-secondary)'}`,
-              padding: '1rem 1.15rem',
+              padding: '1.25rem',
               borderRadius: 'var(--radius-md)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem'
+              marginBottom: '1.5rem'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                <Flame size={18} color="var(--accent-secondary)" />
-                <h4 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                  {howIThrive.streakPaused ? '⏸️ Streak Currently Paused' : `🔥 Active Consistency: ${smallStepState?.streakCount || 12} Days`}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Flame size={20} color="var(--accent-secondary)" />
+                <h4 style={{ fontSize: '1.1rem', margin: 0 }}>
+                  {howIThrive.streakPaused ? '⏸️ Streak Currently Paused' : `🔥 Active Consistency: ${smallStepState.streakCount} Days`}
                 </h4>
               </div>
 
-              <span className="pill-badge primary" style={{ fontSize: '0.68rem' }}>
+              <span className="pill-badge primary">
                 {howIThrive.streakPaused ? 'Progress Safe' : 'Protected'}
               </span>
             </div>
 
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
               {howIThrive.streakPaused 
-                ? `You've completed ${smallStepState?.streakCount || 12} days. Reason: ${howIThrive.streakPauseReason || 'Planned Break'}. Your progress is safely preserved.`
-                : "Need a rest day, travel break, or recovery window? Pause anytime without losing your count."}
+                ? `You've completed ${smallStepState.streakCount} days. Reason: ${howIThrive.streakPauseReason || 'Planned Break'}. Your progress is safe and waiting for you.`
+                : "Need time away for rest, travel, busy days, or recovery? Pause anytime without losing your count."}
             </p>
 
             {howIThrive.streakPaused ? (
               <button 
                 onClick={() => handleUpdate({ streakPaused: false, streakPauseReason: null })}
                 className="btn btn-primary btn-sm"
-                style={{ gap: '0.35rem', alignSelf: 'flex-start' }}
+                style={{ gap: '0.4rem' }}
               >
-                <Play size={13} /> Resume My Streak Today
+                <Play size={14} /> Resume My Streak Today
               </button>
             ) : (
-              <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                <select
-                  value={pauseReasonSelect}
-                  onChange={e => setPauseReasonSelect(e.target.value)}
-                  className="select-field"
-                  style={{ minWidth: 180, flex: 1, fontSize: '0.8rem', padding: '0.35rem 0.6rem' }}
-                >
-                  <option value="rest_day">⏸️ Rest Day / Recharge</option>
-                  <option value="busy_period">💼 Busy Period / High Workload</option>
-                  <option value="travel">✈️ Travel / Vacation</option>
-                  <option value="overwhelmed">🌿 Feeling Overwhelmed</option>
-                  <option value="recovery">🩹 Unwell / Recovery</option>
-                  <option value="personal">💛 Personal Reasons</option>
-                  <option value="other">✨ Other Reason</option>
-                </select>
+              <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-sm)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  Select a shame-free reason to pause:
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    const reasonText = pauseReasonSelect === 'other' && customPauseReason.trim()
-                      ? customPauseReason.trim()
-                      : pauseReasonSelect.replace('_', ' ');
-                    handleUpdate({ streakPaused: true, streakPauseReason: reasonText });
-                  }}
-                  className="btn btn-secondary btn-sm"
-                  style={{ fontWeight: 700, padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
-                >
-                  Pause Streak
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <select
+                    value={pauseReasonSelect}
+                    onChange={e => setPauseReasonSelect(e.target.value)}
+                    className="select-field"
+                    style={{ minWidth: 200, flex: 1 }}
+                  >
+                    <option value="rest_day">⏸️ Rest Day / Recharge</option>
+                    <option value="busy_period">💼 Busy Period / High Workload</option>
+                    <option value="travel">✈️ Travel / Vacation</option>
+                    <option value="overwhelmed">🌿 Feeling Overwhelmed</option>
+                    <option value="recovery">🩹 Unwell / Recovery</option>
+                    <option value="personal">💛 Personal Reasons</option>
+                    <option value="other">✨ Other Reason</option>
+                  </select>
+
+                  {pauseReasonSelect === 'other' && (
+                    <input
+                      type="text"
+                      value={customPauseReason}
+                      onChange={e => setCustomPauseReason(e.target.value)}
+                      placeholder="Enter reason..."
+                      className="input-field"
+                      style={{ flex: 1, minWidth: 150 }}
+                    />
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const reasonText = pauseReasonSelect === 'other' && customPauseReason.trim()
+                        ? customPauseReason.trim()
+                        : pauseReasonSelect.replace('_', ' ');
+                      handleUpdate({ streakPaused: true, streakPauseReason: reasonText });
+                    }}
+                    className="btn btn-secondary btn-sm"
+                    style={{ fontWeight: 700, padding: '0.5rem 1rem' }}
+                  >
+                    Pause Streak
+                  </button>
+                </div>
               </div>
             )}
           </div>
 
           {/* Master Streak Enable / Disable */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tertiary)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
             <div>
-              <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block' }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', display: 'block' }}>
                 Track Streak Counter
               </span>
-              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                If streak numbers cause you stress, you can hide them across the header and profile.
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                If streak numbers cause you stress, you can disable them entirely.
               </span>
             </div>
             <label className="toggle-switch">
               <input
                 type="checkbox"
-                checked={howIThrive.streaksEnabled !== false && userProfile?.trackStreakCounter !== false}
-                onChange={e => {
-                  handleUpdate('streaksEnabled', e.target.checked);
-                  setUserProfile(prev => ({ ...prev, trackStreakCounter: e.target.checked }));
-                }}
+                checked={howIThrive.streaksEnabled !== false}
+                onChange={e => handleUpdate('streaksEnabled', e.target.checked)}
               />
               <span className="toggle-slider" />
             </label>
@@ -310,92 +314,79 @@ export default function HowIThriveHub() {
       )}
 
       {/* =========================================================================
-          TAB 4: COMMUNICATION TONE (Dropdown Selector)
+          TAB 4: COMMUNICATION TONE
           ========================================================================= */}
       {activeTab === 'communication' && (
-        <div className="card-glass" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 0.2rem 0', color: 'var(--text-primary)' }}>
-              Communication Tone 💬
-            </h3>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
-              Choose how Better Every Day and Pip speak with you across tasks, affirmations, and check-ins.
-            </p>
-          </div>
+        <div className="card-glass" style={{ padding: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
+            Communication Tone 💬
+          </h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+            Choose how Better Every Day and Pip speak with you across tasks, affirmations, and check-ins.
+          </p>
 
-          {/* Clean Dropdown Selector */}
-          <div>
-            <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem' }}>
-              Select Tone
-            </label>
-            <select
-              value={howIThrive.communicationStyle || 'soft_gentle'}
-              onChange={e => handleUpdate('communicationStyle', e.target.value)}
-              className="select-field"
-              style={{ width: '100%', fontSize: '0.88rem', padding: '0.55rem 0.85rem', fontWeight: 700 }}
-            >
-              <option value="soft_gentle">🌸 Soft & Gentle (Compassionate, unhurried, reassuring)</option>
-              <option value="direct_practical">🎯 Direct & Practical (Clear, concise, no fluff)</option>
-              <option value="detailed">📊 Detailed & Contextual (Explanatory, numbers-oriented)</option>
-              <option value="playful">✨ Playful & Cheerful (Uplifting, cheeky, enthusiastic)</option>
-              <option value="minimal">▪️ Minimal (Ultra brief, zero cognitive load)</option>
-            </select>
-          </div>
-
-          {/* Live Preview Sample Box */}
-          {(() => {
-            const stylesMap = {
-              soft_gentle: {
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {[
+              {
+                id: 'soft_gentle',
                 name: '🌸 Soft & Gentle',
                 sample: '"You don\'t have to do everything today. Would you like to take one small step?"',
                 tone: 'Compassionate, unhurried, reassuring'
               },
-              direct_practical: {
+              {
+                id: 'direct_practical',
                 name: '🎯 Direct & Practical',
                 sample: '"Next action: drink a glass of water."',
                 tone: 'Clear, concise, no extra fluff'
               },
-              detailed: {
+              {
+                id: 'detailed',
                 name: '📊 Detailed & Contextual',
                 sample: '"You\'ve logged two glasses of water today. Your target is six more for optimal focus."',
                 tone: 'Explanatory, informational, numbers-oriented'
               },
-              playful: {
+              {
+                id: 'playful',
                 name: '✨ Playful & Cheerful',
                 sample: '"Bestie, let\'s get that tiny win! 💛 Adventure awaits."',
                 tone: 'Uplifting, cheeky, enthusiastic'
               },
-              minimal: {
+              {
+                id: 'minimal',
                 name: '▪️ Minimal',
                 sample: '"Drink water."',
                 tone: 'Ultra brief, zero cognitive load'
               }
-            };
-            const currentStyle = stylesMap[howIThrive.communicationStyle || 'soft_gentle'] || stylesMap.soft_gentle;
-            return (
-              <div 
-                style={{ 
-                  background: 'var(--accent-primary-light)', 
-                  border: '1.5px solid var(--accent-primary)', 
-                  padding: '1rem', 
-                  borderRadius: 'var(--radius-md)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.35rem'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 800, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
-                    Sample Tone: {currentStyle.name}
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{currentStyle.tone}</span>
+            ].map(style => {
+              const active = howIThrive.communicationStyle === style.id;
+              return (
+                <div
+                  key={style.id}
+                  onClick={() => handleUpdate('communicationStyle', style.id)}
+                  style={{
+                    background: active ? 'var(--accent-primary-light)' : 'var(--bg-tertiary)',
+                    border: `2px solid ${active ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
+                    padding: '1rem',
+                    borderRadius: 'var(--radius-md)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.3rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                      {style.name}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{style.tone}</span>
+                  </div>
+                  <p style={{ fontSize: '0.85rem', fontStyle: 'italic', color: 'var(--accent-primary)', margin: 0 }}>
+                    {style.sample}
+                  </p>
                 </div>
-                <p style={{ fontSize: '0.84rem', fontStyle: 'italic', color: 'var(--accent-primary)', margin: 0, lineHeight: 1.4 }}>
-                  {currentStyle.sample}
-                </p>
-              </div>
-            );
-          })()}
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -563,10 +554,10 @@ export default function HowIThriveHub() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
               <div>
                 <h4 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  🎉 Dance Party & Break Preferences
+                  🎉 Dance Break Preferences
                 </h4>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.15rem 0 0 0' }}>
-                  Configure your one-tap Home Dance Party duration and music.
+                  Configure your one-tap Home Dance Break duration and music.
                 </p>
               </div>
 
